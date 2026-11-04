@@ -1,6 +1,6 @@
 # WEB_PLAN: Web Version of the Attendance Management System
 
-This plan adds a browser interface and an online deployment. The terminal version stays and keeps working. The plan is approved, with decision D1 changed as shown in section 2.
+This plan adds a browser interface and an online deployment. The terminal version stays and keeps working. Built and tested locally. Deployment is the only step left, see section 10.3.
 
 Related: [TASKS.md](TASKS.md) section 5 has the checkpoints and tests. [VIVA.md](VIVA.md) section 10 has the new viva questions.
 
@@ -64,7 +64,7 @@ g++ -std=c++11 -Wall -Wextra -D_WIN32_WINNT=0x0A00 -Iinclude -Iserver -Ithird_pa
 .\attendance_server.exe
 ```
 
-Then open <http://localhost:8080>. A full build should take about a minute and a half, since five files include the large headers. This is an estimate from the 17-second test.
+Then open <http://localhost:8080>. A full build takes a minute or two, because several files include the large headers.
 
 ### 1.4 Deployment facts (Render docs, read 04-11-2026)
 
@@ -187,11 +187,13 @@ These are new C++ code, because JavaScript may not do them.
 
 | Feature | Where | Notes |
 |---------|-------|-------|
-| Sorting | `AttendanceSystem::listStudents` | Selection sort over an `int order[]` of indexes. Real data never moves. Sort by name, roll number, class, or ID. |
+| Sorting | `AttendanceSystem::listStudents` | Selection sort over an array of indexes. Real data never moves. Sort by name, roll number, class, or ID. |
 | Dashboard numbers | `Report::dashboardStats` | Totals, today's %, and defaulter counts. |
 | Attendance trend | `Report::dailyTrend` | The last 14 days **that have marks**, so the chart stays filled as sample data ages. |
 | Per-subject % | `Report::subjectSummary` | Present and total for each subject. |
 | Class list | `AttendanceSystem::listClasses` | Fills the class dropdowns. |
+| Recent marks | `Student::markHistory` | The latest P and A marks in a subject, in date order, using an insertion sort. |
+| Lowest first | `Report::sortByPercentage` | Selection sort, so the students in most danger come first on the web. The terminal keeps its own order. |
 | ISO dates | `Date::parseIso`, `Date::toIso` | `<input type="date">` gives `2026-11-03`. C++ converts it, not JS. |
 
 Arrays stay, with no `vector`. Results use fixed arrays inside structs. `DefaulterEntry` holds array indexes rather than strings, so the largest list (100 x 20 = 2000 entries) is about 48 KB and safe on a thread's stack.
@@ -223,7 +225,7 @@ Pinned to **v3.12.0**, MIT licence, in `third_party/`. Only `server/` includes i
 |-------|------|-----|
 | `ApiServer` | `server/ApiServer.h/.cpp` | Registers routes, serves `web/`, and has shared helpers: `requireLogin`, `readBody`, `sendResult` |
 | Route handlers | `server/AuthRoutes.cpp`, `StudentRoutes.cpp`, `AttendanceRoutes.cpp`, `ReportRoutes.cpp` | `ApiServer` member functions, one per endpoint, split by module |
-| `SessionManager` | `server/SessionManager.h/.cpp` | Fixed array of `Session` objects: create, find, remove, expire. Also counts failed logins. |
+| `SessionManager` | `server/SessionManager.h/.cpp` | Fixed array of `Session` objects: create, find, remove, expire. Also counts failed logins, and locks a username after three. |
 | `JsonMapper` | `server/JsonMapper.h/.cpp` | Turns core objects and report structs into JSON. This is why passwords can never leak: it has no password to read. |
 
 A typical handler, so the shape stays readable:
@@ -360,6 +362,10 @@ GET /api/dashboard
   "cards": {
     "students": 10,
     "subjects": 4,
+    "classes": 2,
+    "overallPresent": 82,
+    "overallTotal": 100,
+    "overallPercentText": "82.00%",
     "todayMarked": false,
     "todayPresent": 0,
     "todayTotal": 0,
@@ -378,6 +384,10 @@ GET /api/dashboard
   "subjects": [
     { "code": "CS201A", "name": "OOPs using C++", "className": "AIML-A",
       "present": 29, "total": 36, "percent": 80.56, "percentText": "80.56%", "status": "ok" }
+  ],
+  "attention": [
+    { "studentId": 3, "rollNo": "90318015625", "name": "Kabir Mehta", "className": "AIML-A", "subject": "MA201A",
+      "present": 2, "total": 4, "percent": 50.0, "percentText": "50.00%", "marks": "APPA" }
   ]
 }
 ```
@@ -409,8 +419,7 @@ Same name in the same class: the frontend shows a dialog, then sends the request
 Success:
 
 ```
-201 { "ok": true, "message": "Student added with internal ID 11.",
-      "student": { "id": 11, "rollNo": "92018015625", "name": "New Student", "className": "AIML-A" } }
+201 { "ok": true, "message": "Student added with internal ID 11." }
 ```
 
 **Delete a student**
@@ -544,7 +553,7 @@ The app is one `index.html`. Hash routes such as `#/students` swap the content a
 | LOGO      |  [=] Page title              [sun/moon]  (AR) Admin v|
 |           +-----------------------------------------------------+
 | Dashboard |                                                     |
-| Students  |   Content area: cards on the page background        |
+| Students  |   Content area: ruled sheets on the page background |
 | Subjects  |                                                     |
 | Mark      |                                                     |
 | Report    |                                                     |
@@ -561,10 +570,10 @@ Sidebar: 240 px with inline SVG icons, and the active item is tinted with the ac
 |------|--------|---------|
 | **Login** | Centered card on ruled register paper with a red margin line | Logo, two fields, button with spinner. Errors appear inside the card. Lockout shows the C++ message. |
 | **Dashboard** | A tally of 4 numbers, 2 charts side by side (stacked on mobile), then a Needs attention table | Details below |
-| **Students** | Search box, Add button, table in a card | Search as you type, with a short pause, through the server. Clickable column headers sort through the server. Add and edit in a modal, delete through a confirm dialog. Empty state: "No students yet". |
+| **Students** | Search box, Add button, register table | Search as you type, with a short pause, through the server. Clickable column headers sort through the server. Add and edit in a modal, delete through a confirm dialog. Empty state: "No students yet". |
 | **Subjects** | Table and Add button | Same pattern. Shown because of D3. |
 | **Mark attendance** | Filter bar (date, subject), then student list | Each row has a Present/Absent toggle (a checkbox styled as a switch). Sticky footer: live counter (JS, display only), "Mark all present", Save. After Save, the toast shows the totals from C++. If already marked, a banner says so and each change saves as a correction. |
-| **Student report** | Student search, header card, one card of bars | Name, roll number, class, large overall %. One progress bar per subject, with `5 of 6` and the % beside it. Green at 75% or above, red below, each with an icon and the words "OK" or "Below 75%". Grey "No classes yet" for `none`. |
+| **Student report** | Student search, then a report sheet and a Recent marks table | Name, roll number, class, large overall %. One meter per subject, with a notch at 75%, `5 of 6 classes`, and the %. Green at 75% or above, red below, always with the words "OK" or "Below 75%". "No classes yet" for `none`. |
 | **Defaulters** | Summary line and table | Red badge with the % in each row. Empty state: "No defaulters". |
 | **Daily report** | Date picker, stacked bar chart, then a table per subject | Chart shows present and absent per subject |
 | **Monthly report** | Class and month pickers, bar chart, then table | Chart shows each student's %, with the 75% line |
@@ -687,35 +696,7 @@ Chart.js **4.6.1** from jsDelivr, pinned, with an integrity hash:
 
 ### 10.1 Dockerfile
 
-Two stages: one to compile, one small image to run.
-
-```dockerfile
-# Stage 1: compile on Linux
-FROM debian:bookworm-slim AS build
-RUN apt-get update && apt-get install -y --no-install-recommends g++ \
-    && rm -rf /var/lib/apt/lists/*
-WORKDIR /src
-COPY include/ include/
-COPY src/ src/
-COPY server/ server/
-COPY third_party/ third_party/
-RUN g++ -std=c++11 -O2 -Iinclude -Iserver -Ithird_party server/*.cpp src/*.cpp \
-    -pthread -o attendance_server
-
-# Stage 2: only what is needed to run
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
-    && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY --from=build /src/attendance_server .
-COPY web/ web/
-COPY data/ data/
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
-ENV HOST=0.0.0.0 PORT=10000 TZ=Asia/Kolkata
-EXPOSE 10000
-CMD ["./attendance_server"]
-```
+The `Dockerfile` in the project folder has two stages: one compiles on Linux with g++, and one small image runs the server with `web/` and `data/`. It runs as a normal user, not root. It is not repeated here, so this document cannot drift from it. `render.yaml` holds the Render settings.
 
 **Why `TZ` matters:** Render's clock is UTC, 5:30 behind India. Without this, "today" would be yesterday until 5:30 AM, and marking today's attendance would be rejected as a future date.
 
@@ -734,14 +715,15 @@ This also means `data/` in Git **is** the seed. Commit only clean sample data. T
 
 ### 10.3 Deployment steps
 
-1. Finish and test locally. Confirm `data/` is clean.
-2. Commit and push to GitHub.
-3. Create a free account at <https://render.com> and connect GitHub.
-4. New > Web Service > choose the repository. Set **Language** to Docker and the instance type to Free. If Free is not offered for Docker, stop and decide before paying for anything.
-5. Under Advanced, set **Health Check Path** to `/api/health`.
-6. Add the secret `DEMO_PASSWORD`. Do not reference it in the Dockerfile, as Render warns against that for secrets.
-7. Deploy, then read the build log.
-8. Open the `onrender.com` link and run the deployed test list in TASKS.md.
+These steps need your GitHub and Render accounts, so they are not done yet.
+
+1. Confirm `data/` is the clean sample data, then push the `web-version` branch to GitHub.
+2. Create a free account at <https://render.com> and connect GitHub.
+3. Choose New > Blueprint, then choose the repository and the branch. Render reads `render.yaml`.
+4. When asked, enter a secret `DEMO_PASSWORD`, 4 to 20 characters with no spaces or `|`.
+5. Render shows the plan before creating anything. If it does not say Free, stop and decide before paying for anything.
+6. Wait for the build, and read the log. This is the Dockerfile's first real test, because Docker cannot run on the development laptop.
+7. Open the `onrender.com` link, and run W60 to W66 in TASKS.md.
 
 ### 10.4 Viva day
 
@@ -794,9 +776,9 @@ OOPS-PBL/
 |------|------|
 | The core split breaks the terminal | Golden output comparison, plus the full T-checklist again |
 | Dockerfile untested locally | Render's build log is the first test. Keep time for fixes before the viva. |
-| Render free tier does not allow Docker | Confirmed first at W11, before any other deployment work |
+| Render free tier does not allow Docker | Render's docs list `free` as a web service plan, and do not exclude Docker, but do not say it outright. The first deploy settles it. |
 | Someone changes data on the live site | `DEMO_PASSWORD`, plus a restart restores everything |
-| No internet at the viva | Local demo: tables work, charts and Inter need internet |
+| No internet at the viva | Local demo: tables work, but charts and the web fonts need internet |
 | Team must explain more code | Each owner has one route file and one or two pages. VIVA.md section 10 covers the new ideas. |
 
 **Out of scope:** deleting subjects or teachers (the terminal cannot do this either), hashed passwords, a database, multiple lectures per subject per day, and emails or exports.

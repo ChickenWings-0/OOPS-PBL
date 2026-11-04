@@ -375,10 +375,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W12: Documentation
 **Owners:** Dhruv Kataria (`README.md`), all members (review)
 
-- [ ] README: web features, build commands, live link, screenshots
-- [ ] DESIGN.md matches the final structure
-- [ ] Update VIVA.md: Q6, Q68, and the new section 10, against the final code
-- [ ] Update the module guide with real file names
+- [x] README: web features, build commands, live link, screenshots
+- [x] DESIGN.md matches the final structure
+- [x] Update VIVA.md: Q6, Q68, and the new section 10, against the final code
+- [x] Update the module guide with real file names
 
 ### 5.3 Web testing checklist
 

@@ -1,8 +1,15 @@
 # Attendance Management System
 
-A menu-driven console application in C++ for managing student attendance in a school or college. Teachers log in, manage students and subjects, mark attendance by date and subject, and view percentages, a defaulter list, and daily and monthly reports. All data is stored in text files, so it stays between runs.
+An attendance system for a school or college, written in C++. It has two front ends that share the same core classes:
+
+- a **terminal version**: a menu-driven console program
+- a **web version**: a C++ HTTP server with a browser interface
+
+Teachers log in, manage students and subjects, mark attendance by date and subject, and see percentages, a defaulter list, and daily and monthly reports. All data is stored in text files, so it stays between runs. All logic stays in C++, and the browser only sends requests and shows the replies.
 
 Built for the **OOPs using C++ Lab** (PBL), 3rd Semester, B.Tech CSE (AIML).
+
+![Dashboard](docs/screenshots/dashboard-light-desktop.png)
 
 ## Team
 
@@ -26,18 +33,39 @@ Built for the **OOPs using C++ Lab** (PBL), 3rd Semester, B.Tech CSE (AIML).
 - Daily and monthly attendance reports
 - Every change is saved to file immediately
 
+The web version adds:
+
+- A dashboard with charts and a list of the students who need attention
+- Search and sort, done by the C++ server
+- A REST API with JSON, and login sessions with tokens
+- Light mode (ruled register paper) and dark mode (blackboard), on phones and laptops
+
 ## How to compile and run
 
-You need g++ with C++11 support. The terminal version uses no external libraries.
+Run both programs from the project folder, because they read their files from `data/`. Do not run them at the same time, because whichever saves last would overwrite the other's changes.
 
-Open a terminal in the project folder and run:
+### Terminal version
+
+You need g++ with C++11 support. It uses no external libraries.
 
 ```
 g++ -std=c++11 -Wall -Wextra -Iinclude -Iconsole main.cpp console/*.cpp src/*.cpp -o attendance.exe
 .\attendance.exe
 ```
 
-Run the program from the project folder, because it reads its files from `data/`.
+### Web version
+
+The server needs `std::thread`, so it needs a 64-bit compiler. MinGW g++ 6.3 cannot build it. Install [MSYS2](https://www.msys2.org), then run `pacman -S --needed mingw-w64-x86_64-gcc` in the MSYS2 terminal.
+
+In PowerShell, from the project folder:
+
+```
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+g++ -std=c++11 -Wall -Wextra -D_WIN32_WINNT=0x0A00 -Iinclude -Iserver -Ithird_party server/*.cpp src/*.cpp -static -lws2_32 -o attendance_server.exe
+.\attendance_server.exe
+```
+
+Then open <http://localhost:8080>. The build takes a minute or two. The charts and fonts load from the internet. Without it, the tables still work.
 
 **Sample logins**
 
@@ -101,18 +129,28 @@ Roll No          Name                          Class     Subject     Attended  P
 Total entries: 5
 ```
 
+## Screenshots
+
+| Light | Dark |
+|-------|------|
+| ![Students](docs/screenshots/students-light-desktop.png) | ![Monthly report](docs/screenshots/monthly-dark-desktop.png) |
+| ![Mark attendance](docs/screenshots/mark-light-desktop.png) | ![Dashboard](docs/screenshots/dashboard-dark-desktop.png) |
+
 ## Concepts used
 
 | Concept | Where |
 |---------|-------|
-| Classes and objects | `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, `Result`, `ConsoleUI`, `ReportPrinter` |
+| Classes and objects | The core: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, `Result`. The terminal: `ConsoleUI`, `ReportPrinter`. The server: `ApiServer`, `JsonMapper`, `SessionManager`, `Session`. |
 | Encapsulation | Private data with getters and setters. `Teacher::password` is only compared inside `checkLogin()`. |
-| Arrays | `students[]`, `subjects[]`, and `teachers[]` in `AttendanceSystem`, and each student's `records[]` attendance array |
+| Arrays | `students[]`, `subjects[]`, and `teachers[]` in `AttendanceSystem`, each student's `records[]` attendance array, and `sessions[]` in `SessionManager` |
 | Static members | `totalStudents`, `nextId`, `getCount()`, `generateId()`, `calcPercentage()`, `DEFAULTER_LIMIT` |
 | File handling | `ifstream` to read, `ofstream` to rewrite, and `ios::app` to append |
 | Inheritance | `Person` -> `Student` and `Teacher` |
 | Function overloading | `searchStudent(int)` and `searchStudent(string)`, and `countPresent()` in three forms |
 | Runtime polymorphism | Virtual `display()`, called through `showPerson(const Person&)` |
+| Sorting | Selection sort in `listStudents()` and `sortByPercentage()`, and insertion sort in `markHistory()` |
+| Client-server, REST, JSON | The browser sends HTTP requests to `ApiServer`, which answers with JSON |
+| Threads | The server handles requests on several threads, and a `std::mutex` protects the shared data |
 
 ## Project structure
 
@@ -121,8 +159,13 @@ main.cpp       Terminal entry and menus
 console/       Terminal prompts and printing
 include/       Core header files, one per class
 src/           Core source files, one per class
-tests/         Recorded terminal output and its test runner
+server/        Web server: routes, sessions, and JSON
+web/           The browser pages: HTML, CSS, and JavaScript
+third_party/   cpp-httplib and nlohmann/json, with their licences
 data/          students.txt, subjects.txt, teachers.txt, attendance.txt
+tests/         Automated tests for the terminal, the API, and the browser
+Dockerfile     Builds the server for deployment
+render.yaml    Settings for Render
 ```
 
 ## Data files
@@ -136,11 +179,26 @@ Plain text, one record per line, fields separated by `|`.
 | `teachers.txt` | `id\|name\|username\|password` |
 | `attendance.txt` | `studentId\|subjectCode\|DD-MM-YYYY\|status` |
 
+## Testing
+
+```
+python tests/run_golden.py attendance.exe
+python tests/api_test.py attendance_server.exe attendance.exe
+```
+
+`run_golden.py` compares the terminal program against recorded sessions. `api_test.py` sends real HTTP requests, and works out the expected report numbers directly from the data files. `tests/browser/` drives the site in Chrome. Every test runs on a copy of the data.
+
+## Deployment
+
+The `Dockerfile` and `render.yaml` deploy the server on Render. See [WEB_PLAN.md](WEB_PLAN.md) section 10. A free service loses its changes whenever it restarts or sleeps, and then starts again from the sample data, so only fictional data should go online.
+
 ## Limitations
 
-- Passwords are stored as plain text.
+- Passwords are stored as plain text, so the deployed site uses a secret `DEMO_PASSWORD`.
 - Fixed limits: 100 students, 20 subjects, 10 teachers, and 300 attendance records per student.
-- One lecture per subject per date, and one user at a time.
+- One lecture per subject per date.
+- The terminal version is for one user at a time. The server handles requests one at a time behind a mutex.
+- The server keeps all sessions in memory, so a restart logs everyone out.
 
 ## Documentation
 
@@ -148,3 +206,4 @@ Plain text, one record per line, fields separated by `|`.
 - [DESIGN.md](DESIGN.md): classes, file formats, menu flow, and validation rules
 - [TASKS.md](TASKS.md): build checkpoints, module ownership, and test checklist
 - [VIVA.md](VIVA.md): viva questions and answers
+- [WEB_PLAN.md](WEB_PLAN.md): the web version's architecture, API, design system, and deployment

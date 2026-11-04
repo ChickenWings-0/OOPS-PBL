@@ -17,6 +17,7 @@ Access specifier symbols: `-` private, `#` protected, `+` public. "static" marks
 | `MAX_TEACHERS` | 10 | Size of the teacher array |
 | `MAX_RECORDS` | 300 | Attendance records each student can hold |
 | `MAX_DEFAULTER_ENTRIES` | 2000 | `MAX_STUDENTS * MAX_SUBJECTS`, the longest defaulter list |
+| `MAX_CLASSES` | 120 | `MAX_STUDENTS + MAX_SUBJECTS`, the most class names that can exist |
 
 ---
 
@@ -43,6 +44,8 @@ Stores and checks a calendar date.
 | + static | `bool parseIso(const string&, Date&)` | Converts `YYYY-MM-DD` text, as sent by a browser date input |
 | + | `string toIso() const` | Returns `YYYY-MM-DD` for browser date inputs |
 | + | `string shortLabel() const` | Returns `26 Oct`, for chart labels |
+| + | `string longLabel() const` | Returns `Thu, 5 November 2026`, for the top bar |
+| + | `string monthLabel() const` | Returns `November 2026`, for report headings |
 
 ### 2.2 `AttendanceRecord`
 
@@ -89,6 +92,7 @@ One mark: one student's status in one subject on one date.
 | + | `bool hasRecord(code, date) const` | Already marked? |
 | + | `char getStatus(code, date) const` | Returns `P`, `A`, or `-` if there is no record |
 | + | `bool updateRecord(code, date, newStatus)` | Corrects a mark. False if not found. |
+| + | `string markHistory(code, maxMarks) const` | The latest marks in one subject, oldest first, like `PPAP`. Uses an insertion sort by date. |
 | + | `getRecordCount()`, `getRecord(int) const` | Read access for saving to file |
 | + | `int countTotal(code) const`, `int countPresent(code) const` | Counts for one subject |
 | + | `int countTotal() const`, `int countPresent() const` | Overloads: all subjects |
@@ -160,6 +164,8 @@ Calculates reports and returns them as plain structs. It never prints and never 
 | + static | `DashboardData dashboardStats(const Student[], const Subject[])` | Numbers for the dashboard cards |
 | + static | `int dailyTrend(const Student[], TrendPoint[], int maxPoints)` | Latest days that have marks, oldest first |
 | + static | `int subjectSummary(const Student[], const Subject[], SubjectLine[])` | Attendance for each subject, across its class |
+| + static | `void sortByPercentage(DefaulterEntry[], int count)` | Selection sort, lowest attendance first. Only the web pages use this order. |
+| + static | `bool isBelowLimit(double)`, `string percentText(double)` | The 75% rule, and text like `83.33%` |
 
 The structs store array indexes, not copies of names, so they stay small enough for a thread's stack.
 
@@ -180,6 +186,8 @@ The `check...` functions are the rules for one field. The full action calls them
 | + | `int findStudent(const string& rollNo) const` | Overload: finds by roll number. Returns the index, or -1. |
 | + | `int findSubject(const string&) const`, `int findTeacher(const string&) const` | Return the index, or -1 |
 | + | `int findMatchingStudents(text, int results[]) const` | F5. Matches a roll number exactly or a name partly, and returns the count. |
+| + | `int listStudents(text, sortField, ascending, results[]) const` | Search and selection sort for the web. Only the indexes in `results[]` move. |
+| + | `int listClasses(classes[]) const` | Every class name in order, built from students and subjects |
 | + | `int checkLogin(username, password) const` | F1. Returns the teacher's index, or -1. |
 | + | `bool isAdmin(int teacher) const` | Is this teacher the admin? |
 | + | `Result changePassword(teacher, current, newPassword)` | F2. Also `checkCurrentPassword`, `checkNewPassword`. |
@@ -250,6 +258,18 @@ Owns the `AttendanceSystem` object for the terminal and the logged-in teacher. E
 | `bool readYesNo(prompt)` | Accepts Y or N |
 | `Date readDate(prompt)` | Repeats until valid and not in the future. Enter means today. |
 | `char readStatus(prompt)` | Repeats until `P` or `A` is entered, either case |
+
+### 2.14 Server classes
+
+The server layer turns HTTP into calls on the core. [WEB_PLAN.md](WEB_PLAN.md) has the full API and the reasons behind it.
+
+| Class | File | Job |
+|-------|------|-----|
+| `ApiServer` | `server/ApiServer.h/.cpp` | Owns an `AttendanceSystem`, a `SessionManager`, and the `dataLock` mutex. Lists the routes and has the shared helpers `requireLogin`, `readBody`, `pathId`, `sendJson`, `sendError`, `sendResult`, `textField`, `numberField`, and `dateFrom`. |
+| Route handlers | `AuthRoutes.cpp`, `StudentRoutes.cpp`, `AttendanceRoutes.cpp`, `ReportRoutes.cpp` | `ApiServer` member functions, one per endpoint, such as `handleAddStudent`. Each locks the mutex, checks the token, calls the core, and sends the reply. |
+| `Session` | `server/SessionManager.h` | One logged-in user: token, teacher index, and expiry time |
+| `SessionManager` | `server/SessionManager.h/.cpp` | A fixed array of sessions, plus a count of wrong passwords for each teacher |
+| `JsonMapper` | `server/JsonMapper.h/.cpp` | All-static functions that turn objects and report structs into JSON |
 
 ---
 
@@ -499,7 +519,10 @@ OOPS-PBL/
 |-- server/                   Web server, see WEB_PLAN.md
 |-- third_party/              httplib.h, json.hpp, and their licences
 |-- web/                      Frontend, see WEB_PLAN.md
-|-- tests/                    Golden terminal output and its runner
+|-- tests/                    Terminal, API, and browser tests
+|-- docs/screenshots/         Screenshots
+|-- Dockerfile                Builds the server for deployment
+|-- render.yaml               Settings for Render
 |-- .gitignore                Ignores attendance.exe and object files
 |-- README.md
 |-- PLAN.md

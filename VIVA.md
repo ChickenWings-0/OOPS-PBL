@@ -2,20 +2,20 @@
 
 Short answers in simple language. Do not memorise them word for word. Understand the idea, then open the code and find where it happens. Examiners often say "show me this in your code".
 
-Sections 1 to 9 were checked against the final terminal code. Section 10 is written from WEB_PLAN.md, before the web code exists, and must be checked again once it is built.
+This guide was checked against the final code. Section 10 covers the web version.
 
 ---
 
 ## 1. About the project
 
 **Q1. What does your project do?**
-It is a console program for a school or college. A teacher logs in, manages students and subjects, marks attendance by date and subject, and sees percentages, a defaulter list, and daily and monthly reports. Data is saved in text files, so it stays after the program closes.
+It is an attendance system for a school or college, with a console program and a web version that share the same C++ classes. A teacher logs in, manages students and subjects, marks attendance by date and subject, and sees percentages, a defaulter list, and daily and monthly reports. Data is saved in text files, so it stays after the program closes.
 
 **Q2. Which concepts does it use?**
 The required ones are classes, arrays, static members, and file handling. We also used inheritance and function overloading.
 
 **Q3. How many classes are there?**
-Twelve. The core has ten: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, and `Result`. The terminal adds `ConsoleUI` and `ReportPrinter`.
+Twelve. The core has ten: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, and `Result`. The terminal adds `ConsoleUI` and `ReportPrinter`. The web server adds four more: `ApiServer`, `JsonMapper`, `SessionManager`, and `Session`.
 
 **Q4. What happens when the program starts?**
 `main()` creates one `ConsoleUI` object, which contains the `AttendanceSystem` object. The `AttendanceSystem` constructor loads teachers, subjects, students, and then attendance from the files. Then the login screen appears, and after a correct login the main menu runs in a loop until the user exits.
@@ -24,7 +24,7 @@ Twelve. The core has ten: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teac
 It only shows menus and calls functions of `ConsoleUI`. `ConsoleUI` asks the questions and prints the answers, and `AttendanceSystem` makes every decision. Keeping them separate makes each part easier to read and test, and it lets the web server use the same logic.
 
 **Q6. What are the limitations of your project?**
-Plain text passwords, fixed array limits, one user at a time, and one lecture per subject per date. Stating these honestly shows that you understand your own design.
+Plain text passwords, fixed array limits, one user at a time in the terminal version, and one lecture per subject per date. Stating these honestly shows that you understand your own design.
 
 ---
 
@@ -281,7 +281,7 @@ Both would take one `string`, so the two functions would have the same signature
 
 ## 10. Web version
 
-These answers describe the plan in WEB_PLAN.md. File and function names may change slightly during the build.
+Open the code in `server/` and `web/js/` while you revise these.
 
 ### Client-server architecture
 
@@ -399,7 +399,21 @@ A free service has an ephemeral filesystem, so its files return to the original 
 Render's clock uses UTC, which is 5 hours 30 minutes behind India. `Date::today()` would give yesterday's date in the early morning, and today's attendance would be rejected as a future date.
 
 **Q104. What are the limitations of the web version?**
-Data on the free host resets, passwords are plain text, a restart ends all sessions, a single mutex lets only one request use the data at a time, and the terminal and server should not run on the same files together. Charts and the Inter font need internet access.
+Data on the free host resets, passwords are plain text, a restart ends all sessions, a single mutex lets only one request use the data at a time, and the terminal and server should not run on the same files together. Charts and the web fonts need internet access.
+
+### Sorting and design
+
+**Q105. Which sorting algorithms do you use?**
+Selection sort in `listStudents()` and `sortByPercentage()`, and insertion sort in `markHistory()`. Selection sort finds the smallest remaining item and swaps it into place. It is simple, and with at most 100 students its O(n squared) time does not matter. `listStudents()` sorts an array of indexes, so the real `students[]` array never moves.
+
+**Q106. Why does the terminal list defaulters in a different order from the website?**
+Both get the same entries from `defaulterList()`. The web calls `sortByPercentage()` afterwards, so the students in most danger come first. The terminal keeps its order, because the project promised that its output would not change.
+
+**Q107. How do you know the terminal still works after such a big change?**
+Before moving any code, we recorded 45 scripted terminal sessions from the original program, with everything printed and the data files left behind. After the split, `tests/run_golden.py` runs the same sessions and compares them byte for byte, on both compilers. This is called regression testing.
+
+**Q108. Why does the site look like a paper register?**
+A design should come from its subject. Ruled paper, a red margin line, P and A cells, and a highlighter are what an attendance register really looks like. All colours and sizes are CSS variables in `tokens.css`, so light mode (paper) and dark mode (blackboard) share the same components.
 
 ---
 
@@ -412,14 +426,14 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `main.cpp`, `ConsoleUI`, `AttendanceSystem` (core and login), `Result`, `Teacher`, `Config.h`
 - **Be ready to walk through:** program start, the login loop, how menus reach `AttendanceSystem` through `ConsoleUI`, and how the admin check works
 - **Revise:** Q4, Q5, Q12, Q14, Q24, Q64, Q66, Q68
-- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100
+- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100, Q107
 
 ### Vaibhav: Students
 
 - **Module:** `Person`, `Student`, student functions in `AttendanceSystem`
 - **Be ready to walk through:** adding a student from input to file, the delete shift, and both search overloads
 - **Revise:** Q11, Q19, Q25 to Q33, Q58 to Q63, Q69 to Q72
-- **Web:** the student routes, search and sorting on the server, and the Add Student click. Revise Q77 to Q80, Q84, Q85, Q88
+- **Web:** the student routes, search and sorting on the server, and the Add Student click. Revise Q77 to Q80, Q84, Q85, Q88, Q105
 
 ### Akshay Kumar: Subjects and attendance marking
 
@@ -433,14 +447,14 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `FileManager`, `Utils`, `ConsoleInput`, sample data
 - **Be ready to walk through:** loading one file line by line, append versus rewrite, handling a missing file, and `readInt`
 - **Revise:** Q35 to Q47, Q67
-- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103
+- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103, Q108
 
 ### Dhruv Kataria: Reports and testing
 
 - **Module:** `Report`, `ReportPrinter`, `README.md`, testing
 - **Be ready to walk through:** percentage calculation, the defaulter loop, daily and monthly reports, and a few test cases from TASKS.md
 - **Revise:** Q34, Q48 to Q51, Q54, Q55
-- **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104
+- **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104 to Q107
 
 ---
 
