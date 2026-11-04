@@ -4,13 +4,13 @@
 **Topic:** School/College Attendance Management System
 **Status:** Planning. Coding starts only after the plan is approved.
 
-| Team member   | Enrollment No. |
-|---------------|----------------|
-| Aksh Rastogi  | 02518015625    |
-| Vaibhav       | 01118015625    |
-| Akshay Kumar  | 00618015625    |
-| Srishti Gupta | 06618015625    |
-| Dhruv Kataria | 05118015625    |
+| Team member |
+|-------------|
+| Aksh Rastogi |
+| Vaibhav |
+| Akshay Kumar |
+| Srishti Gupta |
+| Dhruv Kataria |
 
 Related documents: [DESIGN.md](DESIGN.md) (how it is built), [TASKS.md](TASKS.md) (build order, module owners, tests), [VIVA.md](VIVA.md) (viva preparation).
 

@@ -266,7 +266,7 @@ g++ -std=c++11 -Wall -Wextra -Iinclude main.cpp src/*.cpp -o attendance.exe
 ## 9. Roll numbers and internal IDs
 
 **Q69. Why is the roll number a `string` and not an `int`?**
-An `int` here holds at most 2,147,483,647, so an 11-digit enrollment number does not fit. A number type would also drop leading zeros, turning `00618015625` into `618015625`. We never do arithmetic on it, so it is really a label, not a number.
+An `int` here holds at most 2,147,483,647, so an 11-digit enrollment number does not fit. A number type would also drop leading zeros, turning `00000012345` into `618015625`. We never do arithmetic on it, so it is really a label, not a number.
 
 **Q70. If the user enters the roll number, why have an internal ID too?**
 The ID is a fixed key that the program controls. `attendance.txt` stores the ID, so a mistyped roll number can be corrected in one place without changing any attendance lines. It also gives the static `nextId` a real job.

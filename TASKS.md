@@ -15,13 +15,13 @@ Build order, module ownership, and the test checklist. See [DESIGN.md](DESIGN.md
 
 The **module owner** presents that module and answers viva questions on it. Everyone should still understand the whole program at a high level.
 
-| Member | Enrollment No. | Module | Files | Main concepts |
-|--------|----------------|--------|-------|---------------|
-| Aksh Rastogi | 02518015625 | Core system, login, menus | `main.cpp`, `AttendanceSystem` (constructor, destructor, `login`, `changePassword`, `addTeacher`, `viewTeachers`, `showPerson`), `Teacher`, `Config.h` | Classes, composition, runtime polymorphism |
-| Vaibhav | 01118015625 | Students | `Person`, `Student`, `AttendanceSystem` (`addStudent`, `viewAllStudents`, `searchStudent` x2, `updateStudent`, `deleteStudent`) | Inheritance, static members, overloading, arrays of objects |
-| Akshay Kumar | 00618015625 | Subjects and attendance marking | `Date`, `AttendanceRecord`, `Subject`, `AttendanceSystem` (`addSubject`, `viewSubjects`, `markAttendance`, `editAttendance`) | Encapsulation, attendance array, date validation |
-| Srishti Gupta | 06618015625 | File handling and validation | `FileManager`, `Utils`, sample data in `data/` | File handling, parsing, input validation |
-| Dhruv Kataria | 05118015625 | Reports and testing | `Report`, `AttendanceSystem` (`viewStudentAttendance`, `showDefaulters`, `showDailyReport`, `showMonthlyReport`), `README.md`, testing checklist | Percentage logic, arrays as parameters, static functions |
+| Member | Module | Files | Main concepts |
+|--------|--------|-------|---------------|
+| Aksh Rastogi | Core system, login, menus | `main.cpp`, `AttendanceSystem` (constructor, destructor, `login`, `changePassword`, `addTeacher`, `viewTeachers`, `showPerson`), `Teacher`, `Config.h` | Classes, composition, runtime polymorphism |
+| Vaibhav | Students | `Person`, `Student`, `AttendanceSystem` (`addStudent`, `viewAllStudents`, `searchStudent` x2, `updateStudent`, `deleteStudent`) | Inheritance, static members, overloading, arrays of objects |
+| Akshay Kumar | Subjects and attendance marking | `Date`, `AttendanceRecord`, `Subject`, `AttendanceSystem` (`addSubject`, `viewSubjects`, `markAttendance`, `editAttendance`) | Encapsulation, attendance array, date validation |
+| Srishti Gupta | File handling and validation | `FileManager`, `Utils`, sample data in `data/` | File handling, parsing, input validation |
+| Dhruv Kataria | Reports and testing | `Report`, `AttendanceSystem` (`viewStudentAttendance`, `showDefaulters`, `showDailyReport`, `showMonthlyReport`), `README.md`, testing checklist | Percentage logic, arrays as parameters, static functions |
 
 ---
 
@@ -54,7 +54,7 @@ The **module owner** presents that module and answers viva questions on it. Ever
 - [x] `Student` statics: `getCount`, `generateId`, `calcPercentage`
 - [x] `Teacher`: constructors, `checkLogin`, `isAdmin`, `display`, statics
 
-**Test:** create `Student arr[5]` and confirm `Student::getCount()` is still 0. Generate two internal IDs and confirm they are 1 and 2. Store the roll number `00618015625` and confirm it reads back unchanged.
+**Test:** create `Student arr[5]` and confirm `Student::getCount()` is still 0. Generate two internal IDs and confirm they are 1 and 2. Store the roll number `00000012345` and confirm it reads back unchanged.
 
 ### Checkpoint 3: Subject, AttendanceRecord, attendance array
 **Owners:** Akshay Kumar (`Subject`, `AttendanceRecord`), Vaibhav (`Student` attendance functions)
@@ -160,7 +160,7 @@ Sample logins: `admin` / `admin123` and `teacher1` / `pass123`.
 - [x] **T16** Update the name of a student, press Enter for roll number and class: name changes, the rest stays
 - [x] **T17** Change the class of a student who has attendance: rejected
 - [x] **T18** Delete a student and answer Y: student is gone from both `students.txt` and `attendance.txt`, and the count drops by 1. Answering N changes nothing.
-- [x] **T19** Add a roll number that already exists: rejected. Add `00618015625`: the leading zeros are kept in the file. Correct a student's roll number: their attendance stays attached.
+- [x] **T19** Add a roll number that already exists: rejected. Add `00000012345`: the leading zeros are kept in the file. Correct a student's roll number: their attendance stays attached.
 
 ### Subjects and attendance
 
