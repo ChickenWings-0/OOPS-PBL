@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction B: mark attendance</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+  <script src="shell.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="side" id="side"></aside>
+    <div class="main">
+      <div class="bar" id="bar"></div>
+      <main class="wrap">
+        <div class="lead"><h1>Mark attendance<br><em>OOPs using C++, AIML-A</em></h1></div>
+        <div class="filters" id="filters"></div>
+        <section class="list" id="list"></section>
+      </main>
+    </div>
+  </div>
+  <div class="dockbar">
+    <span><b>4</b> present</span><span class="sep"></span><span><b>2</b> absent</span>
+    <span class="hint"><kbd>P</kbd><kbd>A</kbd> mark <kbd>↑</kbd><kbd>↓</kbd> move</span>
+    <button class="btn">Save <kbd>Ctrl S</kbd></button>
+  </div>
+  <nav class="tabbar" id="tabbar"></nav>
+
+  <script>
+    drawShell("Mark attendance", "Mark attendance");
+    fill("filters", `<div class="filter">${svg("book", 14)}<b>CS201A</b></div><div class="filter">${svg("calendar", 14)}<b>${SAMPLE.shortDate}</b></div><div class="filter">${svg("users", 14)}<b>6</b> students</div>`);
+    fill("list", SAMPLE.roster.map((kid, index) => `<div class="entry ${index === 4 ? "focus" : ""}">
+      <span class="tag">${initialsOf(kid.name)}</span>
+      <span class="entry-name">${kid.name}</span>
+      <span class="mono roll">${kid.roll}</span>
+      <div class="seg ${kid.here ? "" : "away"}"><span class="here">Present</span><span class="gone">Absent</span></div></div>`).join(""));
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction A: dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+</head>
+<body>
+  <nav class="dock" id="dock"></nav>
+  <main class="page">
+    <header class="head">
+      <div>
+        <div class="head-date" id="date"></div>
+        <h1>Good morning, Neha</h1>
+      </div>
+      <div class="who"><span>Neha Kapoor</span><div class="face">NK</div></div>
+    </header>
+
+    <section class="bento">
+      <article class="tile hero">
+        <div class="hero-top"><span>Today at a glance</span><span class="hero-pill">4 of 4 classes marked</span></div>
+        <div>
+          <div class="hero-number">80<sup>%</sup></div>
+          <div class="hero-sub">16 present, 4 away across every class</div>
+          <div class="dots" id="dots"></div>
+        </div>
+      </article>
+      <article class="tile small"><div class="tile-label">Students</div><div class="tile-big">10</div><div class="tile-note">2 classes</div></article>
+      <article class="tile small"><div class="tile-label">Subjects</div><div class="tile-big">4</div><div class="tile-note">82% overall</div></article>
+      <article class="tile alert"><div class="tile-label">Below 75%</div><div class="tile-big">4</div><div class="faces" id="faces"></div></article>
+      <article class="tile trend"><div class="tile-label">Attendance this fortnight</div><div class="chart"><canvas id="trend"></canvas></div></article>
+
+      <article class="tile rings"><div class="tile-label">By subject</div><div class="ring-grid" id="rings"></div></article>
+      <article class="tile activity"><div class="tile-label">Recent activity</div><div id="activity"></div></article>
+      <article class="tile attention"><div class="tile-label">Needs attention</div><div id="attention"></div></article>
+    </section>
+  </main>
+
+  <script>
+    const nav = [["dashboard", 1], ["users"], ["clipboard"], ["report"], ["columns"]];
+    fill("dock", `<div class="dock-logo">${svg("check", 24)}</div>` + nav.map(([name, on]) => `<a class="${on ? "on" : ""}">${svg(name, 22)}</a>`).join("") +
+      `<div class="gap"></div><a class="wide">${svg("moon", 22)}</a>`);
+    fill("date", SAMPLE.date);
+    fill("dots", Array.from({ length: 20 }, (_, i) => `<i class="${i < 16 ? "" : "off"}"></i>`).join(""));
+    fill("faces", SAMPLE.attention.map((row) => `<div class="face">${initialsOf(row.name)}</div>`).join(""));
+
+    fill("rings", SAMPLE.subjectRows.map((row) => {
+      const round = 2 * Math.PI * 36;
+      return `<div><div class="ring"><svg width="100%" height="100%" viewBox="0 0 84 84">
+        <defs><linearGradient id="g${row.code}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a5a"/><stop offset=".55" stop-color="#ff4f8b"/><stop offset="1" stop-color="#7b5cff"/></linearGradient></defs>
+        <circle cx="42" cy="42" r="36" fill="none" stroke="var(--tile-2)" stroke-width="10"/>
+        <circle cx="42" cy="42" r="36" fill="none" stroke="url(#g${row.code})" stroke-width="10" stroke-linecap="round" stroke-dasharray="${round * row.percent / 100} ${round}"/>
+      </svg><b>${Math.round(row.percent)}</b></div><div class="ring-code">${row.code}</div><div class="ring-cls">${row.cls}</div></div>`;
+    }).join(""));
+
+    fill("activity", SAMPLE.sessions.slice(0, 4).map((row) => `<div class="line"><div class="chip">${svg("check", 18)}</div>
+      <div class="line-main"><div class="line-title">${row.code} marked</div><div class="line-sub">${row.name}, ${row.cls}</div></div>
+      <div class="count">${row.present}/${row.total}</div></div>`).join(""));
+
+    fill("attention", SAMPLE.attention.slice(0, 3).map((row) => `<div class="line"><div class="line-main"><div class="line-title">${row.name}</div><div class="line-sub">${row.code}</div></div><div class="pct">${row.percent}</div></div>`).join(""));
+
+    document.fonts.load('500 12px "DM Sans"').then(() => {
+    const context = document.getElementById("trend").getContext("2d");
+    const wash = context.createLinearGradient(0, 0, 0, 150);
+    wash.addColorStop(0, "rgba(255, 79, 139, .34)");
+    wash.addColorStop(1, "rgba(123, 92, 255, 0)");
+    const stroke = context.createLinearGradient(0, 0, 700, 0);
+    stroke.addColorStop(0, "#ff9a5a");
+    stroke.addColorStop(.5, "#ff4f8b");
+    stroke.addColorStop(1, "#7b5cff");
+    new Chart(context, {
+      type: "line",
+      data: { labels: SAMPLE.trend.map((row) => row[0]), datasets: [{ data: SAMPLE.trend.map((row) => row[1]), borderColor: stroke, backgroundColor: wash, fill: true, borderWidth: 4, tension: 0.42, pointRadius: 0 }] },
+      options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { y: { display: false, min: 60, max: 95 }, x: { border: { display: false }, grid: { display: false }, ticks: { color: cssVar("--ink-3"), font: { family: "DM Sans", size: 12 } } } } },
+    });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction C: dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+  <script src="shell.js"></script>
+</head>
+<body>
+  <header class="top" id="top"></header>
+  <main class="page">
+    <section class="hello">
+      <span id="mascot"></span>
+      <div>
+        <h1>Nice one, Neha!</h1>
+        <p>16 of 20 students showed up today. That's 80%!</p>
+      </div>
+      <a class="btn sun">Mark attendance</a>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="cols">
+      <article class="card"><h2 class="card-title">How the week went</h2><div class="chart"><canvas id="trend"></canvas></div></article>
+      <article class="card"><h2 class="card-title">Subject progress</h2><div id="subjects"></div></article>
+    </section>
+
+    <section class="cols">
+      <article class="card"><h2 class="card-title">Could use a nudge</h2><div id="nudge"></div></article>
+      <article class="card"><h2 class="card-title">Recent activity</h2><div id="feed"></div></article>
+    </section>
+  </main>
+  <nav class="bottom" id="bottom"></nav>
+
+  <script>
+    drawTop("Home");
+    fill("mascot", MASCOT);
+    fill("stats", [
+      ["s-grass", "check", "80%", "Here today"],
+      ["s-sun", "users", "10", "Students"],
+      ["s-grape", "book", "4", "Subjects"],
+      ["s-berry", "alert", "4", "Below 75%"],
+    ].map(([kind, name, value, label]) => `<div class="stat ${kind}"><div class="badge">${svg(name, 26)}</div><div><b>${value}</b><span>${label}</span></div></div>`).join(""));
+
+    fill("subjects", SAMPLE.subjectRows.map((row) => `<div class="subject"><div class="subject-top"><span>${row.code} · ${row.cls}</span><span>${Math.round(row.percent)}%</span></div><div class="track"><i style="width:${row.percent}%"></i></div></div>`).join(""));
+
+    fill("nudge", SAMPLE.attention.slice(0, 3).map((row) => `<div class="feedline"><span class="round">${initialsOf(row.name)}</span><div>${row.name}<small>${row.code}, attended ${row.attended}</small></div><span class="chip bad">${row.percent}</span></div>`).join(""));
+
+    fill("feed", SAMPLE.sessions.slice(0, 3).map((row) => `<div class="feedline"><span class="round ok">${svg("check", 19)}</span><div>${row.code} marked<small>${row.cls}, ${row.when.toLowerCase()}</small></div><span class="chip good">${row.present}/${row.total}</span></div>`).join(""));
+
+    // Every day is one calm colour, and today stands out.
+    const colours = SAMPLE.trend.map((row, index) => (index === SAMPLE.trend.length - 1 ? "#ffc42e" : "#9fd3ff"));
+    Promise.all([document.fonts.load('800 13px Nunito'), document.fonts.load('600 16px Fredoka')]).then(() => {
+    new Chart(document.getElementById("trend"), {
+      type: "bar",
+      data: { labels: SAMPLE.trend.map((row) => row[0]), datasets: [{ data: SAMPLE.trend.map((row) => row[1]), backgroundColor: colours, borderRadius: 14, borderSkipped: false, barPercentage: 0.72 }] },
+      options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { y: { display: false, min: 0, max: 100 }, x: { border: { display: false }, grid: { display: false }, ticks: { color: cssVar("--ink-2"), font: { family: "Nunito", size: 13, weight: "800" } } } } },
+      plugins: [{
+        id: "tops",
+        afterDatasetsDraw(chart) {
+          const { ctx } = chart;
+          ctx.save();
+          ctx.fillStyle = "#1f3247";
+          ctx.font = "600 16px Fredoka";
+          ctx.textAlign = "center";
+          chart.getDatasetMeta(0).data.forEach((bar, index) => ctx.fillText(SAMPLE.trend[index][1] + "%", bar.x, bar.y + 26));
+          ctx.restore();
+        },
+      }],
+    });
+    });
+  </script>
+</body>
+</html>

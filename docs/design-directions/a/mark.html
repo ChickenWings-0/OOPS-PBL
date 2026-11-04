@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction A: mark attendance</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+</head>
+<body>
+  <nav class="dock" id="dock"></nav>
+  <main class="page">
+    <header class="head">
+      <div>
+        <div class="head-date" id="date"></div>
+        <h1>Who's here today?</h1>
+      </div>
+      <div class="who"><span>Neha Kapoor</span><div class="face">NK</div></div>
+    </header>
+    <div class="pills" id="pills"></div>
+    <section class="wall" id="wall"></section>
+  </main>
+  <div class="savebar"><b>4</b><span>here</span><b>2</b><span>away</span><button class="save">Save register</button></div>
+
+  <script>
+    const nav = [["dashboard"], ["users"], ["clipboard", 1], ["report"], ["columns"]];
+    fill("dock", `<div class="dock-logo">${svg("check", 24)}</div>` + nav.map(([name, on]) => `<a class="${on ? "on" : ""}">${svg(name, 22)}</a>`).join("") +
+      `<div class="gap"></div><a class="wide">${svg("moon", 22)}</a>`);
+    fill("date", SAMPLE.date);
+    fill("pills", SAMPLE.subjectRows.map((row, index) => `<div class="pill ${index === 0 ? "on" : ""}">${row.code}<small>${row.name}</small></div>`).join(""));
+    fill("wall", SAMPLE.roster.map((kid) => `<article class="kid ${kid.here ? "" : "away"}">
+      <div class="face">${initialsOf(kid.name)}</div>
+      <div><div class="kid-name">${kid.name}</div><div class="kid-roll">${kid.roll}</div></div>
+      <div class="kid-mark">${svg(kid.here ? "check" : "close", 18)}</div></article>`).join(""));
+  </script>
+</body>
+</html>

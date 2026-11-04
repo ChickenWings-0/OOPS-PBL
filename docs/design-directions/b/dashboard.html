@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction B: dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+  <script src="shell.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="side" id="side"></aside>
+    <div class="main">
+      <div class="bar" id="bar"></div>
+      <main class="wrap">
+        <div class="lead">
+          <h1>80% of students were present today.<br><em>4 away, across 4 classes.</em></h1>
+          <button class="btn">Mark attendance <kbd>M</kbd></button>
+        </div>
+
+        <section class="metrics" id="metrics"></section>
+
+        <section class="duo">
+          <div>
+            <div class="panel-title"><h2>Attendance</h2><span>last 6 marked days</span></div>
+            <div class="chart"><canvas id="trend"></canvas></div>
+          </div>
+          <div>
+            <div class="panel-title"><h2>Recent activity</h2></div>
+            <div class="feed" id="feed"></div>
+          </div>
+        </section>
+
+        <section class="rows">
+          <div class="panel-title"><h2>Needs attention</h2><span>below 75%</span></div>
+          <div id="rows"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <nav class="tabbar" id="tabbar"></nav>
+
+  <script>
+    drawShell("Overview", "Overview");
+
+    fill("metrics", [
+      ["Today", "80%", "16 of 20 marks", true],
+      ["Overall", "82%", "82 of 100 marks"],
+      ["Students", "10", "2 classes, 4 subjects"],
+      ["Below minimum", "4", "5 subject entries"],
+    ].map(([label, value, note, up]) => `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="metric-note ${up ? "up" : ""}">${note}</div></div>`).join(""));
+
+    fill("feed", SAMPLE.sessions.slice(0, 5).map((row, index) => `<div class="event ${index === 0 ? "now" : ""}"><div>${row.code} marked, ${row.present} of ${row.total}</div><div class="event-sub">${row.cls} · ${row.when}</div></div>`).join(""));
+
+    fill("rows", SAMPLE.attention.map((row) => `<div class="row">
+      <div class="person"><span class="tag">${initialsOf(row.name)}</span>${row.name}</div>
+      <span class="mono">${row.code}</span>
+      <div class="ticks">${[...row.marks].map((mark) => `<i class="${mark === "A" ? "a" : ""}"></i>`).join("")}</div>
+      <div class="right">${row.percent}</div></div>`).join(""));
+
+    document.fonts.load('400 11px "Geist Mono"').then(() => {
+    const canvas = document.getElementById("trend");
+    const context = canvas.getContext("2d");
+    const ember = cssVar("--ember");
+    const wash = context.createLinearGradient(0, 0, 0, 230);
+    wash.addColorStop(0, ember + "33");
+    wash.addColorStop(1, ember + "00");
+    const glow = {
+      id: "glow",
+      beforeDatasetsDraw(chart) { chart.ctx.save(); chart.ctx.shadowColor = ember; chart.ctx.shadowBlur = 18; },
+      afterDatasetsDraw(chart) { chart.ctx.restore(); },
+    };
+    new Chart(context, {
+      type: "line",
+      data: { labels: SAMPLE.trend.map((row) => row[0]), datasets: [{ data: SAMPLE.trend.map((row) => row[1]), borderColor: ember, backgroundColor: wash, fill: true, borderWidth: 1.75, tension: 0.35, pointRadius: 0 }] },
+      options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 60, max: 100, border: { display: false }, grid: { color: cssVar("--line") }, ticks: { stepSize: 10, color: cssVar("--ink-3"), font: { family: "Geist Mono", size: 11 }, callback: (value) => value + "%" } },
+          x: { border: { display: false }, grid: { display: false }, ticks: { color: cssVar("--ink-3"), font: { family: "Geist Mono", size: 11 } } },
+        } },
+      plugins: [glow],
+    });
+    });
+  </script>
+</body>
+</html>

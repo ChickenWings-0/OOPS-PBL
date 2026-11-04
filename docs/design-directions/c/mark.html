@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Direction C: mark attendance</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="../../../web/js/icons.js"></script>
+  <script src="../mock.js"></script>
+  <script src="shell.js"></script>
+</head>
+<body>
+  <header class="top" id="top"></header>
+  <main class="page">
+    <div class="quest"><h1>Who's here today?</h1><div class="quest-bar"><i></i></div></div>
+    <div class="tabs" id="tabs"></div>
+    <section class="roster" id="roster"></section>
+  </main>
+  <div class="finish"><div class="finish-count"><em>4 here</em> · <i>2 away</i></div><a class="btn">Save attendance</a></div>
+  <nav class="bottom" id="bottom"></nav>
+
+  <script>
+    drawTop("Mark");
+    fill("tabs", SAMPLE.subjectRows.map((row, index) => `<span class="${index === 0 ? "on" : ""}">${row.code}</span>`).join(""));
+    const shades = ["#3aa8ff", "#9a6bff", "#ffc42e", "#3cc47c", "#ff6b7d", "#2dc3c9"];
+    fill("roster", SAMPLE.roster.map((kid, index) => `<article class="kid">
+      <span class="round" style="background:${shades[index]}">${initialsOf(kid.name)}</span>
+      <div class="kid-main"><div class="kid-name">${kid.name}</div><div class="kid-roll">${kid.roll}</div></div>
+      <div class="choice"><span class="yes ${kid.here ? "on" : ""}">${svg("check", 19)}Here</span><span class="no ${kid.here ? "" : "on"}">${svg("close", 19)}Away</span></div></article>`).join(""));
+  </script>
+</body>
+</html>
