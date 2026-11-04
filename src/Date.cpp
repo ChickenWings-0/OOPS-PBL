@@ -60,10 +60,19 @@ string Date::shortLabel() const {
     return text.str();
 }
 
+// The month names, shared by the label functions below.
+static const string MONTH_NAMES[12] = {"January", "February", "March", "April", "May", "June", "July",
+                                       "August", "September", "October", "November", "December"};
+
+// Returns the month and year, like November 2026.
+string Date::monthLabel() const {
+    stringstream text;
+    text << MONTH_NAMES[month - 1] << " " << year;
+    return text.str();
+}
+
 // Returns the date for page headings, like Thu, 5 November 2026.
 string Date::longLabel() const {
-    const string months[12] = {"January", "February", "March", "April", "May", "June", "July",
-                               "August", "September", "October", "November", "December"};
     const string days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
     // Sakamoto's method: works out the day of the week from the date.
@@ -72,7 +81,7 @@ string Date::longLabel() const {
     int weekday = (y + y / 4 - y / 100 + y / 400 + offsets[month - 1] + day) % 7;
 
     stringstream text;
-    text << days[weekday] << ", " << day << " " << months[month - 1] << " " << year;
+    text << days[weekday] << ", " << day << " " << MONTH_NAMES[month - 1] << " " << year;
     return text.str();
 }
 

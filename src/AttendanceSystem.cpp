@@ -100,6 +100,47 @@ int AttendanceSystem::findMatchingStudents(const string& text, int results[]) co
     return matches;
 }
 
+// Returns true if student a comes before student b when sorted by this field.
+static bool comesBefore(const Student& a, const Student& b, const string& sortField) {
+    if (sortField == "rollNo") {
+        return a.getRollNo() < b.getRollNo();
+    }
+    if (sortField == "name") {
+        return toUpper(a.getName()) < toUpper(b.getName());
+    }
+    if (sortField == "className" && a.getClassName() != b.getClassName()) {
+        return a.getClassName() < b.getClassName();
+    }
+    if (sortField == "className") {
+        return toUpper(a.getName()) < toUpper(b.getName());
+    }
+    return a.getId() < b.getId();
+}
+
+// Fills results[] with the matching students in sorted order, and returns how
+// many there are. A selection sort moves only the indexes in results[], so
+// the student array itself never changes.
+int AttendanceSystem::listStudents(const string& text, const string& sortField, bool ascending,
+                                   int results[]) const {
+    int count = findMatchingStudents(text, results);
+
+    for (int i = 0; i < count - 1; i++) {
+        int first = i;
+        for (int j = i + 1; j < count; j++) {
+            const Student& candidate = students[results[j]];
+            const Student& best = students[results[first]];
+            if (ascending ? comesBefore(candidate, best, sortField)
+                          : comesBefore(best, candidate, sortField)) {
+                first = j;
+            }
+        }
+        int temp = results[i];
+        results[i] = results[first];
+        results[first] = temp;
+    }
+    return count;
+}
+
 // Adds a class name to the list, unless it is already there.
 static void addClassName(string classes[], int& count, const string& className) {
     for (int i = 0; i < count; i++) {

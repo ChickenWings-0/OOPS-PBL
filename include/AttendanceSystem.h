@@ -41,6 +41,10 @@ public:
     // Fills results[] with the index of every match and returns how many
     int findMatchingStudents(const std::string& text, int results[]) const;
 
+    // Search and sort for the web: sortField is rollNo, name, className, or id
+    int listStudents(const std::string& text, const std::string& sortField, bool ascending,
+                     int results[]) const;
+
     // Fills classes[] with every class name, in order, and returns how many
     int listClasses(std::string classes[]) const;
 

@@ -224,11 +224,22 @@ const UI = {
   },
 
   // A register table. Each column is { label, key or cell, num, tight, hideNarrow }.
-  table(columns, rows) {
+  // A column with a sort name gets a heading button. The sorting itself is done by
+  // C++: onSort only asks for it. sortState says which column is sorted now.
+  table(columns, rows, sortState, onSort) {
     const className = (column) => [column.num ? "num" : "", column.tight ? "tight" : "",
       column.hideNarrow ? "hide-narrow" : ""].join(" ").trim() || null;
 
-    const heading = columns.map((column) => h("th", { class: className(column) }, column.label));
+    const heading = columns.map((column) => {
+      if (!column.sort) {
+        return h("th", { class: className(column) }, column.label);
+      }
+      const sorted = sortState.sort === column.sort;
+      const direction = sortState.order === "asc" ? "ascending" : "descending";
+      return h("th", { class: className(column), "aria-sort": sorted ? direction : null },
+        h("button", { type: "button", onClick: () => onSort(column.sort) },
+          column.label, sorted ? (sortState.order === "asc" ? " ↑" : " ↓") : ""));
+    });
     const body = rows.map((row) =>
       h("tr", null, ...columns.map((column) =>
         h("td", { class: className(column) }, column.cell ? column.cell(row) : String(row[column.key])))));

@@ -76,4 +76,12 @@ const Api = {
   post(path, body) {
     return Api.request("POST", path, body);
   },
+
+  put(path, body) {
+    return Api.request("PUT", path, body);
+  },
+
+  delete(path) {
+    return Api.request("DELETE", path);
+  },
 };

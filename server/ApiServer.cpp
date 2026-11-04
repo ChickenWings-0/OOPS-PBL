@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+#include "Utils.h"
 #include "httplib.h"
 
 using namespace std;
@@ -53,7 +54,32 @@ void ApiServer::registerRoutes(httplib::Server& server) {
     server.Get("/api/teachers", [this](const Request& req, Response& res) { handleListTeachers(req, res); });
     server.Post("/api/teachers", [this](const Request& req, Response& res) { handleAddTeacher(req, res); });
 
+    server.Get("/api/students", [this](const Request& req, Response& res) { handleListStudents(req, res); });
+    server.Post("/api/students", [this](const Request& req, Response& res) { handleAddStudent(req, res); });
+    server.Get(R"(/api/students/(\d+))",
+               [this](const Request& req, Response& res) { handleGetStudent(req, res); });
+    server.Put(R"(/api/students/(\d+))",
+               [this](const Request& req, Response& res) { handleUpdateStudent(req, res); });
+    server.Delete(R"(/api/students/(\d+))",
+                  [this](const Request& req, Response& res) { handleDeleteStudent(req, res); });
+
+    server.Get("/api/subjects", [this](const Request& req, Response& res) { handleListSubjects(req, res); });
+    server.Post("/api/subjects", [this](const Request& req, Response& res) { handleAddSubject(req, res); });
+    server.Get("/api/classes", [this](const Request& req, Response& res) { handleListClasses(req, res); });
+
+    server.Get("/api/attendance/sheet",
+               [this](const Request& req, Response& res) { handleAttendanceSheet(req, res); });
+    server.Post("/api/attendance", [this](const Request& req, Response& res) { handleMarkAttendance(req, res); });
+    server.Put("/api/attendance", [this](const Request& req, Response& res) { handleEditAttendance(req, res); });
+
     server.Get("/api/dashboard", [this](const Request& req, Response& res) { handleDashboard(req, res); });
+    server.Get(R"(/api/reports/student/(\d+))",
+               [this](const Request& req, Response& res) { handleStudentReport(req, res); });
+    server.Get("/api/reports/defaulters",
+               [this](const Request& req, Response& res) { handleDefaulters(req, res); });
+    server.Get("/api/reports/daily", [this](const Request& req, Response& res) { handleDailyReport(req, res); });
+    server.Get("/api/reports/monthly",
+               [this](const Request& req, Response& res) { handleMonthlyReport(req, res); });
 }
 
 // Sets up the server and runs until the program is stopped.
@@ -136,6 +162,38 @@ string ApiServer::textField(const json& body, const string& name) {
         return value->get<string>();
     }
     return "";
+}
+
+// Returns the number in an address like /api/students/2, or -1.
+int ApiServer::pathId(const Request& req) const {
+    int id;
+    if (req.matches.size() < 2 || !parseInt(req.matches[1].str(), id)) {
+        return -1;
+    }
+    return id;
+}
+
+// Returns a whole number from a JSON object, or -1 if it is missing or is not
+// a number that fits in an int.
+int ApiServer::numberField(const json& body, const string& name) {
+    json::const_iterator value = body.find(name);
+    if (value != body.end() && value->is_number_integer()) {
+        long long number = value->get<long long>();
+        if (number >= 0 && number <= 2147483647) {
+            return (int)number;
+        }
+    }
+    return -1;
+}
+
+// Reads a date in either YYYY-MM-DD, as browsers send it, or DD-MM-YYYY.
+// Bad text gives a date that is not real, which the core then rejects.
+Date ApiServer::dateFrom(const string& text) {
+    Date date(0, 0, 0);
+    if (!Date::parseIso(text, date)) {
+        Date::parse(text, date);
+    }
+    return date;
 }
 
 // ---------- Sending replies ----------

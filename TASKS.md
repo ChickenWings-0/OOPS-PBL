@@ -314,11 +314,11 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W6: Students, subjects, teachers
 **Owners:** Vaibhav (students), Akshay Kumar (subjects), Aksh Rastogi (teachers)
 
-- [ ] `listStudents` with search and selection sort, and `listClasses`
-- [ ] Student, subject, and class API routes
-- [ ] Students page: table, search, sort, modals, confirm delete
-- [ ] Subjects page
-- [ ] Teachers page, admin only
+- [x] `listStudents` with search and selection sort, and `listClasses`
+- [x] Student, subject, and class API routes
+- [x] Students page: table, search, sort, modals, confirm delete
+- [x] Subjects page
+- [x] Teachers page, admin only
 
 **Test:** W10 to W19.
 
@@ -395,16 +395,16 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Students, subjects, teachers
 
-- [ ] **W10** Add a student in the browser: the line appears in `data/students.txt`, and the terminal shows them after restart
-- [ ] **W11** Duplicate roll number: 409, with the message under the roll number field
-- [ ] **W12** Empty or invalid fields: messages come from C++, with browser validation off
-- [ ] **W13** Same name in the same class: dialog appears, and confirming adds the student
-- [ ] **W14** Search by part of a name, and by exact roll number
-- [ ] **W15** Sorting by each column comes from the server, in both directions
-- [ ] **W16** Edit a student. Changing the class of a student with attendance is rejected.
-- [ ] **W17** Delete asks first, and removes the student from both files
-- [ ] **W18** Add a subject. A lowercase duplicate code is rejected.
-- [ ] **W19** Admin adds a teacher, who can then log in. A teacher does not see this page.
+- [x] **W10** Add a student in the browser: the line appears in `data/students.txt`, and the terminal shows them after restart
+- [x] **W11** Duplicate roll number: 409, with the message under the roll number field
+- [x] **W12** Empty or invalid fields: messages come from C++, with browser validation off
+- [x] **W13** Same name in the same class: dialog appears, and confirming adds the student
+- [x] **W14** Search by part of a name, and by exact roll number
+- [x] **W15** Sorting by each column comes from the server, in both directions
+- [x] **W16** Edit a student. Changing the class of a student with attendance is rejected.
+- [x] **W17** Delete asks first, and removes the student from both files
+- [x] **W18** Add a subject. A lowercase duplicate code is rejected.
+- [x] **W19** Admin adds a teacher, who can then log in. A teacher does not see this page.
 
 #### Attendance
 

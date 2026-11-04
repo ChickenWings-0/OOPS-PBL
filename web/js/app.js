@@ -190,7 +190,7 @@ const App = {
       Pages[route.hash](App.content, isCurrent, value);
     } else {
       App.content.replaceChildren(h("section", { class: "sheet" },
-        UI.empty(`${route.label} is coming next`, "This page has not been built yet.")));
+        UI.empty("Page not found", "Choose a page from the menu.")));
     }
   },
 

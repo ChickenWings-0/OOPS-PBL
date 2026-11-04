@@ -254,6 +254,13 @@
   gap: var(--space-4);
 }
 
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
 @media (max-width: 1120px) {
   .split {
     grid-template-columns: minmax(0, 1fr);
@@ -322,7 +329,8 @@
   }
 
   .stack,
-  .split {
+  .split,
+  .pair {
     gap: var(--space-3);
   }
 }

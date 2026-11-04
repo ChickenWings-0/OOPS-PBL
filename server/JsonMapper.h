@@ -23,11 +23,20 @@ public:
     static std::string initials(const std::string& name);
 
     static nlohmann::json user(const Teacher& teacher);
+    static nlohmann::json studentRow(const Student& student);
+    static nlohmann::json subjectRow(const Subject& subject);
     static nlohmann::json teacherRow(const Teacher& teacher);
     static nlohmann::json today();
     static nlohmann::json lastMarked(bool anyMarks, const Date& date);
     static nlohmann::json defaulterRow(const DefaulterEntry& entry, const Student students[],
                                        const Subject subjects[]);
+
+    static nlohmann::json studentReport(const Student& student, const Subject subjects[],
+                                        const StudentReportData& data);
+    static nlohmann::json dailyReport(const Student students[], const Subject subjects[],
+                                      const Date& date, const DailyReportData& data);
+    static nlohmann::json monthlyReport(const Student students[], const std::string& className,
+                                        int month, int year, const MonthlyReportData& data);
 
     static nlohmann::json dashboard(const DashboardData& data, const TrendPoint trend[],
                                     int trendCount, const SubjectLine lines[], int lineCount,

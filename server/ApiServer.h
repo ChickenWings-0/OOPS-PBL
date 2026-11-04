@@ -13,6 +13,7 @@
 #include <string>
 
 #include "AttendanceSystem.h"
+#include "Date.h"
 #include "Result.h"
 #include "SessionManager.h"
 #include "json.hpp"
@@ -37,6 +38,7 @@ private:
     // Shared helpers for handlers
     int requireLogin(const httplib::Request& req, httplib::Response& res);
     bool readBody(const httplib::Request& req, httplib::Response& res, nlohmann::json& body);
+    int pathId(const httplib::Request& req) const;
 
     // Login and accounts (AuthRoutes.cpp)
     void handleHealth(const httplib::Request& req, httplib::Response& res);
@@ -47,8 +49,27 @@ private:
     void handleListTeachers(const httplib::Request& req, httplib::Response& res);
     void handleAddTeacher(const httplib::Request& req, httplib::Response& res);
 
+    // Students (StudentRoutes.cpp)
+    void handleListStudents(const httplib::Request& req, httplib::Response& res);
+    void handleGetStudent(const httplib::Request& req, httplib::Response& res);
+    void handleAddStudent(const httplib::Request& req, httplib::Response& res);
+    void handleUpdateStudent(const httplib::Request& req, httplib::Response& res);
+    void handleDeleteStudent(const httplib::Request& req, httplib::Response& res);
+
+    // Subjects and attendance (AttendanceRoutes.cpp)
+    void handleListSubjects(const httplib::Request& req, httplib::Response& res);
+    void handleAddSubject(const httplib::Request& req, httplib::Response& res);
+    void handleListClasses(const httplib::Request& req, httplib::Response& res);
+    void handleAttendanceSheet(const httplib::Request& req, httplib::Response& res);
+    void handleMarkAttendance(const httplib::Request& req, httplib::Response& res);
+    void handleEditAttendance(const httplib::Request& req, httplib::Response& res);
+
     // Reports (ReportRoutes.cpp)
     void handleDashboard(const httplib::Request& req, httplib::Response& res);
+    void handleStudentReport(const httplib::Request& req, httplib::Response& res);
+    void handleDefaulters(const httplib::Request& req, httplib::Response& res);
+    void handleDailyReport(const httplib::Request& req, httplib::Response& res);
+    void handleMonthlyReport(const httplib::Request& req, httplib::Response& res);
 
 public:
     void useDemoPassword(const std::string& password);
@@ -60,6 +81,8 @@ public:
                           const std::string& message, const std::string& field = "");
     static void sendResult(httplib::Response& res, const Result& result, int successStatus = 200);
     static std::string textField(const nlohmann::json& body, const std::string& name);
+    static int numberField(const nlohmann::json& body, const std::string& name);
+    static Date dateFrom(const std::string& text);
 };
 
 #endif
