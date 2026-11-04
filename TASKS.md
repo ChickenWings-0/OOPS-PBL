@@ -356,10 +356,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 **Owner:** Dhruv Kataria
 
 - [x] Add the `tests/` API script, run against a copy of `data/`
-- [ ] Run all W tests and all T tests
-- [ ] Clean builds of both programs with no warnings
+- [x] Run all W tests and all T tests
+- [x] Clean builds of both programs with no warnings
 
-**Test:** W40 to W43, then every box in sections 3 and 5.3 up to W59 ticked.
+**Test:** W40 to W43, then every box in sections 3 and 5.3 up to W59 ticked. Automated tests are in `tests/`: terminal 45 of 45, API 216 of 216, browser 100 of 100.
 
 #### Checkpoint W11: Deployment
 **Owner:** Srishti Gupta
@@ -429,10 +429,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Terminal and persistence
 
-- [ ] **W40** Terminal golden output still matches at the end of the project
-- [ ] **W41** Terminal builds on g++ 6.3 and g++ 15.2 with no warnings
-- [ ] **W42** Changes made in the browser survive a server restart locally
-- [ ] **W43** 50 parallel add-student requests produce no duplicate IDs and no lost lines
+- [x] **W40** Terminal golden output still matches at the end of the project
+- [x] **W41** Terminal builds on g++ 6.3 and g++ 15.2 with no warnings
+- [x] **W42** Changes made in the browser survive a server restart locally
+- [x] **W43** 50 parallel add-student requests produce no duplicate IDs and no lost lines
 
 #### Design and behaviour
 
