@@ -5,6 +5,7 @@
 // laptop and on the hosting service:
 //   PORT            port to listen on, default 8080
 //   HOST            address to bind to, default 127.0.0.1 (this computer only)
+//   ALLOWED_ORIGIN  sites that may call the API from a browser, comma-separated
 //   DEMO_PASSWORD   if set, replaces every account's password at startup
 
 #include <cstdlib>
@@ -34,6 +35,8 @@ int main() {
     // static: like the terminal version, this is too large for the stack.
     // Creating it loads the data files.
     static ApiServer server;
+
+    server.allowOrigins(setting("ALLOWED_ORIGIN", ""));
 
     string demoPassword = setting("DEMO_PASSWORD", "");
     if (!demoPassword.empty()) {

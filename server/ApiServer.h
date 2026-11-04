@@ -26,14 +26,21 @@ struct Request;
 struct Response;
 }
 
+const int MAX_ALLOWED_ORIGINS = 10;   // sites that may call this API from a browser
+
 class ApiServer {
 private:
     AttendanceSystem app;       // creating this loads the data files
     SessionManager sessions;
     std::mutex dataLock;
 
+    std::string allowedOrigins[MAX_ALLOWED_ORIGINS];
+    int originCount;
+
     void registerRoutes(httplib::Server& server);
     void applySecurityHeaders(httplib::Server& server);
+    void applyCors(httplib::Server& server);
+    bool isAllowedOrigin(const std::string& origin) const;
 
     // Shared helpers for handlers
     int requireLogin(const httplib::Request& req, httplib::Response& res);
@@ -72,6 +79,9 @@ private:
     void handleMonthlyReport(const httplib::Request& req, httplib::Response& res);
 
 public:
+    ApiServer();
+
+    void allowOrigins(const std::string& list);
     void useDemoPassword(const std::string& password);
     bool start(const std::string& host, int port);
 

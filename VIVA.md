@@ -415,6 +415,29 @@ Before moving any code, we recorded 45 scripted terminal sessions from the origi
 **Q108. Why does the site look like a paper register?**
 A design should come from its subject. Ruled paper, a red margin line, P and A cells, and a highlighter are what an attendance register really looks like. All colours and sizes are CSS variables in `tokens.css`, so light mode (paper) and dark mode (blackboard) share the same components.
 
+### Hosting
+
+**Q109. Why are the frontend and backend hosted separately?**
+They need different things. The frontend is only files that never change between visits, so Vercel can send them quickly from servers around the world, and it stays up even while the backend sleeps. The backend is a running C++ program with files of its own, so it needs a host that runs a program, which is Render. The login page therefore appears instantly, while the API wakes up in the background.
+
+**Q110. What is CORS?**
+Cross-Origin Resource Sharing. An origin is the scheme, host, and port of a site. Browsers stop a page from reading replies from a different origin, so a bad site cannot use your browser to read another site's data. CORS is how a server says which other sites are allowed. Our C++ server sends `Access-Control-Allow-Origin` with the Vercel address, and the browser then lets the page read the reply.
+
+**Q111. What is a preflight request?**
+Before sending a request with an `Authorization` header or JSON, the browser first sends `OPTIONS` to ask if it is allowed. Our server answers in `applyCors` with the allowed methods and headers. Only then does the browser send the real request.
+
+**Q112. Why not use `*` to allow every site? And does CORS protect the API?**
+`*` would let any website call our API from a visitor's browser, so we list exact sites in `ALLOWED_ORIGIN`. But CORS is enforced by browsers, not by the server. A tool like `curl` ignores it. The real protection is still the login token and the checks in C++.
+
+**Q113. What does Docker do for this project?**
+We develop on Windows, but Render runs Linux. Docker describes the environment in a Dockerfile, and builds an image holding the compiled server, `web/`, and `data/`. The first stage has g++ and compiles the code. The second stage keeps only what is needed to run, so the image is small. The same image runs the same way anywhere.
+
+**Q114. Why does the data reset on the free plan?**
+A container's disk is temporary. On each restart, redeploy, or sleep, Render starts a new container from the image, so everything written since is gone, and the image still holds the original `data/` folder. A permanent disk is a paid feature. A database would also solve it, but file handling must stay visible in this project.
+
+**Q115. What happens when the free server is asleep?**
+Requests hang or fail with a 503 while it wakes, which takes about a minute. `api.js` shows a "Waking up the server" message and asks `/api/health` every few seconds. Reads and logins then retry by themselves. A save does not, because the first try may have reached the server, so the user is asked to save again.
+
 ---
 
 ## 11. Module guide for each member
@@ -426,7 +449,7 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `main.cpp`, `ConsoleUI`, `AttendanceSystem` (core and login), `Result`, `Teacher`, `Config.h`
 - **Be ready to walk through:** program start, the login loop, how menus reach `AttendanceSystem` through `ConsoleUI`, and how the admin check works
 - **Revise:** Q4, Q5, Q12, Q14, Q24, Q64, Q66, Q68
-- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100, Q107
+- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100, Q107, Q109 to Q112
 
 ### Vaibhav: Students
 
@@ -447,7 +470,7 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `FileManager`, `Utils`, `ConsoleInput`, sample data
 - **Be ready to walk through:** loading one file line by line, append versus rewrite, handling a missing file, and `readInt`
 - **Revise:** Q35 to Q47, Q67
-- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103, Q108
+- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103, Q108, Q113 to Q115
 
 ### Dhruv Kataria: Reports and testing
 

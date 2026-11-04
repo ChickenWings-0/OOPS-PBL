@@ -30,6 +30,7 @@ const App = {
 
     if (!Api.getToken()) {
       App.showLogin();
+      Api.wake();
       return;
     }
 

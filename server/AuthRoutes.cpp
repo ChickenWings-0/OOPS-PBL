@@ -18,7 +18,7 @@ using nlohmann::json;
 // It touches no shared data, so it needs no lock.
 void ApiServer::handleHealth(const Request&, Response& res) {
     json out;
-    out["ok"] = true;
+    out["status"] = "ok";
     sendJson(res, 200, out);
 }
 

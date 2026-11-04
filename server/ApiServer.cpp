@@ -4,6 +4,7 @@
 #include "ApiServer.h"
 
 #include <iostream>
+#include <sstream>
 
 #include "Utils.h"
 #include "httplib.h"
@@ -16,6 +17,69 @@ using nlohmann::json;
 const size_t MAX_BODY_BYTES = 64 * 1024;   // no real request comes close to this
 
 // ---------- Starting up ----------
+
+// No other site may call this API until allowOrigins() names it.
+ApiServer::ApiServer() : originCount(0) {}
+
+// Reads the comma-separated list from ALLOWED_ORIGIN, such as
+// https://my-site.vercel.app,https://other.example.com
+void ApiServer::allowOrigins(const string& list) {
+    stringstream input(list);
+    string origin;
+
+    while (getline(input, origin, ',') && originCount < MAX_ALLOWED_ORIGINS) {
+        origin = trim(origin);
+        // A browser never sends a slash at the end, so one here could never match.
+        if (!origin.empty() && origin[origin.length() - 1] == '/') {
+            origin.erase(origin.length() - 1);
+        }
+        if (!origin.empty()) {
+            allowedOrigins[originCount] = origin;
+            originCount++;
+            cout << "Allowing browser requests from " << origin << endl;
+        }
+    }
+}
+
+// Returns true if this exact site may call the API.
+bool ApiServer::isAllowedOrigin(const string& origin) const {
+    for (int i = 0; i < originCount; i++) {
+        if (allowedOrigins[i] == origin) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// CORS. A browser refuses to show a page the reply from another site unless
+// that site says it is allowed. The frontend on Vercel and the API on Render
+// are different sites, so the API must say so. Login uses a token in the
+// Authorization header, so no cookies or credentials are involved.
+void ApiServer::applyCors(httplib::Server& server) {
+    // A preflight is the browser asking first: "may I send this request?"
+    server.set_pre_routing_handler([this](const Request& req, Response& res) {
+        if (req.method != "OPTIONS") {
+            return httplib::Server::HandlerResponse::Unhandled;
+        }
+        if (isAllowedOrigin(req.get_header_value("Origin"))) {
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            res.set_header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+            res.set_header("Access-Control-Max-Age", "600");
+        }
+        res.status = 204;
+        return httplib::Server::HandlerResponse::Handled;
+    });
+
+    // This runs for every reply, including errors, so the browser can show
+    // the messages written by C++.
+    server.set_post_routing_handler([this](const Request& req, Response& res) {
+        string origin = req.get_header_value("Origin");
+        if (isAllowedOrigin(origin)) {
+            res.set_header("Access-Control-Allow-Origin", origin);
+        }
+        res.set_header("Vary", "Origin");
+    });
+}
 
 // Replaces every password. Used on the public site, where the sample
 // passwords would otherwise be known to anyone who reads the repository.
@@ -87,6 +151,7 @@ bool ApiServer::start(const string& host, int port) {
     httplib::Server server;
 
     applySecurityHeaders(server);
+    applyCors(server);
     server.set_payload_max_length(MAX_BODY_BYTES);
 
     // Only web/ is served. The data/ folder has no URL at all.

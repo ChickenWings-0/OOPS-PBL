@@ -1,6 +1,6 @@
 # render.yaml
 # Tells Render how to run this project, so setting it up takes a few clicks.
-# Render asks for the value of DEMO_PASSWORD once. It is never stored in Git.
+# Render asks for the two values below once. They are never stored in Git.
 services:
   - type: web
     name: attendance-register
@@ -10,4 +10,6 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DEMO_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGIN
         sync: false

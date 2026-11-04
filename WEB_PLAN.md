@@ -1,6 +1,6 @@
 # WEB_PLAN: Web Version of the Attendance Management System
 
-This plan adds a browser interface and an online deployment. The terminal version stays and keeps working. Built and tested locally. Deployment is the only step left, see section 10.3.
+This plan adds a browser interface and an online deployment. The terminal version stays and keeps working. Built and tested locally. The frontend deploys to Vercel and the API to Render, see section 10.3.
 
 Related: [TASKS.md](TASKS.md) section 5 has the checkpoints and tests. [VIVA.md](VIVA.md) section 10 has the new viva questions.
 
@@ -278,6 +278,7 @@ The mutex is in the server, not the core, so the core still compiles on g++ 6.3.
 |----------|---------|---------|
 | `PORT` | `8080` | Port to listen on. Render sets 10000. |
 | `HOST` | `127.0.0.1` | Address to bind to |
+| `ALLOWED_ORIGIN` | not set | Sites that may call the API from a browser, comma-separated, matched exactly |
 | `DEMO_PASSWORD` | not set | If set, replaces every account's password at startup (D5) |
 | `TZ` | system | `Asia/Kolkata` in Docker, see section 10 |
 
@@ -715,15 +716,9 @@ This also means `data/` in Git **is** the seed. Commit only clean sample data. T
 
 ### 10.3 Deployment steps
 
-These steps need your GitHub and Render accounts, so they are not done yet.
+The frontend is hosted on Vercel and the API on Render. The exact steps are in README.md under Deployment. `web/js/config.js` chooses the API address, `render.yaml` and `vercel.json` hold the settings, and CORS in `ApiServer::applyCors` lets the Vercel site call the Render API. The Render address also serves the frontend itself, as a fallback.
 
-1. Confirm `data/` is the clean sample data, then push the `web-version` branch to GitHub.
-2. Create a free account at <https://render.com> and connect GitHub.
-3. Choose New > Blueprint, then choose the repository and the branch. Render reads `render.yaml`.
-4. When asked, enter a secret `DEMO_PASSWORD`, 4 to 20 characters with no spaces or `|`.
-5. Render shows the plan before creating anything. If it does not say Free, stop and decide before paying for anything.
-6. Wait for the build, and read the log. This is the Dockerfile's first real test, because Docker cannot run on the development laptop.
-7. Open the `onrender.com` link, and run W60 to W66 in TASKS.md.
+The Dockerfile's first real test is Render's build, because Docker cannot run on the development laptop.
 
 ### 10.4 Viva day
 
@@ -755,13 +750,15 @@ OOPS-PBL/
 |-- web/                    Everything the browser downloads
 |   |-- index.html
 |   |-- css/  tokens.css  base.css  layout.css  components.css
-|   `-- js/   theme.js  api.js  ui.js  icons.js  charts.js  app.js
+|   `-- js/   theme.js  config.js  api.js  ui.js  icons.js  charts.js  app.js
 |       `-- pages/  login.js  dashboard.js  students.js  subjects.js  mark.js
 |                   report.js  defaulters.js  daily.js  monthly.js  teachers.js
 |-- data/                   The same four text files
 |-- docs/screenshots/       Screenshots for review and the README
 |-- tests/                  Golden terminal output, API tests, and browser tests
 |-- Dockerfile
+|-- render.yaml
+|-- vercel.json
 |-- .dockerignore
 `-- WEB_PLAN.md and the existing documents
 ```

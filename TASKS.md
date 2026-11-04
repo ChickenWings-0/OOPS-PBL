@@ -367,10 +367,22 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [ ] Confirm Render's free tier accepts Docker, on the first deploy (needs a Render account)
 - [x] `Dockerfile`, `.dockerignore`, and `render.yaml`
 - [x] Confirm `data/` is the clean sample data
-- [ ] Create the Render service and set `DEMO_PASSWORD`
+- [ ] Create the Render service and set `DEMO_PASSWORD` and `ALLOWED_ORIGIN`
+- [ ] Create the Vercel project
 - [ ] Deploy and read the build log
 
 **Test:** W60 to W66.
+
+#### Checkpoint W13: Split hosting
+**Owners:** Aksh Rastogi (CORS), Srishti Gupta (deployment files)
+
+- [x] `/api/health` returns `{"status":"ok"}`
+- [x] CORS in C++, from `ALLOWED_ORIGIN`
+- [x] `web/js/config.js` and `API_BASE`
+- [x] `vercel.json`
+- [x] Cold-start message and automatic retry
+
+**Test:** W70 to W80.
 
 #### Checkpoint W12: Documentation
 **Owners:** Dhruv Kataria (`README.md`), all members (review)
@@ -446,6 +458,20 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [x] **W57** Modals work with the keyboard, and focus is visible
 - [x] **W58** A subject named `<b>test</b>` shows as plain text
 - [x] **W59** With no internet, tables work and the chart areas show a message
+
+#### Split hosting
+
+- [x] **W70** A preflight from an allowed site is answered, naming that origin, the methods, and both headers
+- [x] **W71** Login and the token work cross-origin, with no cookies
+- [x] **W72** Every kind of error reply carries the CORS header, so the browser can show C++ messages
+- [x] **W73** Several origins work, and lookalike origins get nothing
+- [x] **W74** With the page and the API on different ports, the page calls API_BASE, and login and the dashboard work
+- [x] **W75** POST, PUT, DELETE, and error messages work cross-origin, under the real `vercel.json` headers
+- [x] **W76** The browser blocks a site that is not allowed
+- [x] **W77** A sleeping server shows the waking message and no error, and login then retries by itself
+- [x] **W78** A request held for several seconds shows the message, then loads
+- [x] **W79** A read during sleep retries by itself
+- [x] **W80** A save during sleep is not repeated, and asks the user to save again
 
 #### Deployed site
 

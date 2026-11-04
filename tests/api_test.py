@@ -30,10 +30,10 @@ def check(name, passed, detail=""):
     print(("ok   " if passed else "FAIL ") + name + ("" if passed else "   -> " + str(detail)))
 
 
-def call(method, path, body=None, token=None, raw=None):
+def call(method, path, body=None, token=None, raw=None, extra=None):
     """Sends one request and returns (status, parsed JSON or text, headers)."""
     connection = http.client.HTTPConnection("127.0.0.1", PORT, timeout=10)
-    headers = {}
+    headers = dict(extra or {})
     if token:
         headers["Authorization"] = "Bearer " + token
     data = raw if raw is not None else (json.dumps(body) if body is not None else None)
@@ -70,7 +70,7 @@ def expected_numbers(data_folder):
 
 def test_login_and_sessions():
     status, body, _ = call("GET", "/api/health")
-    check("W01 health needs no token", status == 200 and body == {"ok": True}, (status, body))
+    check("W01 health needs no token", status == 200 and body == {"status": "ok"}, (status, body))
 
     status, body, _ = call("POST", "/api/login", {"username": "admin", "password": "admin123"})
     check("W02 correct login gives a token", status == 200 and len(body.get("token", "")) == 32, body)
@@ -282,6 +282,60 @@ def test_empty_data(exe):
         status, body, _ = call("GET", "/api/dashboard", token=login("admin", "admin123"))
         check("no data at all: no crash", status == 200 and body["cards"]["students"] == 0 and
               body["subjects"] == [], (status, body))
+    finally:
+        stop_server(server, folder)
+
+
+def test_cors(exe):
+    site = "https://my-site.vercel.app"
+    settings = {"ALLOWED_ORIGIN": " " + site + "/ , http://127.0.0.1:3000"}
+    server, folder = start_server(exe, settings=settings)
+    try:
+        status, body, headers = call("OPTIONS", "/api/login", extra={
+            "Origin": site, "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type"})
+        check("W70 preflight from an allowed site is answered", status == 204, (status, headers))
+        check("W70 preflight names the origin, never a star", headers.get("Access-Control-Allow-Origin") == site, headers)
+        check("W70 preflight allows the methods", "DELETE" in headers.get("Access-Control-Allow-Methods", ""), headers)
+        check("W70 preflight allows both headers", "Authorization" in headers.get("Access-Control-Allow-Headers", "") and
+              "Content-Type" in headers.get("Access-Control-Allow-Headers", ""), headers)
+
+        status, body, headers = call("POST", "/api/login", {"username": "admin", "password": "admin123"}, extra={"Origin": site})
+        check("W71 login works cross-origin", status == 200 and headers.get("Access-Control-Allow-Origin") == site, (status, headers))
+        check("W71 no cookie is used", "Set-Cookie" not in headers and "Access-Control-Allow-Credentials" not in headers, headers)
+        token = body["token"]
+        status, body, headers = call("GET", "/api/dashboard", token=token, extra={"Origin": site})
+        check("W71 the token works cross-origin", status == 200 and headers.get("Access-Control-Allow-Origin") == site, (status, headers))
+
+        for label, reply in (
+                ("wrong password", call("POST", "/api/login", {"username": "admin", "password": "x"}, extra={"Origin": site})),
+                ("no token", call("GET", "/api/me", extra={"Origin": site})),
+                ("bad JSON", call("POST", "/api/login", raw="{oops", extra={"Origin": site})),
+                ("duplicate", call("POST", "/api/subjects", {"code": "CS201A", "name": "X", "className": "A"}, token=token, extra={"Origin": site})),
+                ("unknown address", call("GET", "/api/nothing", extra={"Origin": site})),
+                ("oversized body", call("POST", "/api/login", raw="x" * 70000, extra={"Origin": site}))):
+            check("W72 the browser can read this error: " + label,
+                  reply[0] >= 400 and reply[2].get("Access-Control-Allow-Origin") == site, reply[:2])
+
+        status, _, headers = call("GET", "/api/health", extra={"Origin": "http://127.0.0.1:3000"})
+        check("W73 the second origin in the list works", headers.get("Access-Control-Allow-Origin") == "http://127.0.0.1:3000", headers)
+
+        for origin in ("https://evil.example.com", site + ".evil.com", "http://my-site.vercel.app", "null"):
+            status, _, headers = call("OPTIONS", "/api/login", extra={"Origin": origin, "Access-Control-Request-Method": "POST"})
+            check("W73 preflight gives nothing to " + origin, "Access-Control-Allow-Origin" not in headers and
+                  "Access-Control-Allow-Methods" not in headers, headers)
+            status, _, headers = call("GET", "/api/health", extra={"Origin": origin})
+            check("W73 no CORS header for " + origin, "Access-Control-Allow-Origin" not in headers, headers)
+
+        status, _, headers = call("GET", "/api/health")
+        check("W73 same-site requests still work, and vary on Origin", status == 200 and headers.get("Vary") == "Origin", headers)
+    finally:
+        stop_server(server, folder)
+
+    server, folder = start_server(exe)
+    try:
+        _, _, headers = call("GET", "/api/health", extra={"Origin": site})
+        check("W73 with no ALLOWED_ORIGIN, no site is allowed", "Access-Control-Allow-Origin" not in headers, headers)
     finally:
         stop_server(server, folder)
 
@@ -673,6 +727,7 @@ def main():
     test_long_history(exe)
     test_empty_data(exe)
     test_demo_password(exe)
+    test_cors(exe)
 
     print("Passed %d of %d checks." % (sum(results), len(results)))
     return 0 if all(results) else 1

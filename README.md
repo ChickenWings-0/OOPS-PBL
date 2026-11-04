@@ -11,6 +11,23 @@ Built for the **OOPs using C++ Lab** (PBL), 3rd Semester, B.Tech CSE (AIML).
 
 ![Dashboard](docs/screenshots/dashboard-light-desktop.png)
 
+## Architecture
+
+```
+  Browser
+     |
+     |  downloads the page              sends requests, with a token in a header
+     v                                       |
+  Vercel (web/: HTML, CSS, JS)               |
+                                             v
+                                  Render (C++ server in Docker)
+                                             |
+                                             v
+                                  Core C++ classes -> data/*.txt
+```
+
+The frontend is a static site. The C++ server holds all the logic and data, and answers with JSON. Because they are on different sites, the server uses CORS to say which site may call it. The Render address also serves the same frontend by itself, as a fallback.
+
 ## Team
 
 | Member | Module |
@@ -66,6 +83,8 @@ g++ -std=c++11 -Wall -Wextra -D_WIN32_WINNT=0x0A00 -Iinclude -Iserver -Ithird_pa
 ```
 
 Then open <http://localhost:8080>. The build takes a minute or two. The charts and fonts load from the internet. Without it, the tables still work.
+
+Locally the server only accepts connections from your own computer. `web/js/config.js` leaves `API_BASE` empty, so the page talks to the server that served it.
 
 **Sample logins**
 
@@ -166,6 +185,7 @@ data/          students.txt, subjects.txt, teachers.txt, attendance.txt
 tests/         Automated tests for the terminal, the API, and the browser
 Dockerfile     Builds the server for deployment
 render.yaml    Settings for Render
+vercel.json    Settings for Vercel
 ```
 
 ## Data files
@@ -186,11 +206,46 @@ python tests/run_golden.py attendance.exe
 python tests/api_test.py attendance_server.exe attendance.exe
 ```
 
-`run_golden.py` compares the terminal program against recorded sessions. `api_test.py` sends real HTTP requests, and works out the expected report numbers directly from the data files. `tests/browser/` drives the site in Chrome. Every test runs on a copy of the data.
+`run_golden.py` compares the terminal program against recorded sessions. `api_test.py` sends real HTTP requests, and works out the expected report numbers directly from the data files. `tests/browser/` drives the site in Chrome, including with the frontend and the API on different ports, and with a simulated sleeping server. Every test runs on a copy of the data.
 
 ## Deployment
 
-The `Dockerfile` and `render.yaml` deploy the server on Render. See [WEB_PLAN.md](WEB_PLAN.md) section 10. A free service loses its changes whenever it restarts or sleeps, and then starts again from the sample data, so only fictional data should go online.
+The API runs on Render, and the frontend on Vercel. Do Render first, because Vercel needs its address.
+
+### 1. Render (the C++ API)
+
+1. Go to <https://render.com>, choose **New > Blueprint**, and connect this repository. Render reads `render.yaml`.
+2. Enter the two values it asks for, from the table below. Use a temporary `ALLOWED_ORIGIN` for now if you do not know the Vercel address yet.
+3. Check that the plan says Free, then deploy.
+4. Open `https://<your-service>.onrender.com/api/health`. It should show `{"status":"ok"}`.
+
+If your address is not `https://attendance-register.onrender.com`, change `RENDER_API` in `web/js/config.js` and the same address in `vercel.json`, then push.
+
+### 2. Vercel (the frontend)
+
+1. Go to <https://vercel.com>, choose **Add New > Project**, and import this repository.
+2. Leave the Root Directory as it is. `vercel.json` sets the rest, and there is no build step.
+3. Deploy, and copy the address it gives you.
+
+### 3. Connect them
+
+On Render, set `ALLOWED_ORIGIN` to the Vercel address, with no slash at the end. Render restarts the service. Then open the Vercel address and log in.
+
+### Environment variables
+
+These are set on Render. Vercel needs none.
+
+| Variable | Example | Meaning |
+|----------|---------|---------|
+| `PORT` | `10000` | The port to listen on. Render sets this itself. The default is `8080`. |
+| `HOST` | `0.0.0.0` | The address to listen on. The Dockerfile sets this. The default is `127.0.0.1`, this computer only. |
+| `ALLOWED_ORIGIN` | `https://oops-pbl.vercel.app` | The sites that may call the API from a browser, separated by commas. The default is none. |
+| `DEMO_PASSWORD` | a secret of your own | Replaces every account's password at startup, because the sample passwords are public in this repository. 4 to 20 characters, with no spaces or `\|`. |
+
+### Free-tier notes
+
+- **Data resets.** Render's free plan has no permanent disk. Every restart, redeploy, or sleep throws away all changes, and the server starts again from the sample data in `data/`. Only use fictional data online.
+- **Cold starts.** The free server sleeps after 15 quiet minutes and takes about a minute to wake. The site shows a "Waking up the server" message and retries by itself. A save is never repeated automatically, because the first try may have reached the server. The site asks you to save again.
 
 ## Limitations
 

@@ -265,7 +265,7 @@ The server layer turns HTTP into calls on the core. [WEB_PLAN.md](WEB_PLAN.md) h
 
 | Class | File | Job |
 |-------|------|-----|
-| `ApiServer` | `server/ApiServer.h/.cpp` | Owns an `AttendanceSystem`, a `SessionManager`, and the `dataLock` mutex. Lists the routes and has the shared helpers `requireLogin`, `readBody`, `pathId`, `sendJson`, `sendError`, `sendResult`, `textField`, `numberField`, and `dateFrom`. |
+| `ApiServer` | `server/ApiServer.h/.cpp` | Owns an `AttendanceSystem`, a `SessionManager`, the `dataLock` mutex, and the list of allowed origins. `applyCors` adds the CORS headers. Lists the routes and has the shared helpers `requireLogin`, `readBody`, `pathId`, `sendJson`, `sendError`, `sendResult`, `textField`, `numberField`, and `dateFrom`. |
 | Route handlers | `AuthRoutes.cpp`, `StudentRoutes.cpp`, `AttendanceRoutes.cpp`, `ReportRoutes.cpp` | `ApiServer` member functions, one per endpoint, such as `handleAddStudent`. Each locks the mutex, checks the token, calls the core, and sends the reply. |
 | `Session` | `server/SessionManager.h` | One logged-in user: token, teacher index, and expiry time |
 | `SessionManager` | `server/SessionManager.h/.cpp` | A fixed array of sessions, plus a count of wrong passwords for each teacher |
