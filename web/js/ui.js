@@ -223,12 +223,13 @@ const UI = {
       h("span", { class: "person-roll" }, rollNo));
   },
 
-  // A register table. Each column is { label, key or cell, num, tight, hideNarrow }.
+  // A register table. Each column is { label, key or cell, num, tight, hideNarrow,
+  // firstNarrow }. firstNarrow marks the column that comes first on a phone.
   // A column with a sort name gets a heading button. The sorting itself is done by
   // C++: onSort only asks for it. sortState says which column is sorted now.
   table(columns, rows, sortState, onSort) {
     const className = (column) => [column.num ? "num" : "", column.tight ? "tight" : "",
-      column.hideNarrow ? "hide-narrow" : ""].join(" ").trim() || null;
+      column.hideNarrow ? "hide-narrow" : "", column.firstNarrow ? "first-narrow" : ""].join(" ").trim() || null;
 
     const heading = columns.map((column) => {
       if (!column.sort) {

@@ -303,7 +303,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [x] Light and dark themes with the toggle
 - [x] Sidebar, top bar, and mobile drawer
 - [x] Login page
-- [x] Dashboard page with stat cards and both charts
+- [x] Dashboard page with the tally and both charts
 - [x] Screenshots at desktop and phone width, in both themes (in `docs/screenshots/`)
 - [x] Browser checks in `tests/browser/`
 
@@ -344,18 +344,18 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W9: Polish and rule audit
 **Owners:** Srishti Gupta (polish), all members (audit)
 
-- [ ] Toasts, spinners, empty states, and focus states on every page
-- [ ] Field errors from server responses on every form
-- [ ] Check every page at phone width, in both themes
-- [ ] Audit `web/js/` against WEB_PLAN.md section 7
-- [ ] Check that no `innerHTML` receives server data
+- [x] Toasts, spinners, empty states, and focus states on every page
+- [x] Field errors from server responses on every form
+- [x] Check every page at phone width, in both themes
+- [x] Audit `web/js/` against WEB_PLAN.md section 7
+- [x] Check that no `innerHTML` receives server data
 
 **Test:** W54 to W59.
 
 #### Checkpoint W10: Full local test
 **Owner:** Dhruv Kataria
 
-- [ ] Add the `tests/` API script, run against a copy of `data/`
+- [x] Add the `tests/` API script, run against a copy of `data/`
 - [ ] Run all W tests and all T tests
 - [ ] Clean builds of both programs with no warnings
 
@@ -364,9 +364,9 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W11: Deployment
 **Owner:** Srishti Gupta
 
-- [ ] Confirm Render's free tier accepts Docker, **before anything else**
-- [ ] `Dockerfile` and `.dockerignore`
-- [ ] Confirm `data/` is the clean sample data
+- [ ] Confirm Render's free tier accepts Docker, on the first deploy (needs a Render account)
+- [x] `Dockerfile`, `.dockerignore`, and `render.yaml`
+- [x] Confirm `data/` is the clean sample data
 - [ ] Create the Render service and set `DEMO_PASSWORD`
 - [ ] Deploy and read the build log
 
@@ -437,15 +437,15 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Design and behaviour
 
 - [x] **W50** Dashboard shows 10 students, 4 subjects, 4 defaulter students
-- [x] **W51** Today's card shows the last marked day when nothing is marked today
+- [x] **W51** The Today cell shows the last marked day when nothing is marked today
 - [x] **W52** Theme toggle changes every colour and redraws charts, and stays after reload
 - [x] **W53** Sidebar collapses below 900 px, with no sideways scrolling at 360 px
-- [ ] **W54** Every page has a loading state and an empty state
-- [ ] **W55** Every save and delete shows a toast
-- [ ] **W56** An expired session returns to login with a message
-- [ ] **W57** Modals work with the keyboard, and focus is visible
-- [ ] **W58** A subject named `<b>test</b>` shows as plain text
-- [ ] **W59** With no internet, tables work and the chart areas show a message
+- [x] **W54** Every page has a loading state and an empty state
+- [x] **W55** Every save and delete shows a toast
+- [x] **W56** An expired session returns to login with a message
+- [x] **W57** Modals work with the keyboard, and focus is visible
+- [x] **W58** A subject named `<b>test</b>` shows as plain text
+- [x] **W59** With no internet, tables work and the chart areas show a message
 
 #### Deployed site
 

@@ -59,7 +59,7 @@ Pages.students = async function (root, isCurrent) {
     return UI.table([
       { label: "ID", key: "id", sort: "id", num: true, tight: true, hideNarrow: true },
       { label: "Roll no", sort: "rollNo", tight: true, hideNarrow: true, cell: (row) => h("span", { class: "mono" }, row.rollNo) },
-      { label: "Name", sort: "name", cell: (row) => h("a", { class: "person-name", href: `#/report/${row.id}` }, row.name) },
+      { label: "Name", sort: "name", firstNarrow: true, cell: (row) => h("a", { class: "person-name", href: `#/report/${row.id}` }, row.name) },
       { label: "Class", key: "className", sort: "className", tight: true },
       {
         label: "Actions", tight: true,

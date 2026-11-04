@@ -1015,6 +1015,10 @@ a.person-name:hover {
   .hide-narrow {
     display: none;
   }
+
+  .table .first-narrow {
+    border-left: 0;
+  }
 }
 
 @media (max-width: 480px) {
