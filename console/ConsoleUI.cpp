@@ -379,7 +379,7 @@ void ConsoleUI::viewStudentAttendance() {
 
 // Shows the defaulter list.
 void ConsoleUI::showDefaulters() const {
-    static DefaulterEntry entries[MAX_DEFAULTER_ENTRIES];
+    DefaulterEntry entries[MAX_DEFAULTER_ENTRIES];
     int count = Report::defaulterList(app.getStudents(), app.getSubjects(), entries);
     ReportPrinter::printDefaulters(app.getStudents(), app.getSubjects(), entries, count);
 }

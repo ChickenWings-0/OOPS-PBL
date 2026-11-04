@@ -1,17 +1,16 @@
 // main.cpp
 // Program entry point and menus.
-// The menus only show options and call AttendanceSystem. All logic lives there.
+// The menus only show options and call ConsoleUI, which calls the core.
 
 #include <iostream>
 
-#include "AttendanceSystem.h"
 #include "ConsoleInput.h"
-#include "Utils.h"
+#include "ConsoleUI.h"
 
 using namespace std;
 
 // Student Management submenu.
-void studentMenu(AttendanceSystem& app) {
+void studentMenu(ConsoleUI& ui) {
     while (true) {
         cout << "\n--- Student Management ---\n"
              << "1. Add student\n"
@@ -23,19 +22,19 @@ void studentMenu(AttendanceSystem& app) {
              << "0. Back\n";
 
         switch (readIntInRange("Enter choice: ", 0, 6)) {
-            case 1: app.addStudent(); break;
-            case 2: app.viewAllStudents(); break;
-            case 3: app.searchStudent(readInt("Enter internal ID: ")); break;
-            case 4: app.searchStudent(readLine("Enter roll number or name: ")); break;
-            case 5: app.updateStudent(); break;
-            case 6: app.deleteStudent(); break;
+            case 1: ui.addStudent(); break;
+            case 2: ui.viewAllStudents(); break;
+            case 3: ui.searchStudent(readInt("Enter internal ID: ")); break;
+            case 4: ui.searchStudent(readLine("Enter roll number or name: ")); break;
+            case 5: ui.updateStudent(); break;
+            case 6: ui.deleteStudent(); break;
             case 0: return;
         }
     }
 }
 
 // Subject Management submenu.
-void subjectMenu(AttendanceSystem& app) {
+void subjectMenu(ConsoleUI& ui) {
     while (true) {
         cout << "\n--- Subject Management ---\n"
              << "1. Add subject\n"
@@ -43,15 +42,15 @@ void subjectMenu(AttendanceSystem& app) {
              << "0. Back\n";
 
         switch (readIntInRange("Enter choice: ", 0, 2)) {
-            case 1: app.addSubject(); break;
-            case 2: app.viewSubjects(); break;
+            case 1: ui.addSubject(); break;
+            case 2: ui.viewSubjects(); break;
             case 0: return;
         }
     }
 }
 
 // Attendance submenu.
-void attendanceMenu(AttendanceSystem& app) {
+void attendanceMenu(ConsoleUI& ui) {
     while (true) {
         cout << "\n--- Attendance ---\n"
              << "1. Mark attendance\n"
@@ -60,16 +59,16 @@ void attendanceMenu(AttendanceSystem& app) {
              << "0. Back\n";
 
         switch (readIntInRange("Enter choice: ", 0, 3)) {
-            case 1: app.markAttendance(); break;
-            case 2: app.editAttendance(); break;
-            case 3: app.viewStudentAttendance(); break;
+            case 1: ui.markAttendance(); break;
+            case 2: ui.editAttendance(); break;
+            case 3: ui.viewStudentAttendance(); break;
             case 0: return;
         }
     }
 }
 
 // Reports submenu.
-void reportMenu(AttendanceSystem& app) {
+void reportMenu(ConsoleUI& ui) {
     while (true) {
         cout << "\n--- Reports ---\n"
              << "1. Defaulter list\n"
@@ -78,17 +77,17 @@ void reportMenu(AttendanceSystem& app) {
              << "0. Back\n";
 
         switch (readIntInRange("Enter choice: ", 0, 3)) {
-            case 1: app.showDefaulters(); break;
-            case 2: app.showDailyReport(); break;
-            case 3: app.showMonthlyReport(); break;
+            case 1: ui.showDefaulters(); break;
+            case 2: ui.showDailyReport(); break;
+            case 3: ui.showMonthlyReport(); break;
             case 0: return;
         }
     }
 }
 
 // Account submenu. Options 2 and 3 exist for the admin only.
-void accountMenu(AttendanceSystem& app) {
-    bool admin = app.isAdminLoggedIn();
+void accountMenu(ConsoleUI& ui) {
+    bool admin = ui.isAdminLoggedIn();
 
     while (true) {
         cout << "\n--- Account ---\n"
@@ -100,16 +99,16 @@ void accountMenu(AttendanceSystem& app) {
         cout << "0. Back\n";
 
         switch (readIntInRange("Enter choice: ", 0, admin ? 3 : 1)) {
-            case 1: app.changePassword(); break;
-            case 2: app.addTeacher(); break;
-            case 3: app.viewTeachers(); break;
+            case 1: ui.changePassword(); break;
+            case 2: ui.addTeacher(); break;
+            case 3: ui.viewTeachers(); break;
             case 0: return;
         }
     }
 }
 
 // Main menu loop. Returns when the user chooses Exit.
-void mainMenu(AttendanceSystem& app) {
+void mainMenu(ConsoleUI& ui) {
     while (true) {
         cout << "\n========== MAIN MENU ==========\n"
              << "1. Student Management\n"
@@ -120,11 +119,11 @@ void mainMenu(AttendanceSystem& app) {
              << "0. Exit\n";
 
         switch (readIntInRange("Enter choice: ", 0, 5)) {
-            case 1: studentMenu(app); break;
-            case 2: subjectMenu(app); break;
-            case 3: attendanceMenu(app); break;
-            case 4: reportMenu(app); break;
-            case 5: accountMenu(app); break;
+            case 1: studentMenu(ui); break;
+            case 2: subjectMenu(ui); break;
+            case 3: attendanceMenu(ui); break;
+            case 4: reportMenu(ui); break;
+            case 5: accountMenu(ui); break;
             case 0: return;
         }
     }
@@ -137,11 +136,11 @@ int main() {
          << "======================================\n";
 
     // static: all the arrays together are about 1.2 MB, which is too much
-    // to keep on the stack. The constructor loads the data files.
-    static AttendanceSystem app;
+    // to keep on the stack. Creating it loads the data files.
+    static ConsoleUI ui;
 
-    if (app.login()) {
-        mainMenu(app);
+    if (ui.login()) {
+        mainMenu(ui);
     }
     return 0;
 }

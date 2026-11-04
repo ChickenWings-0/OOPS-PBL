@@ -184,8 +184,8 @@ The `check...` functions are the rules for one field. The full action calls them
 | + | `bool isAdmin(int teacher) const` | Is this teacher the admin? |
 | + | `Result changePassword(teacher, current, newPassword)` | F2. Also `checkCurrentPassword`, `checkNewPassword`. |
 | + | `Result setAllPasswords(password)` | Used by the server for `DEMO_PASSWORD` |
-| + | `Result addTeacher(actor, name, username, password)` | F2. Also `canAddTeacher`, `canViewTeachers`, `checkTeacherName`, `checkNewUsername`. |
-| + | `Result addStudent(rollNo, name, className, confirmed)` | F3. Also `canAddStudent`, `checkNewRollNo`, `checkStudentName`, `checkClassName`, `checkSameName`. |
+| + | `Result addTeacher(actor, name, username, password)` | F2. Also `canAddTeacher`, `canViewTeachers`, `checkPersonName`, `checkNewUsername`. |
+| + | `Result addStudent(rollNo, name, className, confirmed)` | F3. Also `canAddStudent`, `checkNewRollNo`, `checkPersonName`, `checkClassName`, `checkSameName`. |
 | + | `Result updateStudent(index, rollNo, name, className)` | F6. Also `checkUpdateRollNo`, `checkUpdateName`, `checkUpdateClass`. |
 | + | `Result deleteStudent(index)` | F7. Also `checkStudentExists`. |
 | + | `Result addSubject(code, name, className)` | F8. Also `canAddSubject`, `checkNewCode`, `checkSubjectName`, `checkSubjectExists`. |
@@ -226,6 +226,7 @@ Owns the `AttendanceSystem` object for the terminal and the logged-in teacher. E
 | - | `void showPerson(const Person&) const` | Prints one row by calling virtual `display()` |
 | - | `int askForStudent()` | Asks for a roll number. Returns the index, or -1 after printing the error. |
 | - | `void show(const Result&) const` | Prints the message of a result |
+| - | `bool passes(const Result&) const` | True if a check passed. Otherwise prints why it failed. |
 | + | `ConsoleUI()`, `~ConsoleUI()` | The destructor prints the closing message |
 | + | `bool login()`, `bool isAdminLoggedIn() const` | F1 |
 | + | `changePassword()`, `addTeacher()`, `viewTeachers()` | F2 |

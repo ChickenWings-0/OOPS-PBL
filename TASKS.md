@@ -268,13 +268,13 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W2: Split AttendanceSystem and Report
 **Owners:** Aksh Rastogi (`ConsoleUI`), Vaibhav and Akshay Kumar (their functions), Dhruv Kataria (`Report`, `ReportPrinter`)
 
-- [ ] Move all prompts and printing from `AttendanceSystem` to `ConsoleUI`
-- [ ] Every core action takes parameters and returns `Result`
-- [ ] Move `currentTeacher` out of the core, and pass the acting teacher as a parameter
-- [ ] `Report` fills structs, and `ReportPrinter` prints them
-- [ ] No `cin` remains in the core, and `cout` remains only in `display()` and `FileManager` messages
+- [x] Move all prompts and printing from `AttendanceSystem` to `ConsoleUI`
+- [x] Every core action takes parameters and returns `Result`
+- [x] Move `currentTeacher` out of the core, and pass the acting teacher as a parameter
+- [x] `Report` fills structs, and `ReportPrinter` prints them
+- [x] No `cin` remains in the core, and `cout` remains only in `display()` and `FileManager` messages
 
-**Test:** golden output matches **byte for byte** on g++ 6.3 and g++ 15.2. Re-run the checklist in section 3.
+**Test:** golden output matches **byte for byte** on g++ 6.3 and g++ 15.2. The 45 recorded scenarios cover the checklist in section 3, including restarts.
 
 #### Checkpoint W3: Server skeleton and login
 **Owners:** Aksh Rastogi, Srishti Gupta (`JsonMapper`)
@@ -375,7 +375,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 - [ ] README: web features, build commands, live link, screenshots
 - [ ] DESIGN.md matches the final structure
-- [ ] Update VIVA.md: Q5, Q6, Q24, Q66, Q68, and the new section 10, against the final code
+- [ ] Update VIVA.md: Q6, Q68, and the new section 10, against the final code
 - [ ] Update the module guide with real file names
 
 ### 5.3 Web testing checklist

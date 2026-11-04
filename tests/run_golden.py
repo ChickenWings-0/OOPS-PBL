@@ -16,7 +16,7 @@ import subprocess
 import sys
 import tempfile
 
-from golden_scenarios import SCENARIOS
+from golden_scenarios import RESTART, SCENARIOS
 
 TESTS = os.path.dirname(os.path.abspath(__file__))
 FIXTURE = os.path.join(TESTS, "fixture_data")
@@ -90,11 +90,21 @@ def run_scenario(exe, setup, lines):
         shutil.copytree(FIXTURE, data)
         setup_data(setup, data)
 
-        typed = "".join(line + "\n" for line in lines).encode()
-        run = subprocess.run([exe], cwd=folder, input=typed, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, timeout=30)
+        # Each restart marker ends one run of the program and starts the next.
+        sessions = [[]]
+        for line in lines:
+            if line == RESTART:
+                sessions.append([])
+            else:
+                sessions[-1].append(line)
 
-        result = run.stdout + ("\n[exit code %d]\n" % run.returncode).encode()
+        result = b""
+        for session in sessions:
+            typed = "".join(line + "\n" for line in session).encode()
+            run = subprocess.run([exe], cwd=folder, input=typed, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, timeout=30)
+            result += run.stdout + ("\n[exit code %d]\n" % run.returncode).encode()
+
         for name in DATA_FILES:
             path = os.path.join(data, name)
             result += ("\n===== %s =====\n" % name).encode()

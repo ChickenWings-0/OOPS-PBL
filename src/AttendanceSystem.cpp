@@ -1,33 +1,44 @@
 // AttendanceSystem.cpp
 // Implementation of the AttendanceSystem class.
+// Text may arrive from a keyboard or a browser, so every action cleans it first.
 
 #include "AttendanceSystem.h"
 
-#include <iomanip>
-#include <iostream>
+#include <sstream>
 
-#include "../console/ConsoleInput.h"
 #include "FileManager.h"
-#include "Report.h"
 #include "Utils.h"
 
 using namespace std;
 
-// ---------- Start and finish ----------
+// Turns the outcome of a save into a Result. FileManager has already
+// logged which file failed.
+static Result saveResult(bool saved, const string& message) {
+    if (saved) {
+        return Result(RESULT_OK, message);
+    }
+    return Result(RESULT_SAVE_FAILED, "Could not save the data file.");
+}
+
+// ---------- Start ----------
 
 // Loads all data. Attendance must come last, because each mark
 // is attached to a student who must already be in memory.
-AttendanceSystem::AttendanceSystem() : currentTeacher(-1) {
+AttendanceSystem::AttendanceSystem() {
     FileManager::loadTeachers(teachers);
     FileManager::loadSubjects(subjects);
     FileManager::loadStudents(students);
     FileManager::loadAttendance(students, subjects);
 }
 
-// No memory to free, because nothing here uses new. Changes are already saved.
-AttendanceSystem::~AttendanceSystem() {
-    cout << "All data is saved. Goodbye!" << endl;
-}
+// ---------- Read-only access ----------
+
+// Give the arrays and single objects to the user interfaces, read-only.
+const Student* AttendanceSystem::getStudents() const { return students; }
+const Subject* AttendanceSystem::getSubjects() const { return subjects; }
+const Student& AttendanceSystem::getStudent(int index) const { return students[index]; }
+const Subject& AttendanceSystem::getSubject(int index) const { return subjects[index]; }
+const Teacher& AttendanceSystem::getTeacher(int index) const { return teachers[index]; }
 
 // ---------- Search helpers ----------
 
@@ -71,215 +82,10 @@ int AttendanceSystem::findTeacher(const string& username) const {
     return -1;
 }
 
-// Prints one row for any Person. Because display() is virtual, the Student
-// or Teacher version runs, depending on the real object passed in.
-void AttendanceSystem::showPerson(const Person& person) const {
-    person.display();
-}
-
-// ---------- Login and accounts ----------
-
-// Allows three attempts. Returns true when a login succeeds.
-bool AttendanceSystem::login() {
-    const int MAX_ATTEMPTS = 3;
-
-    for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        string username = readLine("Username: ");
-        string password = readLine("Password: ");
-
-        for (int i = 0; i < Teacher::getCount(); i++) {
-            if (teachers[i].checkLogin(username, password)) {
-                currentTeacher = i;
-                cout << "\nWelcome, " << teachers[i].getName() << "!" << endl;
-                return true;
-            }
-        }
-        cout << "Wrong username or password. Attempts left: "
-             << MAX_ATTEMPTS - attempt << endl;
-    }
-
-    cout << "Too many attempts. Closing the program." << endl;
-    return false;
-}
-
-// Returns true if the logged-in user is the admin.
-bool AttendanceSystem::isAdminLoggedIn() const {
-    return currentTeacher != -1 && teachers[currentTeacher].isAdmin();
-}
-
-// Changes the logged-in user's password after checking the current one.
-void AttendanceSystem::changePassword() {
-    Teacher& teacher = teachers[currentTeacher];
-
-    string current = readLine("Current password: ");
-    if (!teacher.checkLogin(teacher.getUsername(), current)) {
-        cout << "Wrong password." << endl;
-        return;
-    }
-
-    string newPassword = readLine("New password: ");
-    if (!isValidPassword(newPassword)) {
-        cout << "Invalid password. Use 4 to 20 characters, with no spaces or |" << endl;
-        return;
-    }
-
-    teacher.setPassword(newPassword);
-    if (FileManager::saveTeachers(teachers)) {
-        cout << "Password changed." << endl;
-    }
-}
-
-// Adds a new teacher account. Admin only.
-void AttendanceSystem::addTeacher() {
-    if (!isAdminLoggedIn()) {
-        cout << "Only the admin can add teachers." << endl;
-        return;
-    }
-    if (Teacher::getCount() >= MAX_TEACHERS) {
-        cout << "Limit reached. Cannot add more teachers." << endl;
-        return;
-    }
-
-    string name = readLine("Teacher name: ");
-    if (!isValidName(name)) {
-        cout << "Invalid name. Use 1 to 40 letters, spaces, . ' or -" << endl;
-        return;
-    }
-
-    string username = readLine("Username: ");
-    if (!isValidUsername(username)) {
-        cout << "Invalid username. Use 3 to 20 letters or digits." << endl;
-        return;
-    }
-    if (findTeacher(username) != -1) {
-        cout << "This username already exists." << endl;
-        return;
-    }
-
-    string password = readLine("Password: ");
-    if (!isValidPassword(password)) {
-        cout << "Invalid password. Use 4 to 20 characters, with no spaces or |" << endl;
-        return;
-    }
-
-    teachers[Teacher::getCount()] = Teacher(Teacher::generateId(), name, username, password);
-    Teacher::teacherAdded();
-
-    if (FileManager::saveTeachers(teachers)) {
-        cout << "Teacher added." << endl;
-    }
-}
-
-// Shows every teacher. Admin only. Passwords are never shown.
-void AttendanceSystem::viewTeachers() const {
-    if (!isAdminLoggedIn()) {
-        cout << "Only the admin can view teachers." << endl;
-        return;
-    }
-
-    cout << left << setw(6) << "ID" << setw(30) << "Name" << "Username" << endl;
-    cout << string(50, '-') << endl;
-    for (int i = 0; i < Teacher::getCount(); i++) {
-        showPerson(teachers[i]);
-    }
-    cout << "Total teachers: " << Teacher::getCount() << endl;
-}
-
-// ---------- Students ----------
-
-// Prints the heading row used by every student table.
-static void printStudentHeader() {
-    cout << left << setw(6) << "ID" << setw(17) << "Roll No"
-         << setw(30) << "Name" << "Class" << endl;
-    cout << string(60, '-') << endl;
-}
-
-// Adds a new student. The user gives the roll number, name, and class,
-// and the program generates the internal ID.
-void AttendanceSystem::addStudent() {
-    if (Student::getCount() >= MAX_STUDENTS) {
-        cout << "Limit reached. Cannot add more students." << endl;
-        return;
-    }
-
-    string rollNo = toUpper(readLine("Roll/enrollment number: "));
-    if (!isValidRollNo(rollNo)) {
-        cout << "Invalid roll number. Use 1 to 15 letters or digits." << endl;
-        return;
-    }
-    if (findStudent(rollNo) != -1) {
-        cout << "This roll number already exists." << endl;
-        return;
-    }
-
-    string name = readLine("Name: ");
-    if (!isValidName(name)) {
-        cout << "Invalid name. Use 1 to 40 letters, spaces, . ' or -" << endl;
-        return;
-    }
-
-    string className = toUpper(readLine("Class (for example AIML-A): "));
-    if (!isValidClassName(className)) {
-        cout << "Invalid class. Use 1 to 15 letters, digits, or hyphens." << endl;
-        return;
-    }
-
-    // Two students may really share a name, so this is a warning, not an error.
-    for (int i = 0; i < Student::getCount(); i++) {
-        if (toUpper(students[i].getName()) == toUpper(name) &&
-            students[i].getClassName() == className) {
-            cout << "A student with this name is already in " << className << "." << endl;
-            if (!readYesNo("Add anyway? (Y/N): ")) {
-                cout << "Student not added." << endl;
-                return;
-            }
-            break;
-        }
-    }
-
-    int id = Student::generateId();
-    students[Student::getCount()] = Student(id, rollNo, name, className);
-    Student::studentAdded();
-
-    if (FileManager::saveStudents(students)) {
-        cout << "Student added with internal ID " << id << "." << endl;
-    }
-}
-
-// Shows every student and the total count.
-void AttendanceSystem::viewAllStudents() const {
-    if (Student::getCount() == 0) {
-        cout << "No records found." << endl;
-        return;
-    }
-
-    printStudentHeader();
-    for (int i = 0; i < Student::getCount(); i++) {
-        showPerson(students[i]);
-    }
-    cout << "Total students: " << Student::getCount() << endl;
-}
-
-// Searches by internal ID.
-void AttendanceSystem::searchStudent(int id) const {
-    int index = findStudent(id);
-    if (index == -1) {
-        cout << "Student not found." << endl;
-        return;
-    }
-    printStudentHeader();
-    showPerson(students[index]);
-}
-
-// Overload: matches a roll number exactly, or any part of a name.
+// Matches a roll number exactly, or any part of a name.
 // Upper and lower case are treated the same.
-void AttendanceSystem::searchStudent(const string& text) const {
-    if (text.empty()) {
-        cout << "Nothing to search for." << endl;
-        return;
-    }
-
-    string searchText = toUpper(text);
+int AttendanceSystem::findMatchingStudents(const string& text, int results[]) const {
+    string searchText = toUpper(trim(text));
     int matches = 0;
 
     for (int i = 0; i < Student::getCount(); i++) {
@@ -287,92 +93,308 @@ void AttendanceSystem::searchStudent(const string& text) const {
         bool nameMatches = toUpper(students[i].getName()).find(searchText) != string::npos;
 
         if (rollMatches || nameMatches) {
-            if (matches == 0) {
-                printStudentHeader();
-            }
-            showPerson(students[i]);
+            results[matches] = i;
             matches++;
         }
     }
+    return matches;
+}
 
-    if (matches == 0) {
-        cout << "Student not found." << endl;
+// ---------- Login and accounts ----------
+
+// Returns the index of the teacher with these details, or -1.
+int AttendanceSystem::checkLogin(const string& username, const string& password) const {
+    for (int i = 0; i < Teacher::getCount(); i++) {
+        if (teachers[i].checkLogin(username, password)) {
+            return i;
+        }
     }
+    return -1;
+}
+
+// Returns true if this teacher is the admin.
+bool AttendanceSystem::isAdmin(int teacher) const {
+    return teacher >= 0 && teacher < Teacher::getCount() && teachers[teacher].isAdmin();
+}
+
+// Checks a teacher's current password before it may be changed.
+Result AttendanceSystem::checkCurrentPassword(int teacher, const string& password) const {
+    if (!teachers[teacher].checkLogin(teachers[teacher].getUsername(), password)) {
+        return Result(RESULT_INVALID, "Wrong password.", "currentPassword");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks the rules for a new password.
+Result AttendanceSystem::checkNewPassword(const string& password, const string& field) const {
+    if (!isValidPassword(password)) {
+        return Result(RESULT_INVALID, "Invalid password. Use 4 to 20 characters, with no spaces or |",
+                      field);
+    }
+    return Result(RESULT_OK);
+}
+
+// Changes a teacher's password after checking the current one.
+Result AttendanceSystem::changePassword(int teacher, const string& current,
+                                        const string& newPassword) {
+    Result check = checkCurrentPassword(teacher, current);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkNewPassword(newPassword, "newPassword");
+    if (!check.isOk()) {
+        return check;
+    }
+
+    teachers[teacher].setPassword(newPassword);
+    return saveResult(FileManager::saveTeachers(teachers), "Password changed.");
+}
+
+// Replaces every password. The deployed server uses this for its secret
+// demo password, because the sample passwords are public on GitHub.
+Result AttendanceSystem::setAllPasswords(const string& password) {
+    Result check = checkNewPassword(password);
+    if (!check.isOk()) {
+        return check;
+    }
+
+    for (int i = 0; i < Teacher::getCount(); i++) {
+        teachers[i].setPassword(password);
+    }
+    return saveResult(FileManager::saveTeachers(teachers), "All passwords replaced.");
+}
+
+// ---------- Teachers ----------
+
+// Only the admin may add teachers, and the array must have room.
+Result AttendanceSystem::canAddTeacher(int actor) const {
+    if (!isAdmin(actor)) {
+        return Result(RESULT_FORBIDDEN, "Only the admin can add teachers.");
+    }
+    if (Teacher::getCount() >= MAX_TEACHERS) {
+        return Result(RESULT_LIMIT, "Limit reached. Cannot add more teachers.");
+    }
+    return Result(RESULT_OK);
+}
+
+// Only the admin may see the list of teachers.
+Result AttendanceSystem::canViewTeachers(int actor) const {
+    if (!isAdmin(actor)) {
+        return Result(RESULT_FORBIDDEN, "Only the admin can view teachers.");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a new username: valid, and not already in use.
+Result AttendanceSystem::checkNewUsername(const string& username) const {
+    string clean = trim(username);
+    if (!isValidUsername(clean)) {
+        return Result(RESULT_INVALID, "Invalid username. Use 3 to 20 letters or digits.", "username");
+    }
+    if (findTeacher(clean) != -1) {
+        return Result(RESULT_DUPLICATE, "This username already exists.", "username");
+    }
+    return Result(RESULT_OK);
+}
+
+// Adds a new teacher account. Admin only.
+Result AttendanceSystem::addTeacher(int actor, const string& name, const string& username,
+                                    const string& password) {
+    Result check = canAddTeacher(actor);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkPersonName(name);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkNewUsername(username);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkNewPassword(password);
+    if (!check.isOk()) {
+        return check;
+    }
+
+    teachers[Teacher::getCount()] = Teacher(Teacher::generateId(), trim(name), trim(username), password);
+    Teacher::teacherAdded();
+
+    return saveResult(FileManager::saveTeachers(teachers), "Teacher added.");
+}
+
+// ---------- Rules shared by several actions ----------
+
+// Checks the name of a student or a teacher.
+Result AttendanceSystem::checkPersonName(const string& name) const {
+    if (!isValidName(trim(name))) {
+        return Result(RESULT_INVALID, "Invalid name. Use 1 to 40 letters, spaces, . ' or -", "name");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a class name.
+Result AttendanceSystem::checkClassName(const string& className) const {
+    if (!isValidClassName(toUpper(trim(className)))) {
+        return Result(RESULT_INVALID, "Invalid class. Use 1 to 15 letters, digits, or hyphens.",
+                      "className");
+    }
+    return Result(RESULT_OK);
+}
+
+// ---------- Students ----------
+
+// The student array must have room.
+Result AttendanceSystem::canAddStudent() const {
+    if (Student::getCount() >= MAX_STUDENTS) {
+        return Result(RESULT_LIMIT, "Limit reached. Cannot add more students.");
+    }
+    return Result(RESULT_OK);
+}
+
+// Turns a failed search into a message.
+Result AttendanceSystem::checkStudentExists(int index) const {
+    if (index < 0 || index >= Student::getCount()) {
+        return Result(RESULT_NOT_FOUND, "Student not found.");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a new roll number: valid, and not already in use.
+Result AttendanceSystem::checkNewRollNo(const string& rollNo) const {
+    string clean = toUpper(trim(rollNo));
+    if (!isValidRollNo(clean)) {
+        return Result(RESULT_INVALID, "Invalid roll number. Use 1 to 15 letters or digits.", "rollNo");
+    }
+    if (findStudent(clean) != -1) {
+        return Result(RESULT_DUPLICATE, "This roll number already exists.", "rollNo");
+    }
+    return Result(RESULT_OK);
+}
+
+// Two students may really share a name, so this asks for confirmation
+// instead of refusing.
+Result AttendanceSystem::checkSameName(const string& name, const string& className) const {
+    string cleanName = toUpper(trim(name));
+    string cleanClass = toUpper(trim(className));
+
+    for (int i = 0; i < Student::getCount(); i++) {
+        if (toUpper(students[i].getName()) == cleanName &&
+            students[i].getClassName() == cleanClass) {
+            return Result(RESULT_NEEDS_CONFIRM,
+                          "A student with this name is already in " + cleanClass + ".");
+        }
+    }
+    return Result(RESULT_OK);
+}
+
+// Adds a new student. The caller gives the roll number, name, and class,
+// and the program generates the internal ID. "confirmed" means the user has
+// agreed to add a second student with the same name.
+Result AttendanceSystem::addStudent(const string& rollNo, const string& name,
+                                    const string& className, bool confirmed) {
+    Result check = canAddStudent();
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkNewRollNo(rollNo);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkPersonName(name);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkClassName(className);
+    if (!check.isOk()) {
+        return check;
+    }
+    if (!confirmed) {
+        check = checkSameName(name, className);
+        if (!check.isOk()) {
+            return check;
+        }
+    }
+
+    int id = Student::generateId();
+    students[Student::getCount()] = Student(id, toUpper(trim(rollNo)), trim(name),
+                                            toUpper(trim(className)));
+    Student::studentAdded();
+
+    stringstream message;
+    message << "Student added with internal ID " << id << ".";
+    return saveResult(FileManager::saveStudents(students), message.str());
+}
+
+// Checks a changed roll number. The student may keep their own number.
+Result AttendanceSystem::checkUpdateRollNo(int index, const string& rollNo) const {
+    string clean = toUpper(trim(rollNo));
+    if (!isValidRollNo(clean)) {
+        return Result(RESULT_INVALID, "Invalid roll number. Nothing was changed.", "rollNo");
+    }
+    int owner = findStudent(clean);
+    if (owner != -1 && owner != index) {
+        return Result(RESULT_DUPLICATE, "This roll number already exists. Nothing was changed.", "rollNo");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a changed name.
+Result AttendanceSystem::checkUpdateName(const string& name) const {
+    if (!isValidName(trim(name))) {
+        return Result(RESULT_INVALID, "Invalid name. Nothing was changed.", "name");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a changed class. Existing marks belong to the old class's subjects,
+// so a student with attendance cannot move.
+Result AttendanceSystem::checkUpdateClass(int index, const string& className) const {
+    string clean = toUpper(trim(className));
+    if (!isValidClassName(clean)) {
+        return Result(RESULT_INVALID, "Invalid class. Nothing was changed.", "className");
+    }
+    if (clean != students[index].getClassName() && students[index].getRecordCount() > 0) {
+        return Result(RESULT_INVALID,
+                      "Cannot change the class of a student who has attendance. Nothing was changed.",
+                      "className");
+    }
+    return Result(RESULT_OK);
 }
 
 // Changes a student's roll number, name, or class.
 // Everything is checked first, so a bad entry changes nothing.
-void AttendanceSystem::updateStudent() {
-    int index = findStudent(toUpper(readLine("Roll number of the student: ")));
-    if (index == -1) {
-        cout << "Student not found." << endl;
-        return;
+Result AttendanceSystem::updateStudent(int index, const string& rollNo, const string& name,
+                                       const string& className) {
+    Result check = checkStudentExists(index);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkUpdateRollNo(index, rollNo);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkUpdateName(name);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkUpdateClass(index, className);
+    if (!check.isOk()) {
+        return check;
     }
 
-    printStudentHeader();
-    showPerson(students[index]);
-    cout << "Press Enter to keep the current value." << endl;
+    students[index].setRollNo(toUpper(trim(rollNo)));
+    students[index].setName(trim(name));
+    students[index].setClassName(toUpper(trim(className)));
 
-    string newRollNo = toUpper(readLine("New roll number: "));
-    if (newRollNo.empty()) {
-        newRollNo = students[index].getRollNo();
-    }
-    if (!isValidRollNo(newRollNo)) {
-        cout << "Invalid roll number. Nothing was changed." << endl;
-        return;
-    }
-    int owner = findStudent(newRollNo);
-    if (owner != -1 && owner != index) {
-        cout << "This roll number already exists. Nothing was changed." << endl;
-        return;
-    }
-
-    string newName = readLine("New name: ");
-    if (newName.empty()) {
-        newName = students[index].getName();
-    }
-    if (!isValidName(newName)) {
-        cout << "Invalid name. Nothing was changed." << endl;
-        return;
-    }
-
-    string newClass = toUpper(readLine("New class: "));
-    if (newClass.empty()) {
-        newClass = students[index].getClassName();
-    }
-    if (!isValidClassName(newClass)) {
-        cout << "Invalid class. Nothing was changed." << endl;
-        return;
-    }
-    // Existing marks belong to the old class's subjects.
-    if (newClass != students[index].getClassName() && students[index].getRecordCount() > 0) {
-        cout << "Cannot change the class of a student who has attendance. "
-             << "Nothing was changed." << endl;
-        return;
-    }
-
-    students[index].setRollNo(newRollNo);
-    students[index].setName(newName);
-    students[index].setClassName(newClass);
-
-    if (FileManager::saveStudents(students)) {
-        cout << "Student updated." << endl;
-    }
+    return saveResult(FileManager::saveStudents(students), "Student updated.");
 }
 
-// Deletes a student and their attendance, after asking for confirmation.
-void AttendanceSystem::deleteStudent() {
-    int index = findStudent(toUpper(readLine("Roll number of the student: ")));
-    if (index == -1) {
-        cout << "Student not found." << endl;
-        return;
-    }
-
-    printStudentHeader();
-    showPerson(students[index]);
-    if (!readYesNo("Delete this student and their attendance? (Y/N): ")) {
-        cout << "Nothing was deleted." << endl;
-        return;
+// Deletes a student and their attendance.
+Result AttendanceSystem::deleteStudent(int index) {
+    Result check = checkStudentExists(index);
+    if (!check.isOk()) {
+        return check;
     }
 
     // Move every later student one place left to fill the gap.
@@ -384,193 +406,186 @@ void AttendanceSystem::deleteStudent() {
     Student::studentRemoved();
 
     // Attendance is stored inside each Student, so both files must be rewritten.
-    if (FileManager::saveStudents(students) && FileManager::saveAttendance(students)) {
-        cout << "Student deleted." << endl;
-    }
+    bool saved = FileManager::saveStudents(students) && FileManager::saveAttendance(students);
+    return saveResult(saved, "Student deleted.");
 }
 
 // ---------- Subjects ----------
 
-// Adds a new subject for one class. Subject codes must be unique.
-void AttendanceSystem::addSubject() {
+// The subject array must have room.
+Result AttendanceSystem::canAddSubject() const {
     if (Subject::getCount() >= MAX_SUBJECTS) {
-        cout << "Limit reached. Cannot add more subjects." << endl;
-        return;
+        return Result(RESULT_LIMIT, "Limit reached. Cannot add more subjects.");
     }
-
-    string code = toUpper(readLine("Subject code: "));
-    if (!isValidCode(code)) {
-        cout << "Invalid code. Use 1 to 10 letters or digits." << endl;
-        return;
-    }
-    if (findSubject(code) != -1) {
-        cout << "This subject code already exists." << endl;
-        return;
-    }
-
-    string name = readLine("Subject name: ");
-    if (!isValidSubjectName(name)) {
-        cout << "Invalid name. Use 1 to 40 characters, without |" << endl;
-        return;
-    }
-
-    string className = toUpper(readLine("Class (for example AIML-A): "));
-    if (!isValidClassName(className)) {
-        cout << "Invalid class. Use 1 to 15 letters, digits, or hyphens." << endl;
-        return;
-    }
-
-    subjects[Subject::getCount()] = Subject(code, name, className);
-    Subject::subjectAdded();
-
-    if (FileManager::saveSubjects(subjects)) {
-        cout << "Subject added." << endl;
-    }
+    return Result(RESULT_OK);
 }
 
-// Shows every subject and the total count.
-void AttendanceSystem::viewSubjects() const {
-    if (Subject::getCount() == 0) {
-        cout << "No records found." << endl;
-        return;
+// Turns a failed subject search into a message.
+Result AttendanceSystem::checkSubjectExists(const string& code) const {
+    if (findSubject(toUpper(trim(code))) == -1) {
+        return Result(RESULT_NOT_FOUND, "Subject not found.", "subject");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a new subject code: valid, and not already in use.
+Result AttendanceSystem::checkNewCode(const string& code) const {
+    string clean = toUpper(trim(code));
+    if (!isValidCode(clean)) {
+        return Result(RESULT_INVALID, "Invalid code. Use 1 to 10 letters or digits.", "code");
+    }
+    if (findSubject(clean) != -1) {
+        return Result(RESULT_DUPLICATE, "This subject code already exists.", "code");
+    }
+    return Result(RESULT_OK);
+}
+
+// Checks a subject name.
+Result AttendanceSystem::checkSubjectName(const string& name) const {
+    if (!isValidSubjectName(trim(name))) {
+        return Result(RESULT_INVALID, "Invalid name. Use 1 to 40 characters, without |", "name");
+    }
+    return Result(RESULT_OK);
+}
+
+// Adds a new subject for one class. Subject codes must be unique.
+Result AttendanceSystem::addSubject(const string& code, const string& name,
+                                    const string& className) {
+    Result check = canAddSubject();
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkNewCode(code);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkSubjectName(name);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkClassName(className);
+    if (!check.isOk()) {
+        return check;
     }
 
-    cout << left << setw(12) << "Code" << setw(42) << "Subject" << "Class" << endl;
-    cout << string(60, '-') << endl;
-    for (int i = 0; i < Subject::getCount(); i++) {
-        subjects[i].display();
-    }
-    cout << "Total subjects: " << Subject::getCount() << endl;
+    subjects[Subject::getCount()] = Subject(toUpper(trim(code)), trim(name),
+                                            toUpper(trim(className)));
+    Subject::subjectAdded();
+
+    return saveResult(FileManager::saveSubjects(subjects), "Subject added.");
 }
 
 // ---------- Attendance ----------
 
-// Marks one subject on one date for every student of that subject's class.
-void AttendanceSystem::markAttendance() {
-    int subjectIndex = findSubject(toUpper(readLine("Subject code: ")));
-    if (subjectIndex == -1) {
-        cout << "Subject not found." << endl;
-        return;
+// Checks everything that could stop a marking session, before any mark is
+// stored, so a session can never be left half finished.
+Result AttendanceSystem::checkCanMark(const string& code, const Date& date) const {
+    Result check = checkSubjectExists(code);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkClassDate(date);
+    if (!check.isOk()) {
+        return check;
     }
 
-    string code = subjects[subjectIndex].getCode();
-    string className = subjects[subjectIndex].getClassName();
-    Date date = readDate("Date (DD-MM-YYYY, Enter for today): ");
-
-    // Check everything first, so nothing is stored if marking cannot finish.
+    const Subject& subject = subjects[findSubject(toUpper(trim(code)))];
     int classSize = 0;
+
     for (int i = 0; i < Student::getCount(); i++) {
-        if (students[i].getClassName() != className) {
+        if (students[i].getClassName() != subject.getClassName()) {
             continue;
         }
         classSize++;
 
-        if (students[i].hasRecord(code, date)) {
-            cout << "Attendance for " << code << " on " << date.toString()
-                 << " is already marked. Use Correct a mark to change it." << endl;
-            return;
+        if (students[i].hasRecord(subject.getCode(), date)) {
+            return Result(RESULT_DUPLICATE, "Attendance for " + subject.getCode() + " on " +
+                          date.toString() + " is already marked. Use Correct a mark to change it.");
         }
         if (students[i].getRecordCount() >= MAX_RECORDS) {
-            cout << "Limit reached for " << students[i].getName()
-                 << ". Attendance was not marked." << endl;
-            return;
+            return Result(RESULT_LIMIT, "Limit reached for " + students[i].getName() +
+                          ". Attendance was not marked.");
         }
     }
+
     if (classSize == 0) {
-        cout << "No students found in class " << className << "." << endl;
-        return;
+        return Result(RESULT_NOT_FOUND, "No students found in class " + subject.getClassName() + ".");
+    }
+    return Result(RESULT_OK);
+}
+
+// Marks one subject on one date for every student of that subject's class.
+// All marks are checked first, so a session is stored only once it is complete.
+Result AttendanceSystem::markAttendance(const string& code, const Date& date, const char marks[],
+                                        int& presentCount, int& absentCount) {
+    presentCount = 0;
+    absentCount = 0;
+
+    Result check = checkCanMark(code, date);
+    if (!check.isOk()) {
+        return check;
     }
 
-    // Collect every answer first. A session is stored only once it is complete.
-    cout << "Marking " << code << " for " << className
-         << " on " << date.toString() << endl;
-    char marks[MAX_STUDENTS];
+    const Subject& subject = subjects[findSubject(toUpper(trim(code)))];
+
     for (int i = 0; i < Student::getCount(); i++) {
-        if (students[i].getClassName() == className) {
-            marks[i] = readStatus(students[i].getRollNo() + "  " +
-                                  students[i].getName() + " (P/A): ");
+        if (students[i].getClassName() == subject.getClassName() &&
+            marks[i] != 'P' && marks[i] != 'A') {
+            return Result(RESULT_INVALID, "Every student must be marked P or A.");
         }
     }
 
     // All answers are in, so add a record to each student and save it.
-    int presentCount = 0;
     bool saved = true;
     for (int i = 0; i < Student::getCount(); i++) {
-        if (students[i].getClassName() != className) {
+        if (students[i].getClassName() != subject.getClassName()) {
             continue;
         }
 
-        AttendanceRecord record(code, date, marks[i]);
+        AttendanceRecord record(subject.getCode(), date, marks[i]);
         students[i].addRecord(record);
         if (!FileManager::appendAttendance(students[i].getId(), record)) {
             saved = false;
         }
         if (record.isPresent()) {
             presentCount++;
+        } else {
+            absentCount++;
         }
     }
 
-    if (saved) {
-        cout << "Attendance saved. Present: " << presentCount
-             << ", Absent: " << classSize - presentCount << endl;
+    stringstream message;
+    message << "Attendance saved. Present: " << presentCount << ", Absent: " << absentCount;
+    return saveResult(saved, message.str());
+}
+
+// Checks that a mark exists before it is corrected.
+Result AttendanceSystem::checkRecordExists(int index, const string& code, const Date& date) const {
+    if (!students[index].hasRecord(toUpper(trim(code)), date)) {
+        return Result(RESULT_NOT_FOUND, "No attendance record found.");
     }
+    return Result(RESULT_OK);
 }
 
 // Corrects one existing mark.
-void AttendanceSystem::editAttendance() {
-    int studentIndex = findStudent(toUpper(readLine("Roll number of the student: ")));
-    if (studentIndex == -1) {
-        cout << "Student not found." << endl;
-        return;
+Result AttendanceSystem::editAttendance(int index, const string& code, const Date& date,
+                                        char status) {
+    Result check = checkStudentExists(index);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkSubjectExists(code);
+    if (!check.isOk()) {
+        return check;
+    }
+    check = checkRecordExists(index, code, date);
+    if (!check.isOk()) {
+        return check;
+    }
+    if (status != 'P' && status != 'A') {
+        return Result(RESULT_INVALID, "Please enter P or A.", "status");
     }
 
-    string code = toUpper(readLine("Subject code: "));
-    if (findSubject(code) == -1) {
-        cout << "Subject not found." << endl;
-        return;
-    }
-
-    Date date = readDate("Date (DD-MM-YYYY, Enter for today): ");
-    if (!students[studentIndex].hasRecord(code, date)) {
-        cout << "No attendance record found." << endl;
-        return;
-    }
-
-    cout << "Current status: " << students[studentIndex].getStatus(code, date) << endl;
-    char newStatus = readStatus("New status (P/A): ");
-    students[studentIndex].updateRecord(code, date, newStatus);
-
-    if (FileManager::saveAttendance(students)) {
-        cout << "Attendance corrected." << endl;
-    }
-}
-// Shows one student's attendance, per subject and overall.
-void AttendanceSystem::viewStudentAttendance() const {
-    int index = findStudent(toUpper(readLine("Roll number of the student: ")));
-    if (index == -1) {
-        cout << "Student not found." << endl;
-        return;
-    }
-    Report::studentReport(students[index], subjects);
-}
-
-// ---------- Reports ----------
-
-// Shows the defaulter list.
-void AttendanceSystem::showDefaulters() const {
-    Report::defaulterList(students, subjects);
-}
-
-// Asks for a date and shows that day's report.
-void AttendanceSystem::showDailyReport() const {
-    Date date = readDate("Date (DD-MM-YYYY, Enter for today): ");
-    Report::dailyReport(students, subjects, date);
-}
-
-// Asks for a class, month, and year, and shows that month's report.
-void AttendanceSystem::showMonthlyReport() const {
-    string className = toUpper(readLine("Class (for example AIML-A): "));
-    int month = readIntInRange("Month (1-12): ", 1, 12);
-    int year = readIntInRange("Year: ", 2000, Date::today().getYear());
-    Report::monthlyReport(students, className, month, year);
+    students[index].updateRecord(toUpper(trim(code)), date, status);
+    return saveResult(FileManager::saveAttendance(students), "Attendance corrected.");
 }

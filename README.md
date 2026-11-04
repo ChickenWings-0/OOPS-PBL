@@ -28,12 +28,12 @@ Built for the **OOPs using C++ Lab** (PBL), 3rd Semester, B.Tech CSE (AIML).
 
 ## How to compile and run
 
-You need g++ with C++11 support. No external libraries are used.
+You need g++ with C++11 support. The terminal version uses no external libraries.
 
 Open a terminal in the project folder and run:
 
 ```
-g++ -std=c++11 -Wall -Wextra -Iinclude main.cpp src/*.cpp -o attendance.exe
+g++ -std=c++11 -Wall -Wextra -Iinclude -Iconsole main.cpp console/*.cpp src/*.cpp -o attendance.exe
 .\attendance.exe
 ```
 
@@ -105,7 +105,7 @@ Total entries: 5
 
 | Concept | Where |
 |---------|-------|
-| Classes and objects | `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem` |
+| Classes and objects | `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, `Result`, `ConsoleUI`, `ReportPrinter` |
 | Encapsulation | Private data with getters and setters. `Teacher::password` is only compared inside `checkLogin()`. |
 | Arrays | `students[]`, `subjects[]`, and `teachers[]` in `AttendanceSystem`, and each student's `records[]` attendance array |
 | Static members | `totalStudents`, `nextId`, `getCount()`, `generateId()`, `calcPercentage()`, `DEFAULTER_LIMIT` |
@@ -117,9 +117,11 @@ Total entries: 5
 ## Project structure
 
 ```
-main.cpp       Program entry and menus
-include/       Header files, one per class
-src/           Source files, one per class
+main.cpp       Terminal entry and menus
+console/       Terminal prompts and printing
+include/       Core header files, one per class
+src/           Core source files, one per class
+tests/         Recorded terminal output and its test runner
 data/          students.txt, subjects.txt, teachers.txt, attendance.txt
 ```
 

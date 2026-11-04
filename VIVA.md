@@ -15,13 +15,13 @@ It is a console program for a school or college. A teacher logs in, manages stud
 The required ones are classes, arrays, static members, and file handling. We also used inheritance and function overloading.
 
 **Q3. How many classes are there?**
-Nine: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, and `AttendanceSystem`.
+Twelve. The core has ten: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, and `Result`. The terminal adds `ConsoleUI` and `ReportPrinter`.
 
 **Q4. What happens when the program starts?**
-`main()` creates one `AttendanceSystem` object. Its constructor loads teachers, subjects, students, and then attendance from the files. Then the login screen appears, and after a correct login the main menu runs in a loop until the user exits.
+`main()` creates one `ConsoleUI` object, which contains the `AttendanceSystem` object. The `AttendanceSystem` constructor loads teachers, subjects, students, and then attendance from the files. Then the login screen appears, and after a correct login the main menu runs in a loop until the user exits.
 
 **Q5. Why does `main.cpp` contain so little logic?**
-It only shows menus and calls functions of `AttendanceSystem`. Keeping the menu separate from the logic makes each part easier to read and test.
+It only shows menus and calls functions of `ConsoleUI`. `ConsoleUI` asks the questions and prints the answers, and `AttendanceSystem` makes every decision. Keeping them separate makes each part easier to read and test, and it lets the web server use the same logic.
 
 **Q6. What are the limitations of your project?**
 Plain text passwords, fixed array limits, one user at a time, and one lecture per subject per date. Stating these honestly shows that you understand your own design.
@@ -46,13 +46,13 @@ A special function that runs automatically when an object is created. It has the
 `Student students[100]` creates 100 objects with no arguments, so the compiler needs a constructor that takes none. Without it, the array declaration does not compile.
 
 **Q12. What is a destructor? What do yours do?**
-A function that runs automatically when an object is destroyed. It has the class name with `~` in front. Our classes do not use `new`, so there is nothing to free. `~AttendanceSystem()` only prints a closing message. File streams close automatically when they go out of scope.
+A function that runs automatically when an object is destroyed. It has the class name with `~` in front. Our classes do not use `new`, so there is nothing to free. `~ConsoleUI()` only prints a closing message. File streams close automatically when they go out of scope.
 
 **Q13. Why are some functions marked `const`?**
 `const` after a function means it will not change the object. For example `getName() const`. The compiler gives an error if the function tries to change data, which prevents mistakes.
 
 **Q14. What is composition? Where is it?**
-One class containing objects of another, a "has-a" relationship. A `Student` has `AttendanceRecord` objects, and an `AttendanceRecord` has a `Date`.
+One class containing objects of another, a "has-a" relationship. A `Student` has `AttendanceRecord` objects, an `AttendanceRecord` has a `Date`, and a `ConsoleUI` has an `AttendanceSystem`.
 
 **Q15. Why separate `.h` and `.cpp` files?**
 The `.h` file declares what a class has, and the `.cpp` file defines how it works. Other files only need to include the header. This keeps code organised, and each class easy to find.
@@ -85,7 +85,7 @@ Linear search, O(n), because we check each student in turn. For 100 students thi
 **Q23. Why pass `Student` by `const` reference?**
 A `Student` holds a 300-record array, so one object is about 12 KB. A reference avoids copying it, and `const` guarantees the function will not change it.
 
-**Q24. Why is `app` declared `static` in `main()`?**
+**Q24. Why is `ui` declared `static` in `main()`?**
 All the arrays together are about 1.2 MB. Normal local variables live on the stack, which is limited. A `static` local variable lives in static storage, so this data does not use up the stack.
 
 ---
@@ -122,8 +122,8 @@ Yes, in one case: if the student with the highest ID is deleted and the program 
 **Q34. Why are all `FileManager` and `Report` functions static?**
 These classes store no data of their own, so there is nothing an object would hold. `FileManager::saveStudents(students)` is clear and needs no object.
 
-**Q34a. `printStudentHeader()` and `percentText()` are marked `static` but are not in a class. Is that the same thing?**
-No, this is a different meaning of the word. On a function outside any class, `static` means the function can only be used inside that one `.cpp` file. It keeps small private helpers hidden from the rest of the program. It has nothing to do with objects or sharing. In `main()`, `static AttendanceSystem app;` is a third meaning: a local variable that lives for the whole program.
+**Q34a. `printStudentHeader()` and `saveResult()` are marked `static` but are not in a class. Is that the same thing?**
+No, this is a different meaning of the word. On a function outside any class, `static` means the function can only be used inside that one `.cpp` file. It keeps small private helpers hidden from the rest of the program. It has nothing to do with objects or sharing. In `main()`, `static ConsoleUI ui;` is a third meaning: a local variable that lives for the whole program.
 
 ---
 
@@ -224,7 +224,7 @@ With an initialiser list: `Student(...) : Person(id, name)`. The base part is bu
 Constructors: base first, then derived. Destructors: derived first, then base.
 
 **Q62. What is function overloading? Show an example.**
-Same function name, different parameters. `searchStudent(int)` searches by internal ID, and `searchStudent(string)` searches by roll number or name. The compiler picks the right one from the argument type. This is compile-time polymorphism.
+Same function name, different parameters. In `ConsoleUI`, `searchStudent(int)` searches by internal ID, and `searchStudent(string)` searches by roll number or name. The compiler picks the right one from the argument type. This is compile-time polymorphism.
 
 **Q63. What is the difference between overloading and overriding?**
 Overloading: same name, different parameters, usually in one class, decided at compile time. Overriding: a derived class gives its own version of a virtual function with the same signature, decided at run time. `searchStudent` is overloaded. `display()` is overridden.
@@ -233,7 +233,7 @@ Overloading: same name, different parameters, usually in one class, decided at c
 One function call behaves differently depending on the real type of the object, and the choice is made while the program runs.
 
 ```cpp
-void AttendanceSystem::showPerson(const Person& person) const {
+void ConsoleUI::showPerson(const Person& person) const {
     person.display();   // Student or Teacher version, chosen at run time
 }
 ```
@@ -250,10 +250,10 @@ If a derived object is deleted through a base pointer, a virtual destructor ensu
 **Q66. Explain your compile command.**
 
 ```
-g++ -std=c++11 -Wall -Wextra -Iinclude main.cpp src/*.cpp -o attendance.exe
+g++ -std=c++11 -Wall -Wextra -Iinclude -Iconsole main.cpp console/*.cpp src/*.cpp -o attendance.exe
 ```
 
-`-std=c++11` selects the language version. `-Wall -Wextra` turn on warnings. `-Iinclude` tells the compiler where headers are. `src/*.cpp` compiles all source files. `-o` names the output.
+`-std=c++11` selects the language version. `-Wall -Wextra` turn on warnings. `-Iinclude -Iconsole` tell the compiler where headers are. `console/*.cpp` and `src/*.cpp` compile all source files. `-o` names the output.
 
 **Q67. Why read input with `getline` and not `cin >>`?**
 `cin >>` leaves the newline behind, and the next `getline` then reads an empty line. Also, typing letters where a number is expected breaks `cin`. Reading everything as a line and converting it ourselves avoids both problems.
@@ -409,8 +409,8 @@ Each member should know these well and be able to open the code and walk through
 
 ### Aksh Rastogi: Core system, login, menus
 
-- **Module:** `main.cpp`, `AttendanceSystem` (core and login), `Teacher`, `Config.h`
-- **Be ready to walk through:** program start, the login loop, how menus call `AttendanceSystem`, and how the admin check works
+- **Module:** `main.cpp`, `ConsoleUI`, `AttendanceSystem` (core and login), `Result`, `Teacher`, `Config.h`
+- **Be ready to walk through:** program start, the login loop, how menus reach `AttendanceSystem` through `ConsoleUI`, and how the admin check works
 - **Revise:** Q4, Q5, Q12, Q14, Q24, Q64, Q66, Q68
 - **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100
 
@@ -430,14 +430,14 @@ Each member should know these well and be able to open the code and walk through
 
 ### Srishti Gupta: File handling and validation
 
-- **Module:** `FileManager`, `Utils`, sample data
+- **Module:** `FileManager`, `Utils`, `ConsoleInput`, sample data
 - **Be ready to walk through:** loading one file line by line, append versus rewrite, handling a missing file, and `readInt`
 - **Revise:** Q35 to Q47, Q67
 - **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103
 
 ### Dhruv Kataria: Reports and testing
 
-- **Module:** `Report`, report functions in `AttendanceSystem`, `README.md`, testing
+- **Module:** `Report`, `ReportPrinter`, `README.md`, testing
 - **Be ready to walk through:** percentage calculation, the defaulter loop, daily and monthly reports, and a few test cases from TASKS.md
 - **Revise:** Q34, Q48 to Q51, Q54, Q55
 - **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104

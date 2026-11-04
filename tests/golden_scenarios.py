@@ -6,6 +6,7 @@
 ADMIN = ["admin", "admin123"]
 TEACHER = ["teacher1", "pass123"]
 QUIT = ["0"]   # Exit from the main menu
+RESTART = "<<restart>>"   # closes the program and starts it again on the same files
 
 SCENARIOS = {
     # ---------- Login and menus ----------
@@ -181,6 +182,21 @@ SCENARIOS = {
         "3", "1", "CS201B", "04-11-2026", "P", "P", "P",
         "2", "90518015625", "CS201A", "03-11-2026", "P", "0",
         "5", "1", "admin123", "newpass1", "2", "New Teacher", "teacher2", "goodpass", "0"] + QUIT),
+
+    # ---------- Restarting the program ----------
+    "restart_new_password": ("none", ADMIN + ["5", "1", "admin123", "newpass1", "0"] + QUIT + [RESTART]
+                             + ["admin", "admin123", "admin", "newpass1"] + QUIT),
+    "restart_new_teacher": ("none", ADMIN + ["5", "2", "New Teacher", "teacher2", "goodpass", "0"] + QUIT
+                            + [RESTART, "teacher2", "goodpass", "5", "0"] + QUIT),
+    "restart_data_kept": ("none", ADMIN + [
+        "1", "1", "92018015625", "New Student", "AIML-B", "0",
+        "3", "1", "CS201B", "04-11-2026", "P", "A", "P", "P", "P", "0"] + QUIT + [RESTART] + ADMIN + [
+        "1", "1", "92118015625", "Next Student", "AIML-B", "2", "0",
+        "3", "3", "92018015625", "0", "4", "2", "04-11-2026", "0"] + QUIT),
+    "restart_after_closing_early": ("none", ADMIN + ["1", "1", "92018015625", "Kept Student", "AIML-A",
+                                                     RESTART] + ADMIN + ["1", "2", "0"] + QUIT),
+    "restart_after_delete": ("none", ADMIN + ["1", "6", "91018015625", "Y", "0"] + QUIT + [RESTART] + ADMIN + [
+        "1", "1", "92018015625", "After Restart", "AIML-A", "2", "0"] + QUIT),
 
     # ---------- Limits ----------
     "limit_students": ("full_students", ADMIN + ["1", "1", "2", "0"] + QUIT),
