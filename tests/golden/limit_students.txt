@@ -1,0 +1,369 @@
+======================================
+    ATTENDANCE MANAGEMENT SYSTEM
+======================================
+Username: Password: 
+Welcome, Administrator!
+
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: Limit reached. Cannot add more students.
+
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: ID    Roll No          Name                          Class
+------------------------------------------------------------
+1     90118015625      Aarav Sharma                  AIML-A
+2     90218015625      Diya Verma                    AIML-A
+3     90318015625      Kabir Mehta                   AIML-A
+4     90418015625      Ananya Iyer                   AIML-A
+5     90518015625      Rohan Das                     AIML-A
+6     90618015625      Isha Nair                     AIML-A
+7     90718015625      Arjun Malhotra                AIML-B
+8     90818015625      Meera Joshi                   AIML-B
+9     90918015625      Vivaan Singh                  AIML-B
+10    91018015625      Tara Bose                     AIML-B
+11    80000000011      Filler Student                FILLER
+12    80000000012      Filler Student                FILLER
+13    80000000013      Filler Student                FILLER
+14    80000000014      Filler Student                FILLER
+15    80000000015      Filler Student                FILLER
+16    80000000016      Filler Student                FILLER
+17    80000000017      Filler Student                FILLER
+18    80000000018      Filler Student                FILLER
+19    80000000019      Filler Student                FILLER
+20    80000000020      Filler Student                FILLER
+21    80000000021      Filler Student                FILLER
+22    80000000022      Filler Student                FILLER
+23    80000000023      Filler Student                FILLER
+24    80000000024      Filler Student                FILLER
+25    80000000025      Filler Student                FILLER
+26    80000000026      Filler Student                FILLER
+27    80000000027      Filler Student                FILLER
+28    80000000028      Filler Student                FILLER
+29    80000000029      Filler Student                FILLER
+30    80000000030      Filler Student                FILLER
+31    80000000031      Filler Student                FILLER
+32    80000000032      Filler Student                FILLER
+33    80000000033      Filler Student                FILLER
+34    80000000034      Filler Student                FILLER
+35    80000000035      Filler Student                FILLER
+36    80000000036      Filler Student                FILLER
+37    80000000037      Filler Student                FILLER
+38    80000000038      Filler Student                FILLER
+39    80000000039      Filler Student                FILLER
+40    80000000040      Filler Student                FILLER
+41    80000000041      Filler Student                FILLER
+42    80000000042      Filler Student                FILLER
+43    80000000043      Filler Student                FILLER
+44    80000000044      Filler Student                FILLER
+45    80000000045      Filler Student                FILLER
+46    80000000046      Filler Student                FILLER
+47    80000000047      Filler Student                FILLER
+48    80000000048      Filler Student                FILLER
+49    80000000049      Filler Student                FILLER
+50    80000000050      Filler Student                FILLER
+51    80000000051      Filler Student                FILLER
+52    80000000052      Filler Student                FILLER
+53    80000000053      Filler Student                FILLER
+54    80000000054      Filler Student                FILLER
+55    80000000055      Filler Student                FILLER
+56    80000000056      Filler Student                FILLER
+57    80000000057      Filler Student                FILLER
+58    80000000058      Filler Student                FILLER
+59    80000000059      Filler Student                FILLER
+60    80000000060      Filler Student                FILLER
+61    80000000061      Filler Student                FILLER
+62    80000000062      Filler Student                FILLER
+63    80000000063      Filler Student                FILLER
+64    80000000064      Filler Student                FILLER
+65    80000000065      Filler Student                FILLER
+66    80000000066      Filler Student                FILLER
+67    80000000067      Filler Student                FILLER
+68    80000000068      Filler Student                FILLER
+69    80000000069      Filler Student                FILLER
+70    80000000070      Filler Student                FILLER
+71    80000000071      Filler Student                FILLER
+72    80000000072      Filler Student                FILLER
+73    80000000073      Filler Student                FILLER
+74    80000000074      Filler Student                FILLER
+75    80000000075      Filler Student                FILLER
+76    80000000076      Filler Student                FILLER
+77    80000000077      Filler Student                FILLER
+78    80000000078      Filler Student                FILLER
+79    80000000079      Filler Student                FILLER
+80    80000000080      Filler Student                FILLER
+81    80000000081      Filler Student                FILLER
+82    80000000082      Filler Student                FILLER
+83    80000000083      Filler Student                FILLER
+84    80000000084      Filler Student                FILLER
+85    80000000085      Filler Student                FILLER
+86    80000000086      Filler Student                FILLER
+87    80000000087      Filler Student                FILLER
+88    80000000088      Filler Student                FILLER
+89    80000000089      Filler Student                FILLER
+90    80000000090      Filler Student                FILLER
+91    80000000091      Filler Student                FILLER
+92    80000000092      Filler Student                FILLER
+93    80000000093      Filler Student                FILLER
+94    80000000094      Filler Student                FILLER
+95    80000000095      Filler Student                FILLER
+96    80000000096      Filler Student                FILLER
+97    80000000097      Filler Student                FILLER
+98    80000000098      Filler Student                FILLER
+99    80000000099      Filler Student                FILLER
+100   80000000100      Filler Student                FILLER
+Total students: 100
+
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: All data is saved. Goodbye!
+
+[exit code 0]
+
+===== teachers.txt =====
+1|Administrator|admin|admin123
+2|Neha Kapoor|teacher1|pass123
+
+===== subjects.txt =====
+CS201A|OOPs using C++|AIML-A
+MA201A|Mathematics III|AIML-A
+CS201B|OOPs using C++|AIML-B
+MA201B|Mathematics III|AIML-B
+
+===== students.txt =====
+1|90118015625|Aarav Sharma|AIML-A
+2|90218015625|Diya Verma|AIML-A
+3|90318015625|Kabir Mehta|AIML-A
+4|90418015625|Ananya Iyer|AIML-A
+5|90518015625|Rohan Das|AIML-A
+6|90618015625|Isha Nair|AIML-A
+7|90718015625|Arjun Malhotra|AIML-B
+8|90818015625|Meera Joshi|AIML-B
+9|90918015625|Vivaan Singh|AIML-B
+10|91018015625|Tara Bose|AIML-B
+11|80000000011|Filler Student|FILLER
+12|80000000012|Filler Student|FILLER
+13|80000000013|Filler Student|FILLER
+14|80000000014|Filler Student|FILLER
+15|80000000015|Filler Student|FILLER
+16|80000000016|Filler Student|FILLER
+17|80000000017|Filler Student|FILLER
+18|80000000018|Filler Student|FILLER
+19|80000000019|Filler Student|FILLER
+20|80000000020|Filler Student|FILLER
+21|80000000021|Filler Student|FILLER
+22|80000000022|Filler Student|FILLER
+23|80000000023|Filler Student|FILLER
+24|80000000024|Filler Student|FILLER
+25|80000000025|Filler Student|FILLER
+26|80000000026|Filler Student|FILLER
+27|80000000027|Filler Student|FILLER
+28|80000000028|Filler Student|FILLER
+29|80000000029|Filler Student|FILLER
+30|80000000030|Filler Student|FILLER
+31|80000000031|Filler Student|FILLER
+32|80000000032|Filler Student|FILLER
+33|80000000033|Filler Student|FILLER
+34|80000000034|Filler Student|FILLER
+35|80000000035|Filler Student|FILLER
+36|80000000036|Filler Student|FILLER
+37|80000000037|Filler Student|FILLER
+38|80000000038|Filler Student|FILLER
+39|80000000039|Filler Student|FILLER
+40|80000000040|Filler Student|FILLER
+41|80000000041|Filler Student|FILLER
+42|80000000042|Filler Student|FILLER
+43|80000000043|Filler Student|FILLER
+44|80000000044|Filler Student|FILLER
+45|80000000045|Filler Student|FILLER
+46|80000000046|Filler Student|FILLER
+47|80000000047|Filler Student|FILLER
+48|80000000048|Filler Student|FILLER
+49|80000000049|Filler Student|FILLER
+50|80000000050|Filler Student|FILLER
+51|80000000051|Filler Student|FILLER
+52|80000000052|Filler Student|FILLER
+53|80000000053|Filler Student|FILLER
+54|80000000054|Filler Student|FILLER
+55|80000000055|Filler Student|FILLER
+56|80000000056|Filler Student|FILLER
+57|80000000057|Filler Student|FILLER
+58|80000000058|Filler Student|FILLER
+59|80000000059|Filler Student|FILLER
+60|80000000060|Filler Student|FILLER
+61|80000000061|Filler Student|FILLER
+62|80000000062|Filler Student|FILLER
+63|80000000063|Filler Student|FILLER
+64|80000000064|Filler Student|FILLER
+65|80000000065|Filler Student|FILLER
+66|80000000066|Filler Student|FILLER
+67|80000000067|Filler Student|FILLER
+68|80000000068|Filler Student|FILLER
+69|80000000069|Filler Student|FILLER
+70|80000000070|Filler Student|FILLER
+71|80000000071|Filler Student|FILLER
+72|80000000072|Filler Student|FILLER
+73|80000000073|Filler Student|FILLER
+74|80000000074|Filler Student|FILLER
+75|80000000075|Filler Student|FILLER
+76|80000000076|Filler Student|FILLER
+77|80000000077|Filler Student|FILLER
+78|80000000078|Filler Student|FILLER
+79|80000000079|Filler Student|FILLER
+80|80000000080|Filler Student|FILLER
+81|80000000081|Filler Student|FILLER
+82|80000000082|Filler Student|FILLER
+83|80000000083|Filler Student|FILLER
+84|80000000084|Filler Student|FILLER
+85|80000000085|Filler Student|FILLER
+86|80000000086|Filler Student|FILLER
+87|80000000087|Filler Student|FILLER
+88|80000000088|Filler Student|FILLER
+89|80000000089|Filler Student|FILLER
+90|80000000090|Filler Student|FILLER
+91|80000000091|Filler Student|FILLER
+92|80000000092|Filler Student|FILLER
+93|80000000093|Filler Student|FILLER
+94|80000000094|Filler Student|FILLER
+95|80000000095|Filler Student|FILLER
+96|80000000096|Filler Student|FILLER
+97|80000000097|Filler Student|FILLER
+98|80000000098|Filler Student|FILLER
+99|80000000099|Filler Student|FILLER
+100|80000000100|Filler Student|FILLER
+
+===== attendance.txt =====
+1|CS201A|26-10-2026|P
+1|CS201A|27-10-2026|P
+1|CS201A|29-10-2026|P
+1|CS201A|30-10-2026|P
+1|CS201A|02-11-2026|P
+1|CS201A|03-11-2026|P
+1|MA201A|27-10-2026|P
+1|MA201A|30-10-2026|P
+1|MA201A|02-11-2026|P
+1|MA201A|03-11-2026|P
+2|CS201A|26-10-2026|P
+2|CS201A|27-10-2026|P
+2|CS201A|29-10-2026|A
+2|CS201A|30-10-2026|P
+2|CS201A|02-11-2026|P
+2|CS201A|03-11-2026|P
+2|MA201A|27-10-2026|P
+2|MA201A|30-10-2026|P
+2|MA201A|02-11-2026|A
+2|MA201A|03-11-2026|P
+3|CS201A|26-10-2026|A
+3|CS201A|27-10-2026|P
+3|CS201A|29-10-2026|P
+3|CS201A|30-10-2026|P
+3|CS201A|02-11-2026|A
+3|CS201A|03-11-2026|P
+3|MA201A|27-10-2026|A
+3|MA201A|30-10-2026|P
+3|MA201A|02-11-2026|P
+3|MA201A|03-11-2026|A
+4|CS201A|26-10-2026|P
+4|CS201A|27-10-2026|P
+4|CS201A|29-10-2026|P
+4|CS201A|30-10-2026|P
+4|CS201A|02-11-2026|P
+4|CS201A|03-11-2026|P
+4|MA201A|27-10-2026|P
+4|MA201A|30-10-2026|A
+4|MA201A|02-11-2026|P
+4|MA201A|03-11-2026|P
+5|CS201A|26-10-2026|P
+5|CS201A|27-10-2026|P
+5|CS201A|29-10-2026|P
+5|CS201A|30-10-2026|P
+5|CS201A|02-11-2026|P
+5|CS201A|03-11-2026|A
+5|MA201A|27-10-2026|P
+5|MA201A|30-10-2026|P
+5|MA201A|02-11-2026|P
+5|MA201A|03-11-2026|P
+6|CS201A|26-10-2026|P
+6|CS201A|27-10-2026|A
+6|CS201A|29-10-2026|P
+6|CS201A|30-10-2026|A
+6|CS201A|02-11-2026|P
+6|CS201A|03-11-2026|A
+6|MA201A|27-10-2026|P
+6|MA201A|30-10-2026|P
+6|MA201A|02-11-2026|P
+6|MA201A|03-11-2026|A
+7|CS201B|26-10-2026|P
+7|CS201B|27-10-2026|P
+7|CS201B|29-10-2026|P
+7|CS201B|30-10-2026|P
+7|CS201B|02-11-2026|P
+7|CS201B|03-11-2026|P
+7|MA201B|27-10-2026|P
+7|MA201B|30-10-2026|P
+7|MA201B|02-11-2026|P
+7|MA201B|03-11-2026|P
+8|CS201B|26-10-2026|A
+8|CS201B|27-10-2026|P
+8|CS201B|29-10-2026|A
+8|CS201B|30-10-2026|P
+8|CS201B|02-11-2026|P
+8|CS201B|03-11-2026|P
+8|MA201B|27-10-2026|P
+8|MA201B|30-10-2026|P
+8|MA201B|02-11-2026|A
+8|MA201B|03-11-2026|P
+9|CS201B|26-10-2026|P
+9|CS201B|27-10-2026|P
+9|CS201B|29-10-2026|P
+9|CS201B|30-10-2026|A
+9|CS201B|02-11-2026|P
+9|CS201B|03-11-2026|P
+9|MA201B|27-10-2026|A
+9|MA201B|30-10-2026|A
+9|MA201B|02-11-2026|P
+9|MA201B|03-11-2026|P
+10|CS201B|26-10-2026|P
+10|CS201B|27-10-2026|P
+10|CS201B|29-10-2026|P
+10|CS201B|30-10-2026|P
+10|CS201B|02-11-2026|P
+10|CS201B|03-11-2026|P
+10|MA201B|27-10-2026|P
+10|MA201B|30-10-2026|P
+10|MA201B|02-11-2026|P
+10|MA201B|03-11-2026|P

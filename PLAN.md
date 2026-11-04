@@ -2,7 +2,7 @@
 
 **Course:** OOPs using C++ Lab (PBL), 3rd Semester, B.Tech CSE (AIML)
 **Topic:** School/College Attendance Management System
-**Status:** Planning. Coding starts only after the plan is approved.
+**Status:** Terminal version complete. Web version in progress, see [WEB_PLAN.md](WEB_PLAN.md).
 
 | Team member |
 |-------------|
@@ -12,7 +12,7 @@
 | Srishti Gupta |
 | Dhruv Kataria |
 
-Related documents: [DESIGN.md](DESIGN.md) (how it is built), [TASKS.md](TASKS.md) (build order, module owners, tests), [VIVA.md](VIVA.md) (viva preparation).
+Related documents: [DESIGN.md](DESIGN.md) (how it is built), [TASKS.md](TASKS.md) (build order, module owners, tests), [VIVA.md](VIVA.md) (viva preparation), [WEB_PLAN.md](WEB_PLAN.md) (web version).
 
 ---
 
@@ -34,6 +34,7 @@ This project is a **menu-driven console application in C++**. A teacher logs in,
 ### In scope
 
 - Console (text menu) application for one user at a time
+- Web version using the same core classes (see [WEB_PLAN.md](WEB_PLAN.md))
 - Login for an admin and for teachers, checked against a file
 - Add, view, search, update, and delete students
 - Add and view subjects
@@ -44,10 +45,10 @@ This project is a **menu-driven console application in C++**. A teacher logs in,
 
 ### Out of scope
 
-- Graphical interface, web, or mobile version
-- Databases and networking
+- Desktop GUI or a mobile app
+- Databases
 - Encrypted passwords (stored as plain text, see section 8)
-- More than one person using the program at the same time
+- More than one person using the terminal version at the same time
 - More than one lecture of the same subject on the same date
 - Deleting a subject (students' attendance depends on subjects, so subjects are add-only)
 - Biometric or automatic attendance
@@ -87,7 +88,7 @@ These rules were not specified in the project brief, so they are design choices.
 
 ### 5.1 Classes and objects
 
-**Where:** nine classes: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`.
+**Where:** the core has ten classes: `Date`, `AttendanceRecord`, `Person`, `Student`, `Teacher`, `Subject`, `FileManager`, `Report`, `AttendanceSystem`, `Result`. The terminal adds `ConsoleUI` and `ReportPrinter`.
 
 **Why:** each class models one real thing and keeps its data and related functions together.
 
@@ -95,7 +96,7 @@ These rules were not specified in the project brief, so they are design choices.
 |------|------------------|-----|
 | Encapsulation | `Teacher::password` is private and is only compared inside `checkLogin()`. `Student::records` is private and only changes through `addRecord()`. | Other code cannot put an object into a wrong state. |
 | Constructors | `Student()` and `Student(id, rollNo, name, class)`. `AttendanceSystem()` loads all files. | Objects start in a valid state. The default constructor is required because arrays of objects need it. |
-| Destructors | `~AttendanceSystem()` prints a closing message. `~Person()` is virtual. | Our classes do not use `new`, so nothing needs freeing. File streams close themselves when they go out of scope, and this is the honest viva answer. |
+| Destructors | `~ConsoleUI()` prints a closing message. `~Person()` is virtual. | Our classes do not use `new`, so nothing needs freeing. File streams close themselves when they go out of scope, and this is the honest viva answer. |
 | Member functions | `Student::getPercentage()`, `Date::isValid()`, `Subject::display()` | Each object answers questions about its own data. |
 
 ### 5.2 Arrays
@@ -106,7 +107,7 @@ These rules were not specified in the project brief, so they are design choices.
 | `Subject subjects[MAX_SUBJECTS]` | `AttendanceSystem` | Fixed-size array of objects. |
 | `Teacher teachers[MAX_TEACHERS]` | `AttendanceSystem` | Fixed-size array of objects. |
 | `AttendanceRecord records[MAX_RECORDS]` | `Student` | The attendance array of each student. Each student carries their own history. |
-| `char marks[MAX_STUDENTS]` | `markAttendance()` | Holds P/A answers temporarily, so a session is stored only after all answers are entered. |
+| `char marks[MAX_STUDENTS]` | `ConsoleUI::markAttendance()` and the core `markAttendance()` | Holds P/A answers temporarily, so a session is stored only after all answers are entered. |
 | `string fields[...]` | `FileManager` | Holds the separate parts of one line from a file. |
 
 Searching uses a loop over the array. Deleting shifts later elements one place left. When an array is full, the program shows a message and refuses the new entry.
@@ -146,8 +147,8 @@ Searching uses a loop over the array. Deleting shifts later elements one place l
 | Concept | Status | Where |
 |---------|--------|-------|
 | Inheritance | **Included** | `Person` -> `Student`, `Person` -> `Teacher`. Shared `id`, `name`, and `display()`. |
-| Function overloading | **Included** | `searchStudent(int id)` and `searchStudent(string text)`. `findStudent(int id)` and `findStudent(string rollNo)`. `countPresent(code)`, `countPresent()`, and `countPresent(month, year)`. Overloaded constructors. |
-| Runtime polymorphism | Comes with inheritance | `display()` is `virtual`. `showPerson(const Person&)` works for both students and teachers. |
+| Function overloading | **Included** | `ConsoleUI::searchStudent(int id)` and `searchStudent(string text)`. `findStudent(int id)` and `findStudent(string rollNo)`. `countPresent(code)`, `countPresent()`, and `countPresent(month, year)`. Overloaded constructors. |
+| Runtime polymorphism | Comes with inheritance | `display()` is `virtual`. `ConsoleUI::showPerson(const Person&)` works for both students and teachers. |
 | Composition | Comes with the design | `Student` has `AttendanceRecord` objects, and `AttendanceRecord` has a `Date`. |
 | Operator overloading | Not used | Not needed. |
 | Friend functions | Not used | Getters are enough. |
@@ -155,9 +156,9 @@ Searching uses a loop over the array. Deleting shifts later elements one place l
 ## 7. Tools and constraints
 
 - **OS:** Windows 11
-- **Compiler:** g++ 6.3.0 (MinGW), using `-std=c++11`
+- **Compiler:** g++ 6.3.0 (MinGW) for the terminal version, using `-std=c++11`. The web server needs 64-bit g++ 15.2 from MSYS2, because 6.3 has no `std::thread`.
 - **Build:** one `g++` command (`make` is not installed and is not needed)
-- **Libraries:** standard C++ only
+- **Libraries:** standard C++ only in the core and terminal version. The web server adds cpp-httplib and nlohmann/json, both single headers in `third_party/`.
 - **Containers:** plain arrays with `std::string`. No `vector` or other STL containers.
 - **Files:** text format
 

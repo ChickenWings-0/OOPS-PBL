@@ -1,0 +1,6 @@
+# Docker build ignores these: only source, web, and data are needed
+.git
+*.exe
+*.o
+*.md
+tests/

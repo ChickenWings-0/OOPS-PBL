@@ -249,10 +249,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W0: Setup and safety net
 **Owners:** Aksh Rastogi, Dhruv Kataria
 
-- [ ] Update DESIGN.md and PLAN.md with the core split and new features
-- [ ] Add `third_party/`: `httplib.h` v0.64.0 and `json.hpp` v3.12.0, with licences
-- [ ] Record golden terminal output for every menu, **before any refactor**
-- [ ] Add `.gitignore` and `.dockerignore` entries
+- [x] Update DESIGN.md and PLAN.md with the core split and new features
+- [x] Add `third_party/`: `httplib.h` v0.64.0 and `json.hpp` v3.12.0, with licences
+- [x] Record golden terminal output for every menu, **before any refactor**
+- [x] Add `.gitignore` and `.dockerignore` entries
 
 **Test:** `attendance.exe` still builds, and two golden runs match each other.
 

@@ -283,7 +283,7 @@ The mutex is in the server, not the core, so the core still compiles on g++ 6.3.
 
 ## 6. REST API
 
-Everything except `/api/login` and `/api/health` needs a token. Dates come back as `DD-MM-YYYY` for showing and `dateIso` for form inputs.
+Everything except `/api/login` and `/api/health` needs a token. Dates come back as `DD-MM-YYYY` for showing and `dateIso` for form inputs. Percentages come back twice: `percent` is the number for charts, and `percentText` such as `80.00%` is what the page shows, so JS never formats a number. The examples below leave out `percentText` to stay short.
 
 **Every error has this shape**, and the message comes straight from the core `Result`:
 
@@ -750,11 +750,11 @@ OOPS-PBL/
 |-- web/                    Everything the browser downloads
 |   |-- index.html
 |   |-- css/  tokens.css  base.css  layout.css  components.css
-|   `-- js/   api.js  ui.js  icons.js  charts.js  app.js
+|   `-- js/   theme.js  api.js  ui.js  icons.js  charts.js  app.js
 |       `-- pages/  login.js  dashboard.js  students.js  subjects.js  mark.js
 |                   report.js  defaulters.js  daily.js  monthly.js  teachers.js
 |-- data/                   The same four text files
-|-- tests/                  Golden terminal output and API test script
+|-- tests/                  Golden terminal output, its runner, and API test script
 |-- Dockerfile
 |-- .dockerignore
 `-- WEB_PLAN.md and the existing documents

@@ -1,0 +1,3 @@
+tests/golden/* -text
+tests/fixture_data/* -text
+data/* -text

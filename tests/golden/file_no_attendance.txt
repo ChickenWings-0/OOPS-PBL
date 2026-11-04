@@ -1,0 +1,72 @@
+======================================
+    ATTENDANCE MANAGEMENT SYSTEM
+======================================
+Username: Password: 
+Welcome, Administrator!
+
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Attendance ---
+1. Mark attendance
+2. Correct a mark
+3. View student attendance
+0. Back
+Enter choice: Roll number of the student: 
+Name    : Diya Verma
+Roll No : 90218015625
+Class   : AIML-A
+
+Code        Subject                                   Present  Total  Percentage      Status
+------------------------------------------------------------------------------------------------
+CS201A      OOPs using C++                            0        0      No classes yet
+MA201A      Mathematics III                           0        0      No classes yet
+------------------------------------------------------------------------------------------------
+Overall                                               0        0      No classes yet
+
+--- Attendance ---
+1. Mark attendance
+2. Correct a mark
+3. View student attendance
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: All data is saved. Goodbye!
+
+[exit code 0]
+
+===== teachers.txt =====
+1|Administrator|admin|admin123
+2|Neha Kapoor|teacher1|pass123
+
+===== subjects.txt =====
+CS201A|OOPs using C++|AIML-A
+MA201A|Mathematics III|AIML-A
+CS201B|OOPs using C++|AIML-B
+MA201B|Mathematics III|AIML-B
+
+===== students.txt =====
+1|90118015625|Aarav Sharma|AIML-A
+2|90218015625|Diya Verma|AIML-A
+3|90318015625|Kabir Mehta|AIML-A
+4|90418015625|Ananya Iyer|AIML-A
+5|90518015625|Rohan Das|AIML-A
+6|90618015625|Isha Nair|AIML-A
+7|90718015625|Arjun Malhotra|AIML-B
+8|90818015625|Meera Joshi|AIML-B
+9|90918015625|Vivaan Singh|AIML-B
+10|91018015625|Tara Bose|AIML-B
+
+===== attendance.txt =====
+(file does not exist)

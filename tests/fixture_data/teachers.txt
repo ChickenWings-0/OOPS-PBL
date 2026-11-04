@@ -1,0 +1,2 @@
+1|Administrator|admin|admin123
+2|Neha Kapoor|teacher1|pass123

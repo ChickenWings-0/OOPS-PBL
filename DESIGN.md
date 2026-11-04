@@ -1,6 +1,8 @@
 # DESIGN: Attendance Management System
 
-This document says exactly how the program is built. [PLAN.md](PLAN.md) explains what and why.
+This document says exactly how the program is built. [PLAN.md](PLAN.md) explains what and why. The web server and frontend are described in [WEB_PLAN.md](WEB_PLAN.md).
+
+The code has three layers. The **core** (`include/`, `src/`) holds the rules, arrays, and files, and never uses `cin`. The **console** layer (`main.cpp`, `console/`) prompts and prints. The **server** layer (`server/`) speaks HTTP and JSON. The console and the server call the same core functions.
 
 Access specifier symbols: `-` private, `#` protected, `+` public. "static" marks static members.
 
@@ -14,6 +16,7 @@ Access specifier symbols: `-` private, `#` protected, `+` public. "static" marks
 | `MAX_SUBJECTS` | 20 | Size of the subject array |
 | `MAX_TEACHERS` | 10 | Size of the teacher array |
 | `MAX_RECORDS` | 300 | Attendance records each student can hold |
+| `MAX_DEFAULTER_ENTRIES` | 2000 | `MAX_STUDENTS * MAX_SUBJECTS`, the longest defaulter list |
 
 ---
 
@@ -37,6 +40,9 @@ Stores and checks a calendar date.
 | + static | `Date today()` | Today's date, using `<ctime>` |
 | + static | `bool isLeapYear(int y)` | Leap year check |
 | + static | `bool parse(const string&, Date&)` | Converts `DD-MM-YYYY` text to a `Date`. Returns false if invalid. |
+| + static | `bool parseIso(const string&, Date&)` | Converts `YYYY-MM-DD` text, as sent by a browser date input |
+| + | `string toIso() const` | Returns `YYYY-MM-DD` for browser date inputs |
+| + | `string shortLabel() const` | Returns `26 Oct`, for chart labels |
 
 ### 2.2 `AttendanceRecord`
 
@@ -143,44 +149,97 @@ All file reading and writing lives here, so a format change touches one class on
 
 ### 2.8 `Report` (all static)
 
-Read-only printing. Reports never change data.
+Calculates reports and returns them as plain structs. It never prints and never changes data. `ReportPrinter` shows the structs in the terminal, and `JsonMapper` turns them into JSON, so the two can never disagree.
 
 | Access | Member | Purpose |
 |--------|--------|---------|
-| + static | `void studentReport(const Student&, const Subject[])` | Per-subject table and overall percentage (F11) |
-| + static | `void defaulterList(const Student[], const Subject[])` | F12 |
-| + static | `void dailyReport(const Student[], const Subject[], const Date&)` | F13 |
-| + static | `void monthlyReport(const Student[], const string& className, int m, int y)` | F14 |
+| + static | `StudentReportData studentReport(const Student&, const Subject[])` | Per-subject lines and overall percentage (F11) |
+| + static | `int defaulterList(const Student[], const Subject[], DefaulterEntry[])` | Fills the array and returns the count (F12) |
+| + static | `DailyReportData dailyReport(const Student[], const Subject[], const Date&)` | F13 |
+| + static | `MonthlyReportData monthlyReport(const Student[], const string& className, int m, int y)` | F14 |
+| + static | `DashboardData dashboardStats(const Student[], const Subject[])` | Numbers for the dashboard cards |
+| + static | `int dailyTrend(const Student[], TrendPoint[], int maxPoints)` | Latest days that have marks, oldest first |
+| + static | `int subjectSummary(const Student[], const Subject[], SubjectLine[])` | Attendance for each subject, across its class |
+
+The structs store array indexes, not copies of names, so they stay small enough for a thread's stack.
 
 ### 2.9 `AttendanceSystem` (main controller)
 
-Owns the arrays and carries out each menu action. It asks for input, validates it, updates the arrays, and calls `FileManager` to save.
+Owns the arrays and carries out each action. Every action takes normal parameters, validates them, updates the arrays, calls `FileManager` to save, and returns a `Result`. It never reads input and never prints.
+
+The `check...` functions are the rules for one field. The full action calls them too, so a rule exists only once. The terminal also calls them between prompts, so it can reject a bad roll number before asking for the name.
 
 | Access | Member | Purpose |
 |--------|--------|---------|
 | - | `Student students[MAX_STUDENTS]` | All students |
 | - | `Subject subjects[MAX_SUBJECTS]` | All subjects |
 | - | `Teacher teachers[MAX_TEACHERS]` | All teachers |
-| - | `int currentTeacher` | Array index of the logged-in teacher, -1 if none |
-| - | `int findStudent(int id) const` | Finds by internal ID. Returns the index, or -1. |
-| - | `int findStudent(const string& rollNo) const` | Overload: finds by roll number. Returns the index, or -1. |
-| - | `int findSubject(const string&) const` | Returns the index, or -1 |
-| - | `int findTeacher(const string&) const` | Returns the index, or -1 |
-| - | `void showPerson(const Person&) const` | Prints one row by calling virtual `display()` |
 | + | `AttendanceSystem()` | Loads all files |
-| + | `~AttendanceSystem()` | Prints a closing message |
-| + | `bool login()` | F1 |
-| + | `bool isAdminLoggedIn() const` | Controls the admin menu options |
+| + | `getStudents()`, `getSubjects()`, `getStudent(i)`, `getSubject(i)`, `getTeacher(i)` | Read-only access for the terminal and the server |
+| + | `int findStudent(int id) const` | Finds by internal ID. Returns the index, or -1. |
+| + | `int findStudent(const string& rollNo) const` | Overload: finds by roll number. Returns the index, or -1. |
+| + | `int findSubject(const string&) const`, `int findTeacher(const string&) const` | Return the index, or -1 |
+| + | `int findMatchingStudents(text, int results[]) const` | F5. Matches a roll number exactly or a name partly, and returns the count. |
+| + | `int checkLogin(username, password) const` | F1. Returns the teacher's index, or -1. |
+| + | `bool isAdmin(int teacher) const` | Is this teacher the admin? |
+| + | `Result changePassword(teacher, current, newPassword)` | F2. Also `checkCurrentPassword`, `checkNewPassword`. |
+| + | `Result setAllPasswords(password)` | Used by the server for `DEMO_PASSWORD` |
+| + | `Result addTeacher(actor, name, username, password)` | F2. Also `canAddTeacher`, `canViewTeachers`, `checkTeacherName`, `checkNewUsername`. |
+| + | `Result addStudent(rollNo, name, className, confirmed)` | F3. Also `canAddStudent`, `checkNewRollNo`, `checkStudentName`, `checkClassName`, `checkSameName`. |
+| + | `Result updateStudent(index, rollNo, name, className)` | F6. Also `checkUpdateRollNo`, `checkUpdateName`, `checkUpdateClass`. |
+| + | `Result deleteStudent(index)` | F7. Also `checkStudentExists`. |
+| + | `Result addSubject(code, name, className)` | F8. Also `canAddSubject`, `checkNewCode`, `checkSubjectName`, `checkSubjectExists`. |
+| + | `Result markAttendance(code, date, marks[], present, absent)` | F9. Also `checkCanMark`. |
+| + | `Result editAttendance(index, code, date, status)` | F10. Also `checkRecordExists`. |
+
+### 2.10 `Utils` (plain functions, not a class)
+
+Shared text and validation helpers, used by every layer.
+
+| Function | Purpose |
+|----------|---------|
+| `Result checkClassDate(date)` | Rejects an invalid date or a date in the future |
+| `string trim(text)`, `string toUpper(text)` | Text cleaning |
+| `bool parseInt(text, int&)` | Safe text-to-number. Returns false instead of crashing. |
+| `bool isValidRollNo(text)`, `isValidName(text)`, `isValidCode(text)`, `isValidSubjectName(text)`, `isValidClassName(text)`, `isValidUsername(text)`, `isValidPassword(text)` | Rules from section 8 |
+
+### 2.11 `Result`
+
+The answer from every core action, so the terminal and the web show the same messages.
+
+| Access | Member | Purpose |
+|--------|--------|---------|
+| - | `ResultCode code` | `RESULT_OK`, `RESULT_INVALID`, `RESULT_NOT_FOUND`, `RESULT_DUPLICATE`, `RESULT_NEEDS_CONFIRM`, `RESULT_LIMIT`, `RESULT_FORBIDDEN`, or `RESULT_SAVE_FAILED` |
+| - | `string message` | The text to show |
+| - | `string field` | Which form field it is about, for the web, or empty |
+| + | `Result(code, message, field)` | Constructor |
+| + | `bool isOk() const`, `getCode()`, `getMessage()`, `getField()` | Getters |
+
+### 2.12 `ConsoleUI` (terminal only)
+
+Owns the `AttendanceSystem` object for the terminal and the logged-in teacher. Each function prompts, calls the core, and prints the result.
+
+| Access | Member | Purpose |
+|--------|--------|---------|
+| - | `AttendanceSystem app` | The core |
+| - | `int currentTeacher` | Array index of the logged-in teacher, -1 if none |
+| - | `void showPerson(const Person&) const` | Prints one row by calling virtual `display()` |
+| - | `int askForStudent()` | Asks for a roll number. Returns the index, or -1 after printing the error. |
+| - | `void show(const Result&) const` | Prints the message of a result |
+| + | `ConsoleUI()`, `~ConsoleUI()` | The destructor prints the closing message |
+| + | `bool login()`, `bool isAdminLoggedIn() const` | F1 |
 | + | `changePassword()`, `addTeacher()`, `viewTeachers()` | F2 |
 | + | `addStudent()`, `viewAllStudents()`, `updateStudent()`, `deleteStudent()` | F3, F4, F6, F7 |
-| + | `searchStudent(int id)`, `searchStudent(const string& text)` | F5, overloaded. The string version matches a roll number exactly or a name partly. |
+| + | `searchStudent(int id)`, `searchStudent(const string& text)` | F5, overloaded |
 | + | `addSubject()`, `viewSubjects()` | F8 |
 | + | `markAttendance()`, `editAttendance()`, `viewStudentAttendance()` | F9, F10, F11 |
 | + | `showDefaulters()`, `showDailyReport()`, `showMonthlyReport()` | F12, F13, F14 |
 
-### 2.10 `Utils` (plain functions, not a class)
+### 2.13 `ReportPrinter` and `ConsoleInput` (terminal only)
 
-Shared input and validation helpers.
+`ReportPrinter` has all-static functions that print the structs from `Report` with `setw`.
+
+`ConsoleInput` holds plain input functions:
 
 | Function | Purpose |
 |----------|---------|
@@ -190,9 +249,6 @@ Shared input and validation helpers.
 | `bool readYesNo(prompt)` | Accepts Y or N |
 | `Date readDate(prompt)` | Repeats until valid and not in the future. Enter means today. |
 | `char readStatus(prompt)` | Repeats until `P` or `A` is entered, either case |
-| `string trim(text)`, `string toUpper(text)` | Text cleaning |
-| `bool parseInt(text, int&)` | Safe text-to-number. Returns false instead of crashing. |
-| `bool isValidRollNo(text)`, `isValidName(text)`, `isValidCode(text)`, `isValidSubjectName(text)`, `isValidClassName(text)`, `isValidUsername(text)`, `isValidPassword(text)` | Rules from section 8 |
 
 ---
 
@@ -250,7 +306,8 @@ Shared input and validation helpers.
    |  FileManager  |                         |    Report     |
    +---------------+                         +---------------+
 
-   main.cpp -> creates AttendanceSystem, shows the menus, calls its functions
+   main.cpp -> creates ConsoleUI, which owns AttendanceSystem, and shows the menus
+   server/  -> ApiServer owns its own AttendanceSystem, and calls the same functions
 ```
 
 | Relationship | Meaning | Example |
@@ -265,7 +322,7 @@ Shared input and validation helpers.
 
 Each `Student` carries its own 300-record array, so one object is about 12 KB and all 100 students are about **1.2 MB** (measured with a mock-up of this layout on g++ 6.3). Two rules follow:
 
-1. `main()` declares `static AttendanceSystem app;`, so this data lives in static storage and not on the limited stack. A plain local variable did still run in testing, but it would use a large share of the stack and could overflow if the limits were raised.
+1. `main()` declares `static ConsoleUI ui;`, which owns the `AttendanceSystem`, so this data lives in static storage and not on the limited stack. A plain local variable did still run in testing, but it would use a large share of the stack and could overflow if the limits were raised.
 2. Pass `Student` by `const` reference, never by value, to avoid copying 12 KB per call.
 
 ---
@@ -403,9 +460,14 @@ Answers are held in `marks[]` first, so an interrupted session leaves no half-ma
 
 ```
 OOPS-PBL/
-|-- main.cpp                  Program entry and menus
-|-- include/
+|-- main.cpp                  Terminal entry and menus
+|-- console/                  Terminal prompts and printing
+|   |-- ConsoleUI.h/.cpp
+|   |-- ConsoleInput.h/.cpp
+|   `-- ReportPrinter.h/.cpp
+|-- include/                  Core headers
 |   |-- Config.h              Array size limits
+|   |-- Result.h
 |   |-- Utils.h
 |   |-- Date.h
 |   |-- AttendanceRecord.h
@@ -416,7 +478,8 @@ OOPS-PBL/
 |   |-- FileManager.h
 |   |-- Report.h
 |   `-- AttendanceSystem.h
-|-- src/
+|-- src/                      Core source
+|   |-- Result.cpp
 |   |-- Utils.cpp
 |   |-- Date.cpp
 |   |-- AttendanceRecord.cpp
@@ -432,18 +495,23 @@ OOPS-PBL/
 |   |-- subjects.txt
 |   |-- teachers.txt
 |   `-- attendance.txt
+|-- server/                   Web server, see WEB_PLAN.md
+|-- third_party/              httplib.h, json.hpp, and their licences
+|-- web/                      Frontend, see WEB_PLAN.md
+|-- tests/                    Golden terminal output and its runner
 |-- .gitignore                Ignores attendance.exe and object files
 |-- README.md
 |-- PLAN.md
 |-- DESIGN.md
 |-- TASKS.md
-`-- VIVA.md
+|-- VIVA.md
+`-- WEB_PLAN.md
 ```
 
 **Build and run** (from the project folder, tested in PowerShell with this compiler):
 
 ```
-g++ -std=c++11 -Wall -Wextra -Iinclude main.cpp src/*.cpp -o attendance.exe
+g++ -std=c++11 -Wall -Wextra -Iinclude -Iconsole main.cpp console/*.cpp src/*.cpp -o attendance.exe
 .\attendance.exe
 ```
 

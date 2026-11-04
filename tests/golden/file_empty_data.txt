@@ -1,0 +1,158 @@
+======================================
+    ATTENDANCE MANAGEMENT SYSTEM
+======================================
+Username: Password: 
+Welcome, Administrator!
+
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: No records found.
+
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: Enter internal ID: Student not found.
+
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: Enter roll number or name: Student not found.
+
+--- Student Management ---
+1. Add student
+2. View all students
+3. Search by internal ID
+4. Search by roll no / name
+5. Update student
+6. Delete student
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Subject Management ---
+1. Add subject
+2. View subjects
+0. Back
+Enter choice: No records found.
+
+--- Subject Management ---
+1. Add subject
+2. View subjects
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Attendance ---
+1. Mark attendance
+2. Correct a mark
+3. View student attendance
+0. Back
+Enter choice: Subject code: Subject not found.
+
+--- Attendance ---
+1. Mark attendance
+2. Correct a mark
+3. View student attendance
+0. Back
+Enter choice: Roll number of the student: Student not found.
+
+--- Attendance ---
+1. Mark attendance
+2. Correct a mark
+3. View student attendance
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: 
+--- Reports ---
+1. Defaulter list
+2. Daily report
+3. Monthly report
+0. Back
+Enter choice: No defaulters found.
+
+--- Reports ---
+1. Defaulter list
+2. Daily report
+3. Monthly report
+0. Back
+Enter choice: Date (DD-MM-YYYY, Enter for today): No records found.
+
+--- Reports ---
+1. Defaulter list
+2. Daily report
+3. Monthly report
+0. Back
+Enter choice: Class (for example AIML-A): Month (1-12): Year: No records found.
+
+--- Reports ---
+1. Defaulter list
+2. Daily report
+3. Monthly report
+0. Back
+Enter choice: 
+========== MAIN MENU ==========
+1. Student Management
+2. Subject Management
+3. Attendance
+4. Reports
+5. Account
+0. Exit
+Enter choice: All data is saved. Goodbye!
+
+[exit code 0]
+
+===== teachers.txt =====
+1|Administrator|admin|admin123
+2|Neha Kapoor|teacher1|pass123
+
+===== subjects.txt =====
+(file does not exist)
+
+===== students.txt =====
+(file does not exist)
+
+===== attendance.txt =====
+(file does not exist)
