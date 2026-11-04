@@ -259,9 +259,9 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W1: Split Utils and add Result
 **Owners:** Srishti Gupta (`ConsoleInput`), Aksh Rastogi (`Result`)
 
-- [ ] Move console input functions from `Utils` to `console/ConsoleInput`
-- [ ] Add the `Result` class and `ResultCode`
-- [ ] Add `Date::parseIso` and `Date::toIso`
+- [x] Move console input functions from `Utils` to `console/ConsoleInput`
+- [x] Add the `Result` class and `ResultCode`
+- [x] Add `Date::parseIso` and `Date::toIso`
 
 **Test:** golden output matches. `Date` tests pass for `2026-11-03`, `2026-02-30`, and `abc`.
 

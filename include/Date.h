@@ -22,6 +22,8 @@ public:
 
     bool isValid() const;                       // is this a real calendar date?
     std::string toString() const;               // returns "DD-MM-YYYY"
+    std::string toIso() const;                  // returns "YYYY-MM-DD"
+    std::string shortLabel() const;             // returns "26 Oct"
     bool equals(const Date& other) const;       // same date?
     bool isAfter(const Date& other) const;      // later than the other date?
     bool isInMonth(int m, int y) const;         // in this month and year?
@@ -30,6 +32,7 @@ public:
     static Date today();
     static bool isLeapYear(int y);
     static bool parse(const std::string& text, Date& result);
+    static bool parseIso(const std::string& text, Date& result);
 };
 
 #endif

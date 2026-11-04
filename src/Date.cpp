@@ -43,6 +43,23 @@ string Date::toString() const {
     return text.str();
 }
 
+// Returns the date the way a browser date input expects it, like 2026-11-04.
+string Date::toIso() const {
+    stringstream text;
+    text << setfill('0') << setw(4) << year << "-"
+         << setw(2) << month << "-" << setw(2) << day;
+    return text.str();
+}
+
+// Returns a short label for charts, like 04 Nov.
+string Date::shortLabel() const {
+    const string names[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    stringstream text;
+    text << setfill('0') << setw(2) << day << " " << names[month - 1];
+    return text.str();
+}
+
 // Returns true if both dates are the same day.
 bool Date::equals(const Date& other) const {
     return day == other.day && month == other.month && year == other.year;
@@ -85,6 +102,34 @@ bool Date::parse(const string& text, Date& result) {
     char dash1, dash2;
 
     if (!(input >> d >> dash1 >> m >> dash2 >> y)) {
+        return false;
+    }
+    if (dash1 != '-' || dash2 != '-') {
+        return false;
+    }
+
+    char extra;
+    if (input >> extra) {      // anything left over means bad format
+        return false;
+    }
+
+    Date parsed(d, m, y);
+    if (!parsed.isValid()) {
+        return false;
+    }
+
+    result = parsed;
+    return true;
+}
+
+// Converts text like "2026-11-04" into a Date. A browser date input sends
+// this format. Returns false if the format is wrong or the date is not real.
+bool Date::parseIso(const string& text, Date& result) {
+    stringstream input(text);
+    int d, m, y;
+    char dash1, dash2;
+
+    if (!(input >> y >> dash1 >> m >> dash2 >> d)) {
         return false;
     }
     if (dash1 != '-' || dash2 != '-') {

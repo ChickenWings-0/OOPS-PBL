@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "../console/ConsoleInput.h"
 #include "FileManager.h"
 #include "Report.h"
 #include "Utils.h"

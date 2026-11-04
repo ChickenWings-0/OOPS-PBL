@@ -10,4 +10,7 @@ const int MAX_SUBJECTS = 20;    // size of the subject array
 const int MAX_TEACHERS = 10;    // size of the teacher array
 const int MAX_RECORDS  = 300;   // attendance records each student can hold
 
+// Longest possible defaulter list: every student in every subject.
+const int MAX_DEFAULTER_ENTRIES = MAX_STUDENTS * MAX_SUBJECTS;
+
 #endif

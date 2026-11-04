@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "AttendanceSystem.h"
+#include "ConsoleInput.h"
 #include "Utils.h"
 
 using namespace std;

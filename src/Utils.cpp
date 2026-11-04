@@ -1,11 +1,9 @@
 // Utils.cpp
-// Implementation of the input and validation helpers.
+// Implementation of the text and validation helpers.
 
 #include "Utils.h"
 
 #include <cctype>
-#include <cstdlib>
-#include <iostream>
 #include <sstream>
 
 using namespace std;
@@ -46,87 +44,6 @@ bool parseInt(const string& text, int& value) {
 
     value = number;
     return true;
-}
-
-// Shows the prompt and reads one full line.
-// Everything is read through here, so leftover newlines are never a problem.
-// If input has ended, the program closes instead of looping forever.
-string readLine(const string& prompt) {
-    cout << prompt;
-    string line;
-    if (!getline(cin, line)) {
-        cout << "\nInput ended. Closing the program." << endl;
-        exit(0);
-    }
-    return trim(line);
-}
-
-// Keeps asking until a whole number is entered.
-int readInt(const string& prompt) {
-    while (true) {
-        int value;
-        if (parseInt(readLine(prompt), value)) {
-            return value;
-        }
-        cout << "Please enter a whole number." << endl;
-    }
-}
-
-// Keeps asking until a number between minValue and maxValue is entered.
-int readIntInRange(const string& prompt, int minValue, int maxValue) {
-    while (true) {
-        int value = readInt(prompt);
-        if (value >= minValue && value <= maxValue) {
-            return value;
-        }
-        cout << "Please enter a number from " << minValue
-             << " to " << maxValue << "." << endl;
-    }
-}
-
-// Keeps asking until Y or N is entered. Returns true for Y.
-bool readYesNo(const string& prompt) {
-    while (true) {
-        string answer = toUpper(readLine(prompt));
-        if (answer == "Y") {
-            return true;
-        }
-        if (answer == "N") {
-            return false;
-        }
-        cout << "Please enter Y or N." << endl;
-    }
-}
-
-// Keeps asking until a real date that is not in the future is entered.
-// Pressing Enter on its own means today.
-Date readDate(const string& prompt) {
-    while (true) {
-        string text = readLine(prompt);
-        if (text.empty()) {
-            return Date::today();
-        }
-
-        Date date;
-        if (!Date::parse(text, date)) {
-            cout << "Invalid date. Use DD-MM-YYYY, year 2000 or later." << endl;
-        } else if (date.isAfter(Date::today())) {
-            cout << "The date cannot be in the future." << endl;
-        } else {
-            return date;
-        }
-    }
-}
-
-// Keeps asking until P or A is entered, in either case.
-char readStatus(const string& prompt) {
-    while (true) {
-        string answer = toUpper(readLine(prompt));
-        if (answer == "P" || answer == "A") {
-            return answer[0];
-        }
-        cout << "Please enter P or A." << endl;
-    }
 }
 
 // Returns true if every character is a letter or a digit.
@@ -192,4 +109,15 @@ bool isValidPassword(const string& text) {
         return false;
     }
     return text.find(' ') == string::npos && text.find('|') == string::npos;
+}
+
+// Returns an error if the date is not real, or is later than today.
+Result checkClassDate(const Date& date) {
+    if (!date.isValid()) {
+        return Result(RESULT_INVALID, "Invalid date. Use DD-MM-YYYY, year 2000 or later.", "date");
+    }
+    if (date.isAfter(Date::today())) {
+        return Result(RESULT_INVALID, "The date cannot be in the future.", "date");
+    }
+    return Result(RESULT_OK);
 }
