@@ -325,9 +325,9 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W7: Mark attendance
 **Owner:** Akshay Kumar
 
-- [ ] `/api/attendance/sheet`, `POST`, and `PUT`
-- [ ] Mark attendance page: pickers, toggles, Mark all present, live counter (JS, display only), Save
-- [ ] Already-marked banner and correcting marks
+- [x] `/api/attendance/sheet`, `POST`, and `PUT`
+- [x] Mark attendance page: pickers, toggles, Mark all present, live counter (JS, display only), Save
+- [x] Already-marked banner and correcting marks
 
 **Test:** W20 to W27.
 
@@ -408,14 +408,14 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Attendance
 
-- [ ] **W20** Choosing a subject lists only that class
-- [ ] **W21** Live counter updates after each toggle, sends no request, and is not part of the saved data
-- [ ] **W22** Mark all present sets every toggle and updates the counter, and the totals after Save come from C++
-- [ ] **W23** Saving adds lines to `attendance.txt` with `ios::app`
-- [ ] **W24** A session already marked shows the banner, and a repeat `POST` returns 409
-- [ ] **W25** Future date and invalid date are rejected by C++, including with `curl`
-- [ ] **W26** Correct a mark from A to P: the file and the percentage change
-- [ ] **W27** Two browsers save the same subject and date together: one succeeds, one gets 409, and no duplicate lines exist
+- [x] **W20** Choosing a subject lists only that class
+- [x] **W21** Live counter updates after each toggle, sends no request, and is not part of the saved data
+- [x] **W22** Mark all present sets every toggle and updates the counter, and the totals after Save come from C++
+- [x] **W23** Saving adds lines to `attendance.txt` with `ios::app`
+- [x] **W24** A session already marked shows the banner, and a repeat `POST` returns 409
+- [x] **W25** Future date and invalid date are rejected by C++, including with `curl`
+- [x] **W26** Correct a mark from A to P: the file and the percentage change
+- [x] **W27** Two browsers save the same subject and date together: one succeeds, one gets 409, and no duplicate lines exist
 
 #### Reports
 
