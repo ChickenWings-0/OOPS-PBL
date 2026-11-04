@@ -361,21 +361,23 @@ GET /api/dashboard
     "students": 10,
     "subjects": 4,
     "todayMarked": false,
+    "todayPresent": 0,
+    "todayTotal": 0,
+    "todayPercentText": "0.00%",
+    "anyMarks": true,
     "lastMarkedDate": "03-11-2026",
-    "lastMarkedPercent": 80.00,
+    "lastMarkedLabel": "03 Nov",
+    "lastMarkedPercentText": "80.00%",
     "defaulterStudents": 4,
     "defaulterEntries": 5
   },
   "trend": [
-    { "date": "26-10-2026", "percent": 80.00 }, { "date": "27-10-2026", "percent": 85.00 },
-    { "date": "29-10-2026", "percent": 80.00 }, { "date": "30-10-2026", "percent": 80.00 },
-    { "date": "02-11-2026", "percent": 85.00 }, { "date": "03-11-2026", "percent": 80.00 }
+    { "date": "26-10-2026", "label": "26 Oct", "present": 8, "total": 10, "percent": 80.0, "percentText": "80.00%" },
+    { "date": "27-10-2026", "label": "27 Oct", "present": 17, "total": 20, "percent": 85.0, "percentText": "85.00%" }
   ],
   "subjects": [
-    { "code": "CS201A", "name": "OOPs using C++", "className": "AIML-A", "percent": 80.56, "status": "ok" },
-    { "code": "MA201A", "name": "Mathematics III", "className": "AIML-A", "percent": 79.17, "status": "ok" },
-    { "code": "CS201B", "name": "OOPs using C++", "className": "AIML-B", "percent": 87.50, "status": "ok" },
-    { "code": "MA201B", "name": "Mathematics III", "className": "AIML-B", "percent": 81.25, "status": "ok" }
+    { "code": "CS201A", "name": "OOPs using C++", "className": "AIML-A",
+      "present": 29, "total": 36, "percent": 80.56, "percentText": "80.56%", "status": "ok" }
   ]
 }
 ```
@@ -573,8 +575,8 @@ Sidebar: 240 px with inline SVG icons, and the active item is tinted with the ac
 ```
 +--------------+ +--------------+ +--------------+ +--------------+
 | Students     | | Subjects     | | Today        | | Defaulters   |
-| 10           | | 4            | | Not marked   | | 4 students   |
-|              | |              | | Last: 80.00% | | 5 entries    |
+| 10           | | 4            | | Not marked   | | 4            |
+| In all ...   | | In all ...   | | Last: 80.00% | | Below 75%    |
 +--------------+ +--------------+ +--------------+ +--------------+
 +---------------------------------+ +----------------------------+
 | Attendance trend                | | Attendance by subject      |
@@ -582,6 +584,8 @@ Sidebar: 240 px with inline SVG icons, and the active item is tinted with the ac
 | Y axis 0 to 100, 75% line       | | 75% line                   |
 +---------------------------------+ +----------------------------+
 ```
+
+Each chart card has a Chart/Table switch. The table shows the same server numbers, for colour-blind readers and for use without internet.
 
 **Polish on every page:** hover and focus states, 150 ms transitions, toasts for success and error, skeleton or spinner while loading, empty states, confirm dialogs before delete, field errors under the right input using `field` from the server, and a "Session expired" return to login on a 401.
 
@@ -648,7 +652,7 @@ Chart.js **4.6.1** from jsDelivr, pinned, with an integrity hash:
 
 | Rule | Value |
 |------|-------|
-| Line | 2 px, markers at least 8 px with a surface-coloured ring, about 10% area wash |
+| Line | 2 px, markers at least 8 px with a surface-coloured ring, a soft area fill that fades downwards |
 | Bars | At most 24 px thick, 4 px rounded ends, 2 px gaps in stacks |
 | Grid | 1 px solid, recessive |
 | Y axis | Fixed 0 to 100 for percentages, always one axis |
@@ -754,7 +758,8 @@ OOPS-PBL/
 |       `-- pages/  login.js  dashboard.js  students.js  subjects.js  mark.js
 |                   report.js  defaulters.js  daily.js  monthly.js  teachers.js
 |-- data/                   The same four text files
-|-- tests/                  Golden terminal output, its runner, and API test script
+|-- docs/screenshots/       Screenshots for review and the README
+|-- tests/                  Golden terminal output, API tests, and browser tests
 |-- Dockerfile
 |-- .dockerignore
 `-- WEB_PLAN.md and the existing documents

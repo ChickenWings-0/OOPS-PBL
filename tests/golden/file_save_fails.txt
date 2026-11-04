@@ -90,7 +90,7 @@ Enter choice:
 2. Correct a mark
 3. View student attendance
 0. Back
-Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201B for AIML-B on <TODAY>
+Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201B for AIML-B on 28-10-2026
 90718015625  Arjun Malhotra (P/A): 90818015625  Meera Joshi (P/A): 90918015625  Vivaan Singh (P/A): Error: could not save data/attendance.txt
 Error: could not save data/attendance.txt
 Error: could not save data/attendance.txt

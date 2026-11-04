@@ -44,7 +44,7 @@ Enter choice:
 2. Correct a mark
 3. View student attendance
 0. Back
-Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201B for AIML-B on <TODAY>
+Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201B for AIML-B on 28-10-2026
 90718015625  Arjun Malhotra (P/A): 90818015625  Meera Joshi (P/A): 90918015625  Vivaan Singh (P/A): 91018015625  Tara Bose (P/A): 92018015625  New Student (P/A): Attendance saved. Present: 4, Absent: 1
 
 --- Attendance ---
@@ -165,7 +165,7 @@ Enter choice:
 3. Monthly report
 0. Back
 Enter choice: Date (DD-MM-YYYY, Enter for today): 
-Daily report for <TODAY>
+Daily report for 28-10-2026
 
 CS201B - OOPs using C++ (AIML-B)
 Roll No          Name                          Status
@@ -319,8 +319,8 @@ MA201B|Mathematics III|AIML-B
 10|MA201B|30-10-2026|P
 10|MA201B|02-11-2026|P
 10|MA201B|03-11-2026|P
-7|CS201B|<TODAY>|P
-8|CS201B|<TODAY>|A
-9|CS201B|<TODAY>|P
-10|CS201B|<TODAY>|P
-11|CS201B|<TODAY>|P
+7|CS201B|28-10-2026|P
+8|CS201B|28-10-2026|A
+9|CS201B|28-10-2026|P
+10|CS201B|28-10-2026|P
+11|CS201B|28-10-2026|P

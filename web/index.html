@@ -1,1 +1,40 @@
-<!doctype html><title>placeholder</title>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attendance Management System</title>
+  <meta name="description" content="Attendance tracking for a school or college, powered by a C++ server.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <!-- Runs first, so the page never flashes the wrong theme. -->
+  <script src="js/theme.js"></script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"
+          integrity="sha384-Emf5ZVIUiarAdhkgtqK+5/Z5qIvM6QoVrS+qAVtfyZVuD5lIHrac0me485+Antp0"
+          crossorigin="anonymous"></script>
+  <script defer src="js/icons.js"></script>
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/api.js"></script>
+  <script defer src="js/charts.js"></script>
+  <script defer src="js/pages/login.js"></script>
+  <script defer src="js/pages/dashboard.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+  <noscript>
+    <p class="noscript">This site needs JavaScript. The terminal version of the project works without it.</p>
+  </noscript>
+</body>
+</html>

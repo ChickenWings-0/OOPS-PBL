@@ -1,0 +1,119 @@
+/* tokens.css
+   The design system. Every colour, size, and shadow used by the site is
+   defined here once, so changing a value here changes it everywhere.
+   Colours were checked for contrast and colour-blind safety: see WEB_PLAN.md section 9. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg-page: #f6f7f9;
+  --bg-surface: #ffffff;
+  --bg-hover: #f3f4f6;
+  --border: #e5e7eb;
+
+  /* Text */
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+
+  /* Accent */
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef2ff;
+  --on-accent: #ffffff;
+
+  /* Status: reserved for attendance state, never used as a chart series */
+  --good-text: #166534;
+  --good-bg: #dcfce7;
+  --good-bar: #15803d;
+  --bad-text: #b91c1c;
+  --bad-bg: #fee2e2;
+  --bad-bar: #dc2626;
+  --track: #e5e7eb;
+
+  /* Charts */
+  --chart-1: #4f46e5;
+  --chart-2: #eb6834;
+  --chart-wash: rgba(79, 70, 229, 0.16);
+  --chart-grid: #e5e7eb;
+
+  /* Login background */
+  --glow-1: rgba(79, 70, 229, 0.16);
+  --glow-2: rgba(235, 104, 52, 0.09);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 6px 16px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 20px 48px rgba(16, 24, 40, 0.18);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Corners */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* Type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+
+  /* Motion */
+  --fast: 150ms ease-out;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --topbar-height: 64px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-page: #0f1115;
+  --bg-surface: #171a21;
+  --bg-hover: #1f2330;
+  --border: #2a2f3a;
+
+  --text: #f3f4f6;
+  --text-secondary: #c1c6d0;
+  --text-muted: #9aa1ad;
+
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-soft: #1e2140;
+  --on-accent: #0f1115;
+
+  --good-text: #86efac;
+  --good-bg: #14321f;
+  --good-bar: #22c55e;
+  --bad-text: #fca5a5;
+  --bad-bg: #3f1a1c;
+  --bad-bar: #f87171;
+  --track: #2a2f3a;
+
+  --chart-1: #7a84f6;
+  --chart-2: #d95926;
+  --chart-wash: rgba(122, 132, 246, 0.20);
+  --chart-grid: #2a2f3a;
+
+  --glow-1: rgba(129, 140, 248, 0.16);
+  --glow-2: rgba(217, 89, 38, 0.08);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+}

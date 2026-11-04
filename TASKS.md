@@ -299,12 +299,13 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W5: Design system, shell, login, dashboard
 **Owners:** Srishti Gupta (CSS, components), Aksh Rastogi (shell, login page), Dhruv Kataria (dashboard, charts)
 
-- [ ] `tokens.css` and the core components
-- [ ] Light and dark themes with the toggle
-- [ ] Sidebar, top bar, and mobile drawer
-- [ ] Login page
-- [ ] Dashboard page with stat cards and both charts
-- [ ] Screenshots at desktop and phone width, in both themes
+- [x] `tokens.css` and the core components
+- [x] Light and dark themes with the toggle
+- [x] Sidebar, top bar, and mobile drawer
+- [x] Login page
+- [x] Dashboard page with stat cards and both charts
+- [x] Screenshots at desktop and phone width, in both themes (in `docs/screenshots/`)
+- [x] Browser checks in `tests/browser/`
 
 **Test:** W50 to W53.
 
@@ -435,10 +436,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Design and behaviour
 
-- [ ] **W50** Dashboard shows 10 students, 4 subjects, 4 defaulter students
-- [ ] **W51** Today's card shows the last marked day when nothing is marked today
-- [ ] **W52** Theme toggle changes every colour and redraws charts, and stays after reload
-- [ ] **W53** Sidebar collapses below 900 px, with no sideways scrolling at 360 px
+- [x] **W50** Dashboard shows 10 students, 4 subjects, 4 defaulter students
+- [x] **W51** Today's card shows the last marked day when nothing is marked today
+- [x] **W52** Theme toggle changes every colour and redraws charts, and stays after reload
+- [x] **W53** Sidebar collapses below 900 px, with no sideways scrolling at 360 px
 - [ ] **W54** Every page has a loading state and an empty state
 - [ ] **W55** Every save and delete shows a toast
 - [ ] **W56** An expired session returns to login with a message

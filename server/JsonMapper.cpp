@@ -76,6 +76,7 @@ json JsonMapper::dashboard(const DashboardData& data, const TrendPoint trend[], 
     cards["todayTotal"] = data.todayTotal;
     cards["anyMarks"] = data.anyMarks;
     cards["lastMarkedDate"] = data.anyMarks ? data.lastMarkedDate.toString() : "";
+    cards["lastMarkedLabel"] = data.anyMarks ? data.lastMarkedDate.shortLabel() : "";
     cards["lastMarkedPercentText"] = Report::percentText(data.lastMarkedPercentage);
     cards["defaulterStudents"] = data.defaulterStudents;
     cards["defaulterEntries"] = data.defaulterEntries;

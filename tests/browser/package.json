@@ -1,0 +1,8 @@
+{
+  "name": "attendance-browser-tests",
+  "private": true,
+  "description": "Drives the real site in Chrome. Testing only: the site itself uses no Node packages.",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

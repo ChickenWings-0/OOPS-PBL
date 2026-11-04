@@ -93,7 +93,7 @@ SCENARIOS = {
     # ---------- Attendance ----------
     "mark_new_date": ("none", ADMIN + [
         "3",
-        "1", "cs201a", "04-11-2026", "P", "a", "x", "p", "A", "P", "p",
+        "1", "cs201a", "28-10-2026", "P", "a", "x", "p", "A", "P", "p",
         "3", "90118015625",
         "0"] + QUIT),
     "mark_rejected": ("none", ADMIN + [
@@ -106,13 +106,13 @@ SCENARIOS = {
         "3", "1", "CS201B", "", "P", "P", "A", "P", "1", "CS201B", "", "0"] + QUIT),
     "mark_no_students": ("none", ADMIN + [
         "2", "1", "ZZ101", "Empty Class", "NOBODY", "0",
-        "3", "1", "ZZ101", "04-11-2026", "0"] + QUIT),
-    "mark_interrupted": ("none", ADMIN + ["3", "1", "CS201A", "04-11-2026", "P", "A"]),
+        "3", "1", "ZZ101", "28-10-2026", "0"] + QUIT),
+    "mark_interrupted": ("none", ADMIN + ["3", "1", "CS201A", "28-10-2026", "P", "A"]),
     "mark_edit": ("none", ADMIN + [
         "3",
         "2", "99999",
         "2", "90518015625", "NOPE",
-        "2", "90518015625", "CS201A", "04-11-2026",
+        "2", "90518015625", "CS201A", "28-10-2026",
         "2", "90518015625", "CS201A", "03-11-2026", "x", "P",
         "2", "90518015625", "cs201a", "03-11-2026", "a",
         "3", "90518015625",
@@ -179,7 +179,7 @@ SCENARIOS = {
         "5", "90118015625", "", "Name Change", "",
         "6", "91018015625", "Y", "0",
         "2", "1", "ZZ101", "No Save", "AIML-A", "0",
-        "3", "1", "CS201B", "04-11-2026", "P", "P", "P",
+        "3", "1", "CS201B", "28-10-2026", "P", "P", "P",
         "2", "90518015625", "CS201A", "03-11-2026", "P", "0",
         "5", "1", "admin123", "newpass1", "2", "New Teacher", "teacher2", "goodpass", "0"] + QUIT),
 
@@ -190,9 +190,9 @@ SCENARIOS = {
                             + [RESTART, "teacher2", "goodpass", "5", "0"] + QUIT),
     "restart_data_kept": ("none", ADMIN + [
         "1", "1", "92018015625", "New Student", "AIML-B", "0",
-        "3", "1", "CS201B", "04-11-2026", "P", "A", "P", "P", "P", "0"] + QUIT + [RESTART] + ADMIN + [
+        "3", "1", "CS201B", "28-10-2026", "P", "A", "P", "P", "P", "0"] + QUIT + [RESTART] + ADMIN + [
         "1", "1", "92118015625", "Next Student", "AIML-B", "2", "0",
-        "3", "3", "92018015625", "0", "4", "2", "04-11-2026", "0"] + QUIT),
+        "3", "3", "92018015625", "0", "4", "2", "28-10-2026", "0"] + QUIT),
     "restart_after_closing_early": ("none", ADMIN + ["1", "1", "92018015625", "Kept Student", "AIML-A",
                                                      RESTART] + ADMIN + ["1", "2", "0"] + QUIT),
     "restart_after_delete": ("none", ADMIN + ["1", "6", "91018015625", "Y", "0"] + QUIT + [RESTART] + ADMIN + [
@@ -202,6 +202,6 @@ SCENARIOS = {
     "limit_students": ("full_students", ADMIN + ["1", "1", "2", "0"] + QUIT),
     "limit_subjects": ("full_subjects", ADMIN + ["2", "1", "2", "0"] + QUIT),
     "limit_teachers": ("full_teachers", ADMIN + ["5", "2", "3", "0"] + QUIT),
-    "limit_records": ("full_records", ADMIN + ["3", "1", "CS201A", "04-11-2026", "0"] + QUIT),
+    "limit_records": ("full_records", ADMIN + ["3", "1", "CS201A", "28-10-2026", "0"] + QUIT),
     "limit_files_too_long": ("over_limits", ADMIN + ["1", "2", "0", "2", "2", "0"] + QUIT),
 }

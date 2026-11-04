@@ -191,6 +191,7 @@ def test_dashboard(admin, data_folder):
     check("W51 last marked day is reported", cards["todayMarked"] is False and
           cards["lastMarkedDate"] == ordered[-1], cards)
     check("percent text has two decimals", cards["lastMarkedPercentText"] == "80.00%", cards)
+    check("last marked day has a short label", cards["lastMarkedLabel"] == "03 Nov", cards)
 
 
 def test_security_headers():

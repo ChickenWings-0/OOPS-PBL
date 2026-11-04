@@ -17,7 +17,7 @@ Enter choice:
 2. Correct a mark
 3. View student attendance
 0. Back
-Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201A for AIML-A on <TODAY>
+Enter choice: Subject code: Date (DD-MM-YYYY, Enter for today): Marking CS201A for AIML-A on 28-10-2026
 90118015625  Aarav Sharma (P/A): 90218015625  Diya Verma (P/A): 90318015625  Kabir Mehta (P/A): 
 Input ended. Closing the program.
 All data is saved. Goodbye!
