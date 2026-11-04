@@ -334,10 +334,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W8: Reports
 **Owner:** Dhruv Kataria
 
-- [ ] Student, defaulter, daily, and monthly API routes
-- [ ] Student report page with progress bars and overall %
-- [ ] Defaulters page
-- [ ] Daily and monthly pages with tables and charts
+- [x] Student, defaulter, daily, and monthly API routes
+- [x] Student report page with progress bars and overall %
+- [x] Defaulters page
+- [x] Daily and monthly pages with tables and charts
 
 **Test:** W30 to W36.
 
@@ -419,13 +419,13 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Reports
 
-- [ ] **W30** Student report shows 83.33%, 75.00%, and overall 80.00% for Diya Verma
-- [ ] **W31** Bars are green at exactly 75.00% and red below, with an icon and words
-- [ ] **W32** Student with no marks shows "No classes yet"
-- [ ] **W33** Defaulters page shows the same 5 entries as the terminal
-- [ ] **W34** Daily report on 03-11-2026 matches the terminal. A date with no data shows an empty state.
-- [ ] **W35** Monthly report for October and November matches the terminal
-- [ ] **W36** Every report matches an independent calculation from `attendance.txt`
+- [x] **W30** Student report shows 83.33%, 75.00%, and overall 80.00% for Diya Verma
+- [x] **W31** Bars are green at exactly 75.00% and red below, with an icon and words
+- [x] **W32** Student with no marks shows "No classes yet"
+- [x] **W33** Defaulters page shows the same 5 entries as the terminal
+- [x] **W34** Daily report on 03-11-2026 matches the terminal. A date with no data shows an empty state.
+- [x] **W35** Monthly report for October and November matches the terminal
+- [x] **W36** Every report matches an independent calculation from `attendance.txt`
 
 #### Terminal and persistence
 
