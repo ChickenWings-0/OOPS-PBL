@@ -2,7 +2,7 @@
 
 Short answers in simple language. Do not memorise them word for word. Understand the idea, then open the code and find where it happens. Examiners often say "show me this in your code".
 
-This guide was checked against the final code.
+Sections 1 to 9 were checked against the final terminal code. Section 10 is written from WEB_PLAN.md, before the web code exists, and must be checked again once it is built.
 
 ---
 
@@ -279,43 +279,172 @@ Both would take one `string`, so the two functions would have the same signature
 
 ---
 
-## 10. Module guide for each member
+## 10. Web version
 
-Each member should know these well and be able to open the code and walk through it.
+These answers describe the plan in WEB_PLAN.md. File and function names may change slightly during the build.
+
+### Client-server architecture
+
+**Q73. What is client-server architecture? Where is it in your project?**
+A client asks for something and a server answers. In our project, the browser is the client and `attendance_server` is the server. The browser only shows the page. The server holds the data and makes every decision.
+
+**Q74. What is HTTP? What is in a request and a response?**
+HTTP is the set of rules that browsers and servers use to talk. A request has a method (`POST`), a path (`/api/students`), headers (such as the token), and sometimes a body. A response has a status code (`201`), headers, and a body. HTTP is stateless, which means the server does not remember one request when the next arrives.
+
+**Q75. What does cpp-httplib do for you, and what do you still write?**
+It handles sockets, reads the HTTP text, and manages the worker threads. We give it a path and a function to call. Everything that happens inside that function is our code: checking the token, calling the core classes, and building the reply.
+
+**Q76. What do `localhost`, a port, and `0.0.0.0` mean?**
+`localhost` (`127.0.0.1`) means this same computer. A port is a number that says which program on the computer should receive the message. Binding to `127.0.0.1` accepts connections only from this laptop. Binding to `0.0.0.0` accepts them from any network, which Render requires so its traffic can reach our server.
+
+### REST APIs
+
+**Q77. What is a REST API?**
+It is a way of designing a server around resources, where the URL names the thing and the HTTP method says what to do with it. `GET /api/students` lists students, `POST` adds one, `PUT /api/students/2` updates student 2, and `DELETE /api/students/2` removes them.
+
+**Q78. What is the difference between GET, POST, PUT, and DELETE?**
+`GET` reads and changes nothing. `POST` creates something new. `PUT` updates something that exists. `DELETE` removes it. Sending the same `GET` many times is always safe. Sending the same `POST` twice could create two records, which is why our duplicate checks stay in C++.
+
+**Q79. Which status codes do you use, and why do they matter?**
+`200` OK, `201` created, `400` bad input, `401` not logged in, `403` logged in but not allowed, `404` not found, `409` conflict such as a duplicate, `429` too many login attempts, and `500` a server failure such as a file that cannot be written. The code tells the JavaScript what kind of reply it got, before it reads the body.
+
+**Q80. What is the difference between 401 and 403?**
+`401` means we do not know who you are, so you must log in. `403` means we know who you are, but you are not allowed. A teacher who opens the teachers list gets `403`.
+
+### JSON
+
+**Q81. What is JSON? Why use it?**
+JSON is a text format for data, built from name and value pairs, lists, numbers, strings, and true or false. For example, `{ "name": "Diya Verma", "percent": 83.33 }`. Almost every language can read it, including JavaScript, so a C++ server and a browser can share data easily.
+
+**Q82. Why did you use the nlohmann/json library and not write JSON by hand?**
+Writing JSON by hand is easy, but reading it is not. A server must handle nested lists, escaped quotes, and deliberately broken input from anyone on the internet. A hand-written parser would be more code than the server itself, and any bug in it would be exposed online. nlohmann/json is one header and well tested, and it works much like a `map`.
+
+**Q83. Your data files use `|`, and your API uses JSON. Why two formats?**
+They do different jobs. The `|` files are our storage format, handled by `fstream`. JSON is only the format for messages between the browser and the server. `JsonMapper` converts objects to JSON when a reply is sent, and nothing is stored as JSON.
+
+### From a button click to a C++ member function
+
+**Q84. Walk me through what happens when a user clicks Save on the Add Student form.**
+1. The click runs a JavaScript function in `students.js`.
+2. It calls `fetch()`, which sends `POST /api/students` with the token in a header and the form values as JSON.
+3. cpp-httplib receives the request on a worker thread and matches the path to `ApiServer::handleAddStudent`.
+4. The handler locks the mutex, checks the token with `requireLogin`, and reads the JSON.
+5. It calls `app.addStudent(...)`, a member function of `AttendanceSystem`.
+6. `addStudent` validates the input, rejects a duplicate roll number, adds the object to the `students[]` array, and calls `FileManager::saveStudents`.
+7. `saveStudents` rewrites `data/students.txt` using `ofstream`.
+8. `addStudent` returns a `Result`, and `sendResult` turns it into `201` with JSON.
+9. The JavaScript receives the reply, shows a toast, and reloads the table.
+
+**Q85. Which of those steps contain your project's logic?**
+Only the C++ ones, mainly steps 5 to 7. The same `addStudent` runs in the terminal version.
+
+**Q86. How do the terminal and the web use the same code?**
+We separated the core from the UI. Core classes take normal parameters and return a `Result`. They never use `cin` or HTTP. `ConsoleUI` collects input with prompts, and `ApiServer` collects it from JSON. Both call the same function. A rule changed in one place changes in both.
+
+**Q87. What is the `Result` class for?**
+A core function can no longer print its own error, because it does not know if a terminal or a browser is listening. It returns a `Result` holding success or failure, a code, a message, and the field it is about. The terminal prints the message. The server sends it as JSON with the right status code.
+
+**Q88. Why must validation be in C++ and not JavaScript?**
+Anyone can skip the browser and send a request with `curl`, or change the JavaScript. Only the server can be trusted. In many real websites the browser also checks input for speed, but in our project C++ does it all, so the rules exist in one place.
+
+**Q89. The live counter on the marking page changes as you click. Is that not logic in JavaScript?**
+Yes, and it is the one UI-only exception to our rule. JavaScript counts the ticked checkboxes so the teacher can see the running Present and Absent numbers without waiting for the network. It is display only: the count is not sent or saved. When Save is pressed, C++ validates the marks, counts them, and saves them, and the totals in the success message come from C++. If someone changed the JavaScript, the counter on their screen could be wrong, but the saved attendance could not.
+
+### Login and security
+
+**Q90. HTTP is stateless. How does the server remember who is logged in?**
+After a correct login, `SessionManager` creates a long random token and stores it in an array with the teacher's details and an expiry time. The browser sends that token with each request. The server looks it up to find out who is asking.
+
+**Q91. How are admin-only routes protected?**
+`requireAdmin()` runs in C++ on each admin route and checks the teacher linked to the token. Hiding the Teachers menu item is only for appearance. A teacher who calls the URL directly still gets `403`.
+
+**Q92. Could someone download `data/teachers.txt` from the website?**
+No. The server only serves files inside `web/`. The `data/` folder has no URL, and the `JsonMapper` code never reads a password.
+
+**Q93. What is XSS, and how do you avoid it?**
+Cross-site scripting is when text saved by a user runs as code in someone else's browser. A subject name could contain `<script>`. We insert server text with `textContent`, which always shows it as plain text and never runs it.
+
+**Q94. Are passwords still plain text? Is that acceptable online?**
+Yes, they are, and it would not be acceptable for a real product. A real system would store salted hashes. We reduce the risk by using fictional data only, by using HTTPS on Render, by not serving the data folder, and by setting a secret demo password on the live site.
+
+### Threads
+
+**Q95. What is a thread? Why does the server need more than one?**
+A thread is a separate path of execution inside one program. With several threads, a slow request from one user does not stop another user's request from being accepted.
+
+**Q96. What is a race condition? How does your mutex prevent one?**
+A race condition is when two threads use shared data at the same time and the result depends on timing. Two requests could both read the same `nextId` and create two students with the same ID. `lock_guard<mutex>` lets one thread in at a time. It unlocks automatically when the function ends, even after an early `return`.
+
+**Q97. What happens if two teachers mark the same subject and date at the same moment?**
+The mutex makes the requests run one after the other. The first saves. The second finds the records in `hasRecord` and gets `409`. No duplicate lines are written.
+
+**Q98. Why does the mutex live in the server and not the core?**
+Only the server has threads. Keeping it out of the core means the terminal version needs no thread support and still builds on g++ 6.3.
+
+### Build and deployment
+
+**Q99. Why did you need a different compiler?**
+cpp-httplib needs `std::thread`. Our MinGW g++ 6.3 is 32-bit with the `win32` thread model, so `std::thread` does not exist there, and the library does not support 32-bit. MSYS2's 64-bit g++ 15.2 uses the `posix` thread model and works.
+
+**Q100. Explain the server compile command.**
+`-std=c++11` sets the C++ standard. `-Wall -Wextra` turn on warnings. `-D_WIN32_WINNT=0x0A00` tells the Windows headers we target Windows 10. `-I` adds folders to search for headers. `-static` puts the libraries inside the `.exe`. `-lws2_32` links Winsock, the Windows networking library.
+
+**Q101. What is Docker? What does your Dockerfile do?**
+Docker packages a program with everything it needs into an image, so it runs the same way anywhere. Our Dockerfile has two stages. The first installs g++ on Linux and compiles the server. The second copies only the program, `web/`, and `data/` into a small image.
+
+**Q102. Why does data disappear on Render's free plan? How is sample data restored?**
+A free service has an ephemeral filesystem, so its files return to the original image on every restart, redeploy, or spin-down after 15 idle minutes. The free plan cannot attach a persistent disk. Our sample data is copied into the image, so every start automatically restores it. No restore code is needed.
+
+**Q103. Why set `TZ=Asia/Kolkata` in the Dockerfile?**
+Render's clock uses UTC, which is 5 hours 30 minutes behind India. `Date::today()` would give yesterday's date in the early morning, and today's attendance would be rejected as a future date.
+
+**Q104. What are the limitations of the web version?**
+Data on the free host resets, passwords are plain text, a restart ends all sessions, a single mutex lets only one request use the data at a time, and the terminal and server should not run on the same files together. Charts and the Inter font need internet access.
+
+---
+
+## 11. Module guide for each member
+
+Each member should know these well and be able to open the code and walk through it. Web files are listed in TASKS.md section 5.1.
 
 ### Aksh Rastogi: Core system, login, menus
 
 - **Module:** `main.cpp`, `AttendanceSystem` (core and login), `Teacher`, `Config.h`
 - **Be ready to walk through:** program start, the login loop, how menus call `AttendanceSystem`, and how the admin check works
 - **Revise:** Q4, Q5, Q12, Q14, Q24, Q64, Q66, Q68
+- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100
 
 ### Vaibhav: Students
 
 - **Module:** `Person`, `Student`, student functions in `AttendanceSystem`
 - **Be ready to walk through:** adding a student from input to file, the delete shift, and both search overloads
 - **Revise:** Q11, Q19, Q25 to Q33, Q58 to Q63, Q69 to Q72
+- **Web:** the student routes, search and sorting on the server, and the Add Student click. Revise Q77 to Q80, Q84, Q85, Q88
 
 ### Akshay Kumar: Subjects and attendance marking
 
 - **Module:** `Date`, `AttendanceRecord`, `Subject`, marking functions in `AttendanceSystem`
 - **Be ready to walk through:** the full marking flow, duplicate checking, correcting a mark, and date validation
 - **Revise:** Q8, Q14, Q17, Q52, Q53, Q56, Q57
+- **Web:** the attendance routes, the live count, and two teachers marking together. Revise Q78, Q84, Q88, Q89, Q97
 
 ### Srishti Gupta: File handling and validation
 
 - **Module:** `FileManager`, `Utils`, sample data
 - **Be ready to walk through:** loading one file line by line, append versus rewrite, handling a missing file, and `readInt`
 - **Revise:** Q35 to Q47, Q67
+- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103
 
 ### Dhruv Kataria: Reports and testing
 
 - **Module:** `Report`, report functions in `AttendanceSystem`, `README.md`, testing
 - **Be ready to walk through:** percentage calculation, the defaulter loop, daily and monthly reports, and a few test cases from TASKS.md
 - **Revise:** Q34, Q48 to Q51, Q54, Q55
+- **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104
 
 ---
 
-## 11. Tips for the viva
+## 12. Tips for the viva
 
 1. Run the demo on your own laptop, and test it the day before.
 2. Keep the code open, so you can jump to whatever you are asked about.

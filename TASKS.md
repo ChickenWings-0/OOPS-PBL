@@ -218,3 +218,251 @@ Sample logins: `admin` / `admin123` and `teacher1` / `pass123`.
 8. Show the monthly report for October, then November.
 9. Exit, open `data/attendance.txt` in Notepad, and show the new lines.
 10. Restart and show that the data is still there.
+
+---
+
+## 5. Web version
+
+Plan: [WEB_PLAN.md](WEB_PLAN.md). The terminal version must keep working at every checkpoint.
+
+**Extra rules for the web checkpoints**
+
+1. All logic stays in C++. JavaScript only sends requests and shows replies, as listed in WEB_PLAN.md section 7. The one UI-only exception is the live counter on the Mark attendance page.
+2. The core (`include/`, `src/`) must not use `cin`, HTTP, JSON, or threads, and must keep compiling on g++ 6.3.
+3. Tests run on copies of `data/`, so the sample data in Git stays clean.
+4. Update DESIGN.md and README.md whenever the design or commands change.
+
+### 5.1 Web module ownership
+
+Each member keeps the same area as in section 1, now from the browser down to the C++ code.
+
+| Member | Web module | Files | Main concepts |
+|--------|------------|-------|---------------|
+| Aksh Rastogi | Server core, login, app shell | `server_main.cpp`, `ApiServer`, `AuthRoutes.cpp`, `SessionManager`, `Result`, `ConsoleUI`, `index.html`, `api.js`, `app.js`, `login.js`, `teachers.js` | Client-server, HTTP, sessions, threads and the mutex |
+| Vaibhav | Students | `StudentRoutes.cpp`, `listStudents` and sorting, `students.js` | REST CRUD, status codes, selection sort |
+| Akshay Kumar | Subjects and attendance | `AttendanceRoutes.cpp`, `Date::parseIso`, `Date::toIso`, `subjects.js`, `mark.js` | Request bodies, duplicate protection, date handling |
+| Srishti Gupta | Data, JSON, design system, deployment | `JsonMapper`, `ConsoleInput`, `FileManager`, `web/css/`, `ui.js`, `icons.js`, `Dockerfile` | JSON, file handling on a server, Docker, ephemeral storage |
+| Dhruv Kataria | Reports and testing | `Report`, `ReportPrinter`, `ReportRoutes.cpp`, `charts.js`, `dashboard.js`, `report.js`, `defaulters.js`, `daily.js`, `monthly.js`, `tests/` | Separating calculation from display, charts, testing |
+
+### 5.2 Web checkpoints
+
+#### Checkpoint W0: Setup and safety net
+**Owners:** Aksh Rastogi, Dhruv Kataria
+
+- [ ] Update DESIGN.md and PLAN.md with the core split and new features
+- [ ] Add `third_party/`: `httplib.h` v0.64.0 and `json.hpp` v3.12.0, with licences
+- [ ] Record golden terminal output for every menu, **before any refactor**
+- [ ] Add `.gitignore` and `.dockerignore` entries
+
+**Test:** `attendance.exe` still builds, and two golden runs match each other.
+
+#### Checkpoint W1: Split Utils and add Result
+**Owners:** Srishti Gupta (`ConsoleInput`), Aksh Rastogi (`Result`)
+
+- [ ] Move console input functions from `Utils` to `console/ConsoleInput`
+- [ ] Add the `Result` class and `ResultCode`
+- [ ] Add `Date::parseIso` and `Date::toIso`
+
+**Test:** golden output matches. `Date` tests pass for `2026-11-03`, `2026-02-30`, and `abc`.
+
+#### Checkpoint W2: Split AttendanceSystem and Report
+**Owners:** Aksh Rastogi (`ConsoleUI`), Vaibhav and Akshay Kumar (their functions), Dhruv Kataria (`Report`, `ReportPrinter`)
+
+- [ ] Move all prompts and printing from `AttendanceSystem` to `ConsoleUI`
+- [ ] Every core action takes parameters and returns `Result`
+- [ ] Move `currentTeacher` out of the core, and pass the acting teacher as a parameter
+- [ ] `Report` fills structs, and `ReportPrinter` prints them
+- [ ] No `cin` remains in the core, and `cout` remains only in `display()` and `FileManager` messages
+
+**Test:** golden output matches **byte for byte** on g++ 6.3 and g++ 15.2. Re-run the checklist in section 3.
+
+#### Checkpoint W3: Server skeleton and login
+**Owners:** Aksh Rastogi, Srishti Gupta (`JsonMapper`)
+
+- [ ] `server_main.cpp`, `ApiServer`, `PORT`, `HOST`, `DEMO_PASSWORD`
+- [ ] Serve `web/`, and `GET /api/health`
+- [ ] `SessionManager`: create, find, remove, expire, and login lockout
+- [ ] `/api/login`, `/api/logout`, `/api/me`, `/api/account/password`
+- [ ] The mutex, `requireLogin`, `requireAdmin`, `readBody`, `sendResult`
+
+**Test:** W01 to W08.
+
+#### Checkpoint W4: Dashboard data
+**Owner:** Dhruv Kataria
+
+- [ ] `Report::dashboardStats`, `dailyTrend`, `subjectSummary`
+- [ ] `GET /api/dashboard`
+
+**Test:** matches WEB_PLAN.md section 6.2, and an independent calculation from `attendance.txt`.
+
+#### Checkpoint W5: Design system, shell, login, dashboard
+**Owners:** Srishti Gupta (CSS, components), Aksh Rastogi (shell, login page), Dhruv Kataria (dashboard, charts)
+
+- [ ] `tokens.css` and the core components
+- [ ] Light and dark themes with the toggle
+- [ ] Sidebar, top bar, and mobile drawer
+- [ ] Login page
+- [ ] Dashboard page with stat cards and both charts
+- [ ] Screenshots at desktop and phone width, in both themes
+
+**Test:** W50 to W53.
+
+**DESIGN APPROVAL GATE. Stop here and show the dashboard. No other page is built until the design is approved.**
+
+#### Checkpoint W6: Students, subjects, teachers
+**Owners:** Vaibhav (students), Akshay Kumar (subjects), Aksh Rastogi (teachers)
+
+- [ ] `listStudents` with search and selection sort, and `listClasses`
+- [ ] Student, subject, class, and teacher API routes
+- [ ] Students page: table, search, sort, modals, confirm delete
+- [ ] Subjects page
+- [ ] Teachers page, admin only
+
+**Test:** W10 to W19.
+
+#### Checkpoint W7: Mark attendance
+**Owner:** Akshay Kumar
+
+- [ ] `/api/attendance/sheet`, `POST`, and `PUT`
+- [ ] Mark attendance page: pickers, toggles, Mark all present, live counter (JS, display only), Save
+- [ ] Already-marked banner and correcting marks
+
+**Test:** W20 to W27.
+
+#### Checkpoint W8: Reports
+**Owner:** Dhruv Kataria
+
+- [ ] Student, defaulter, daily, and monthly API routes
+- [ ] Student report page with progress bars and overall %
+- [ ] Defaulters page
+- [ ] Daily and monthly pages with tables and charts
+
+**Test:** W30 to W36.
+
+#### Checkpoint W9: Polish and rule audit
+**Owners:** Srishti Gupta (polish), all members (audit)
+
+- [ ] Toasts, spinners, empty states, and focus states on every page
+- [ ] Field errors from server responses on every form
+- [ ] Check every page at phone width, in both themes
+- [ ] Audit `web/js/` against WEB_PLAN.md section 7
+- [ ] Check that no `innerHTML` receives server data
+
+**Test:** W54 to W59.
+
+#### Checkpoint W10: Full local test
+**Owner:** Dhruv Kataria
+
+- [ ] Add the `tests/` API script, run against a copy of `data/`
+- [ ] Run all W tests and all T tests
+- [ ] Clean builds of both programs with no warnings
+
+**Test:** W40 to W43, then every box in sections 3 and 5.3 up to W59 ticked.
+
+#### Checkpoint W11: Deployment
+**Owner:** Srishti Gupta
+
+- [ ] Confirm Render's free tier accepts Docker, **before anything else**
+- [ ] `Dockerfile` and `.dockerignore`
+- [ ] Confirm `data/` is the clean sample data
+- [ ] Create the Render service and set `DEMO_PASSWORD`
+- [ ] Deploy and read the build log
+
+**Test:** W60 to W66.
+
+#### Checkpoint W12: Documentation
+**Owners:** Dhruv Kataria (`README.md`), all members (review)
+
+- [ ] README: web features, build commands, live link, screenshots
+- [ ] DESIGN.md matches the final structure
+- [ ] Update VIVA.md: Q5, Q6, Q24, Q66, Q68, and the new section 10, against the final code
+- [ ] Update the module guide with real file names
+
+### 5.3 Web testing checklist
+
+#### Server and login
+
+- [ ] **W01** `GET /api/health` returns 200 with no token
+- [ ] **W02** Correct login returns a token. Wrong password returns 401 and the C++ message.
+- [ ] **W03** A route with no token, or a made-up token, returns 401
+- [ ] **W04** After logout, the old token returns 401
+- [ ] **W05** Teacher token on an admin route returns 403, with `curl`, not only the browser
+- [ ] **W06** Three wrong logins lock that username for 30 seconds (429)
+- [ ] **W07** `/data/teachers.txt` and `/../data/teachers.txt` are not served, and no API reply contains a password
+- [ ] **W08** Broken JSON and an oversized body return an error, and the server keeps running
+
+#### Students, subjects, teachers
+
+- [ ] **W10** Add a student in the browser: the line appears in `data/students.txt`, and the terminal shows them after restart
+- [ ] **W11** Duplicate roll number: 409, with the message under the roll number field
+- [ ] **W12** Empty or invalid fields: messages come from C++, with browser validation off
+- [ ] **W13** Same name in the same class: dialog appears, and confirming adds the student
+- [ ] **W14** Search by part of a name, and by exact roll number
+- [ ] **W15** Sorting by each column comes from the server, in both directions
+- [ ] **W16** Edit a student. Changing the class of a student with attendance is rejected.
+- [ ] **W17** Delete asks first, and removes the student from both files
+- [ ] **W18** Add a subject. A lowercase duplicate code is rejected.
+- [ ] **W19** Admin adds a teacher, who can then log in. A teacher does not see this page.
+
+#### Attendance
+
+- [ ] **W20** Choosing a subject lists only that class
+- [ ] **W21** Live counter updates after each toggle, sends no request, and is not part of the saved data
+- [ ] **W22** Mark all present sets every toggle and updates the counter, and the totals after Save come from C++
+- [ ] **W23** Saving adds lines to `attendance.txt` with `ios::app`
+- [ ] **W24** A session already marked shows the banner, and a repeat `POST` returns 409
+- [ ] **W25** Future date and invalid date are rejected by C++, including with `curl`
+- [ ] **W26** Correct a mark from A to P: the file and the percentage change
+- [ ] **W27** Two browsers save the same subject and date together: one succeeds, one gets 409, and no duplicate lines exist
+
+#### Reports
+
+- [ ] **W30** Student report shows 83.33%, 75.00%, and overall 80.00% for Diya Verma
+- [ ] **W31** Bars are green at exactly 75.00% and red below, with an icon and words
+- [ ] **W32** Student with no marks shows "No classes yet"
+- [ ] **W33** Defaulters page shows the same 5 entries as the terminal
+- [ ] **W34** Daily report on 03-11-2026 matches the terminal. A date with no data shows an empty state.
+- [ ] **W35** Monthly report for October and November matches the terminal
+- [ ] **W36** Every report matches an independent calculation from `attendance.txt`
+
+#### Terminal and persistence
+
+- [ ] **W40** Terminal golden output still matches at the end of the project
+- [ ] **W41** Terminal builds on g++ 6.3 and g++ 15.2 with no warnings
+- [ ] **W42** Changes made in the browser survive a server restart locally
+- [ ] **W43** 50 parallel add-student requests produce no duplicate IDs and no lost lines
+
+#### Design and behaviour
+
+- [ ] **W50** Dashboard shows 10 students, 4 subjects, 4 defaulter students
+- [ ] **W51** Today's card shows the last marked day when nothing is marked today
+- [ ] **W52** Theme toggle changes every colour and redraws charts, and stays after reload
+- [ ] **W53** Sidebar collapses below 900 px, with no sideways scrolling at 360 px
+- [ ] **W54** Every page has a loading state and an empty state
+- [ ] **W55** Every save and delete shows a toast
+- [ ] **W56** An expired session returns to login with a message
+- [ ] **W57** Modals work with the keyboard, and focus is visible
+- [ ] **W58** A subject named `<b>test</b>` shows as plain text
+- [ ] **W59** With no internet, tables work and the chart areas show a message
+
+#### Deployed site
+
+- [ ] **W60** Build succeeds on Render, and the health check passes
+- [ ] **W61** Login works with `DEMO_PASSWORD`, and `admin123` does not
+- [ ] **W62** The site opens over HTTPS, on a laptop and on a phone
+- [ ] **W63** `/data/teachers.txt` is not reachable
+- [ ] **W64** Marking today works at any time of day (India time zone)
+- [ ] **W65** Add a student, restart the service, and confirm the sample data is back
+- [ ] **W66** Cold start after 15 idle minutes loads within about a minute
+
+### 5.4 Demo order for the web version (about 5 minutes)
+
+1. Start `attendance_server.exe` and show the build command.
+2. Log in, point out the error message from a wrong password, then show the dashboard.
+3. Switch the theme, and narrow the window to show the mobile layout.
+4. Add a student, and show the duplicate error from C++.
+5. Mark attendance, then open `data/attendance.txt` to show the new lines.
+6. Show a student report and the defaulter list.
+7. Open DevTools > Network and show the JSON for one request.
+8. Open the same function in `AttendanceSystem.cpp`, and show that the terminal calls it too.
+9. Open the live link.
