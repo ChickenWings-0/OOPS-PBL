@@ -54,3 +54,65 @@ json JsonMapper::today() {
     out["dateIso"] = date.toIso();
     return out;
 }
+
+// Turns one subject's figures into its status word. The frontend only
+// picks a colour from this, so it never compares anything to 75.
+static string statusWord(int total, bool belowLimit) {
+    if (total == 0) {
+        return "none";
+    }
+    return belowLimit ? "low" : "ok";
+}
+
+// Everything the dashboard page shows.
+json JsonMapper::dashboard(const DashboardData& data, const TrendPoint trend[], int trendCount,
+                           const SubjectLine lines[], int lineCount, const Subject subjects[]) {
+    json cards;
+    cards["students"] = data.studentCount;
+    cards["subjects"] = data.subjectCount;
+    cards["todayMarked"] = data.todayMarked;
+    cards["todayPercentText"] = Report::percentText(data.todayPercentage);
+    cards["todayPresent"] = data.todayPresent;
+    cards["todayTotal"] = data.todayTotal;
+    cards["anyMarks"] = data.anyMarks;
+    cards["lastMarkedDate"] = data.anyMarks ? data.lastMarkedDate.toString() : "";
+    cards["lastMarkedPercentText"] = Report::percentText(data.lastMarkedPercentage);
+    cards["defaulterStudents"] = data.defaulterStudents;
+    cards["defaulterEntries"] = data.defaulterEntries;
+
+    json trendRows = json::array();
+    for (int i = 0; i < trendCount; i++) {
+        json row;
+        row["date"] = trend[i].date.toString();
+        row["label"] = trend[i].date.shortLabel();
+        row["present"] = trend[i].present;
+        row["total"] = trend[i].total;
+        row["percent"] = rounded(trend[i].percentage);
+        row["percentText"] = Report::percentText(trend[i].percentage);
+        trendRows.push_back(row);
+    }
+
+    json subjectRows = json::array();
+    for (int i = 0; i < lineCount; i++) {
+        const Subject& subject = subjects[lines[i].subjectIndex];
+        json row;
+        row["code"] = subject.getCode();
+        row["name"] = subject.getName();
+        row["className"] = subject.getClassName();
+        row["present"] = lines[i].present;
+        row["total"] = lines[i].total;
+        row["percent"] = rounded(lines[i].percentage);
+        row["percentText"] = Report::percentText(lines[i].percentage);
+        row["status"] = statusWord(lines[i].total, lines[i].belowLimit);
+        subjectRows.push_back(row);
+    }
+
+    json out;
+    out["ok"] = true;
+    out["today"] = Date::today().toString();
+    out["limit"] = (int)Student::DEFAULTER_LIMIT;
+    out["cards"] = cards;
+    out["trend"] = trendRows;
+    out["subjects"] = subjectRows;
+    return out;
+}

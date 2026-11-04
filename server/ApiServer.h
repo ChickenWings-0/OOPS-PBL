@@ -47,6 +47,9 @@ private:
     void handleListTeachers(const httplib::Request& req, httplib::Response& res);
     void handleAddTeacher(const httplib::Request& req, httplib::Response& res);
 
+    // Reports (ReportRoutes.cpp)
+    void handleDashboard(const httplib::Request& req, httplib::Response& res);
+
 public:
     void useDemoPassword(const std::string& password);
     bool start(const std::string& host, int port);

@@ -69,6 +69,29 @@ struct MonthlyReportData {
     bool anyRecords;      // false if the class has no marks in this month
 };
 
+// Attendance across all subjects on one day.
+struct TrendPoint {
+    Date date;
+    int present;
+    int total;
+    double percentage;
+};
+
+// The headline numbers for the dashboard.
+struct DashboardData {
+    int studentCount;
+    int subjectCount;
+    bool todayMarked;          // has any attendance been marked today?
+    int todayPresent;
+    int todayTotal;
+    double todayPercentage;
+    bool anyMarks;             // false if no attendance exists at all
+    Date lastMarkedDate;
+    double lastMarkedPercentage;
+    int defaulterStudents;     // a student counts once, however many subjects
+    int defaulterEntries;      // one for each student and subject
+};
+
 class Report {
 public:
     static bool isBelowLimit(double percentage);
@@ -81,6 +104,12 @@ public:
                                        const Date& date);
     static MonthlyReportData monthlyReport(const Student students[], const std::string& className,
                                            int month, int year);
+
+    // For the web dashboard
+    static int dailyTrend(const Student students[], TrendPoint points[], int maxPoints);
+    static int subjectSummary(const Student students[], const Subject subjects[],
+                              SubjectLine lines[]);
+    static DashboardData dashboardStats(const Student students[], const Subject subjects[]);
 };
 
 #endif

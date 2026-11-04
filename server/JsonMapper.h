@@ -10,6 +10,7 @@
 #include <string>
 
 #include "Date.h"
+#include "Report.h"
 #include "Result.h"
 #include "Student.h"
 #include "Subject.h"
@@ -24,6 +25,10 @@ public:
     static nlohmann::json user(const Teacher& teacher);
     static nlohmann::json teacherRow(const Teacher& teacher);
     static nlohmann::json today();
+
+    static nlohmann::json dashboard(const DashboardData& data, const TrendPoint trend[],
+                                    int trendCount, const SubjectLine lines[], int lineCount,
+                                    const Subject subjects[]);
 };
 
 #endif

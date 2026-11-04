@@ -52,6 +52,8 @@ void ApiServer::registerRoutes(httplib::Server& server) {
 
     server.Get("/api/teachers", [this](const Request& req, Response& res) { handleListTeachers(req, res); });
     server.Post("/api/teachers", [this](const Request& req, Response& res) { handleAddTeacher(req, res); });
+
+    server.Get("/api/dashboard", [this](const Request& req, Response& res) { handleDashboard(req, res); });
 }
 
 // Sets up the server and runs until the program is stopped.

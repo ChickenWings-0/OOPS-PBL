@@ -291,8 +291,8 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W4: Dashboard data
 **Owner:** Dhruv Kataria
 
-- [ ] `Report::dashboardStats`, `dailyTrend`, `subjectSummary`
-- [ ] `GET /api/dashboard`
+- [x] `Report::dashboardStats`, `dailyTrend`, `subjectSummary`
+- [x] `GET /api/dashboard`
 
 **Test:** matches WEB_PLAN.md section 6.2, and an independent calculation from `attendance.txt`.
 

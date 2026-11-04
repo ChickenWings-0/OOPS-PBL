@@ -137,3 +137,115 @@ MonthlyReportData Report::monthlyReport(const Student students[], const string& 
     }
     return data;
 }
+
+// Finds where a day belongs in points[], which is kept oldest first, and adds
+// it if it is new. When the array is full, the oldest day is dropped.
+// Returns the day's index, or -1 if it is older than every day being kept.
+static int placeForDay(TrendPoint points[], int& count, int maxPoints, const Date& date) {
+    int place = 0;
+    while (place < count && date.isAfter(points[place].date)) {
+        place++;
+    }
+    if (place < count && points[place].date.equals(date)) {
+        return place;
+    }
+
+    if (count == maxPoints) {
+        if (place == 0) {
+            return -1;
+        }
+        for (int i = 0; i < place - 1; i++) {      // drop the oldest day
+            points[i] = points[i + 1];
+        }
+        place--;
+    } else {
+        for (int i = count; i > place; i--) {      // make a gap for the new day
+            points[i] = points[i - 1];
+        }
+        count++;
+    }
+
+    points[place].date = date;
+    points[place].present = 0;
+    points[place].total = 0;
+    return place;
+}
+
+// Works out attendance for the latest days that have marks, oldest first.
+// Only marked days count, so a chart stays filled over weekends and holidays.
+// Fills points[] and returns how many days were found.
+int Report::dailyTrend(const Student students[], TrendPoint points[], int maxPoints) {
+    int count = 0;
+
+    for (int i = 0; i < Student::getCount(); i++) {
+        for (int j = 0; j < students[i].getRecordCount(); j++) {
+            const AttendanceRecord& record = students[i].getRecord(j);
+
+            int place = placeForDay(points, count, maxPoints, record.getDate());
+            if (place == -1) {
+                continue;
+            }
+            points[place].total++;
+            if (record.isPresent()) {
+                points[place].present++;
+            }
+        }
+    }
+
+    for (int i = 0; i < count; i++) {
+        points[i].percentage = Student::calcPercentage(points[i].present, points[i].total);
+    }
+    return count;
+}
+
+// Works out attendance in each subject, across all of its students.
+// Fills lines[] and returns how many subjects there are.
+int Report::subjectSummary(const Student students[], const Subject subjects[],
+                           SubjectLine lines[]) {
+    for (int i = 0; i < Subject::getCount(); i++) {
+        string code = subjects[i].getCode();
+
+        int present = 0;
+        int total = 0;
+        for (int j = 0; j < Student::getCount(); j++) {
+            present += students[j].countPresent(code);
+            total += students[j].countTotal(code);
+        }
+
+        lines[i].subjectIndex = i;
+        lines[i].present = present;
+        lines[i].total = total;
+        lines[i].percentage = Student::calcPercentage(present, total);
+        lines[i].belowLimit = total > 0 && isBelowLimit(lines[i].percentage);
+    }
+    return Subject::getCount();
+}
+
+// Works out the headline numbers for the dashboard.
+DashboardData Report::dashboardStats(const Student students[], const Subject subjects[]) {
+    DashboardData data;
+    data.studentCount = Student::getCount();
+    data.subjectCount = Subject::getCount();
+
+    // The latest marked day tells us about both "today" and "last marked".
+    TrendPoint latest;
+    data.anyMarks = dailyTrend(students, &latest, 1) > 0;
+    data.todayMarked = data.anyMarks && latest.date.equals(Date::today());
+    data.todayPresent = data.todayMarked ? latest.present : 0;
+    data.todayTotal = data.todayMarked ? latest.total : 0;
+    data.todayPercentage = data.todayMarked ? latest.percentage : 0.0;
+    data.lastMarkedDate = data.anyMarks ? latest.date : Date();
+    data.lastMarkedPercentage = data.anyMarks ? latest.percentage : 0.0;
+
+    DefaulterEntry entries[MAX_DEFAULTER_ENTRIES];
+    data.defaulterEntries = defaulterList(students, subjects, entries);
+
+    // Entries are grouped by student, so a new student starts when the index changes.
+    data.defaulterStudents = 0;
+    for (int i = 0; i < data.defaulterEntries; i++) {
+        if (i == 0 || entries[i].studentIndex != entries[i - 1].studentIndex) {
+            data.defaulterStudents++;
+        }
+    }
+    return data;
+}

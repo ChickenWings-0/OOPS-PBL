@@ -54,6 +54,19 @@ def login(username, password):
     return body.get("token") if status == 200 else None
 
 
+def expected_numbers(data_folder):
+    """Works out dashboard numbers directly from the text files."""
+    rows = [line.strip().split("|") for line in open(os.path.join(data_folder, "attendance.txt")) if line.strip()]
+    days, subjects, marks = {}, {}, {}
+    for student, code, date, status in rows:
+        for table, key in ((days, date), (subjects, code), (marks, (student, code))):
+            table.setdefault(key, [0, 0])
+            table[key][1] += 1
+            table[key][0] += status == "P"
+    low = [key for key, (present, total) in marks.items() if present * 100.0 / total < 75]
+    return days, subjects, low
+
+
 def test_login_and_sessions():
     status, body, _ = call("GET", "/api/health")
     check("W01 health needs no token", status == 200 and body == {"ok": True}, (status, body))
@@ -67,9 +80,9 @@ def test_login_and_sessions():
     check("W02 wrong password is 401 with the C++ message",
           status == 401 and body.get("error") == "Wrong username or password.", (status, body))
 
-    status, _, _ = call("GET", "/api/me")
+    status, _, _ = call("GET", "/api/dashboard")
     check("W03 no token is 401", status == 401, status)
-    status, _, _ = call("GET", "/api/me", token="0" * 32)
+    status, _, _ = call("GET", "/api/dashboard", token="0" * 32)
     check("W03 made-up token is 401", status == 401, status)
     status, body, _ = call("GET", "/api/me", token=admin)
     check("W03 real token works", status == 200 and body["user"]["username"] == "admin", (status, body))
@@ -114,7 +127,7 @@ def test_files_are_private(admin):
         status, body, _ = call("GET", path)
         check("W07 not served: " + path, status in (400, 404) and "admin123" not in str(body), (status, body))
 
-    for method, path in (("GET", "/api/me"), ("GET", "/api/teachers"), ("GET", "/api/me")):
+    for method, path in (("GET", "/api/me"), ("GET", "/api/teachers"), ("GET", "/api/dashboard")):
         _, body, _ = call(method, path, token=admin)
         text = json.dumps(body)
         check("W07 no password in " + path, "admin123" not in text and "password" not in text.lower(), text[:200])
@@ -147,6 +160,37 @@ def test_password_change(admin):
     check("password: changed", status == 200 and body.get("message") == "Password changed.", (status, body))
     check("password: new one logs in", login("admin", "newpass1") is not None)
     call("POST", "/api/account/password", {"currentPassword": "newpass1", "newPassword": "admin123"}, token=admin)
+
+
+def test_dashboard(admin, data_folder):
+    days, subjects, low = expected_numbers(data_folder)
+    status, body, _ = call("GET", "/api/dashboard", token=admin)
+    check("dashboard responds", status == 200, status)
+    cards = body["cards"]
+
+    check("W50 ten students, four subjects", cards["students"] == 10 and cards["subjects"] == 4, cards)
+    check("W50 defaulters", cards["defaulterEntries"] == len(low) and
+          cards["defaulterStudents"] == len({student for student, _ in low}), (cards, low))
+
+    def date_key(text):
+        return text[6:], text[3:5], text[:2]
+
+    ordered = sorted(days, key=date_key)
+    check("trend has every marked day, oldest first", [row["date"] for row in body["trend"]] == ordered,
+          body["trend"])
+    for row in body["trend"]:
+        present, total = days[row["date"]]
+        check("trend " + row["date"], row["present"] == present and row["total"] == total and
+              abs(row["percent"] - present * 100.0 / total) < 0.006, row)
+
+    for row in body["subjects"]:
+        present, total = subjects[row["code"]]
+        check("subject " + row["code"], row["present"] == present and row["total"] == total and
+              abs(row["percent"] - present * 100.0 / total) < 0.006 and row["status"] == "ok", row)
+
+    check("W51 last marked day is reported", cards["todayMarked"] is False and
+          cards["lastMarkedDate"] == ordered[-1], cards)
+    check("percent text has two decimals", cards["lastMarkedPercentText"] == "80.00%", cards)
 
 
 def test_security_headers():
@@ -186,6 +230,60 @@ def stop_server(server, folder):
     shutil.rmtree(folder, ignore_errors=True)
 
 
+def twenty_marked_days(data_folder):
+    """Replaces attendance with one mark a day for the last 20 days, today included."""
+    today = datetime.date.today()
+    with open(os.path.join(data_folder, "attendance.txt"), "w") as file:
+        for back in range(19, -1, -1):
+            day = today - datetime.timedelta(days=back)
+            file.write("1|CS201A|%s|%s\n" % (day.strftime("%d-%m-%Y"), "A" if back == 0 else "P"))
+
+
+def no_attendance(data_folder):
+    os.remove(os.path.join(data_folder, "attendance.txt"))
+
+
+def no_data(data_folder):
+    for name in ("attendance.txt", "students.txt", "subjects.txt"):
+        os.remove(os.path.join(data_folder, name))
+
+
+def test_long_history(exe):
+    server, folder = start_server(exe, twenty_marked_days)
+    try:
+        _, body, _ = call("GET", "/api/dashboard", token=login("admin", "admin123"))
+        today = datetime.date.today()
+        wanted = [(today - datetime.timedelta(days=back)).strftime("%d-%m-%Y") for back in range(13, -1, -1)]
+        check("trend keeps only the latest 14 days, oldest first",
+              [row["date"] for row in body["trend"]] == wanted, body["trend"])
+        cards = body["cards"]
+        check("W51 today is recognised when marked", cards["todayMarked"] is True and
+              cards["todayTotal"] == 1 and cards["todayPresent"] == 0 and
+              cards["todayPercentText"] == "0.00%", cards)
+    finally:
+        stop_server(server, folder)
+
+
+def test_empty_data(exe):
+    server, folder = start_server(exe, no_attendance)
+    try:
+        status, body, _ = call("GET", "/api/dashboard", token=login("admin", "admin123"))
+        check("no attendance: no crash, empty trend", status == 200 and body["trend"] == [] and
+              body["cards"]["anyMarks"] is False, (status, body))
+        check("no attendance: subjects show none", all(row["status"] == "none" for row in body["subjects"]),
+              body["subjects"])
+    finally:
+        stop_server(server, folder)
+
+    server, folder = start_server(exe, no_data)
+    try:
+        status, body, _ = call("GET", "/api/dashboard", token=login("admin", "admin123"))
+        check("no data at all: no crash", status == 200 and body["cards"]["students"] == 0 and
+              body["subjects"] == [], (status, body))
+    finally:
+        stop_server(server, folder)
+
+
 def test_demo_password(exe):
     server, folder = start_server(exe, settings={"DEMO_PASSWORD": "demo-secret1"})
     try:
@@ -214,11 +312,14 @@ def main():
         test_files_are_private(admin)
         test_bad_requests(admin)
         test_password_change(admin)
+        test_dashboard(admin, os.path.join(folder, "data"))
         test_security_headers()
         test_lockout()
     finally:
         stop_server(server, folder)
 
+    test_long_history(exe)
+    test_empty_data(exe)
     test_demo_password(exe)
 
     print("Passed %d of %d checks." % (sum(results), len(results)))
