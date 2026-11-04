@@ -279,11 +279,12 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Checkpoint W3: Server skeleton and login
 **Owners:** Aksh Rastogi, Srishti Gupta (`JsonMapper`)
 
-- [ ] `server_main.cpp`, `ApiServer`, `PORT`, `HOST`, `DEMO_PASSWORD`
-- [ ] Serve `web/`, and `GET /api/health`
-- [ ] `SessionManager`: create, find, remove, expire, and login lockout
-- [ ] `/api/login`, `/api/logout`, `/api/me`, `/api/account/password`
-- [ ] The mutex, `requireLogin`, `requireAdmin`, `readBody`, `sendResult`
+- [x] `server_main.cpp`, `ApiServer`, `PORT`, `HOST`, `DEMO_PASSWORD`
+- [x] Serve `web/`, and `GET /api/health`
+- [x] `SessionManager`: create, find, remove, expire, and login lockout
+- [x] `/api/login`, `/api/logout`, `/api/me`, `/api/account/password`
+- [x] The mutex, `requireLogin`, `readBody`, `sendResult`
+- [x] `/api/teachers`, so the admin check can be tested
 
 **Test:** W01 to W08.
 
@@ -313,7 +314,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 **Owners:** Vaibhav (students), Akshay Kumar (subjects), Aksh Rastogi (teachers)
 
 - [ ] `listStudents` with search and selection sort, and `listClasses`
-- [ ] Student, subject, class, and teacher API routes
+- [ ] Student, subject, and class API routes
 - [ ] Students page: table, search, sort, modals, confirm delete
 - [ ] Subjects page
 - [ ] Teachers page, admin only
@@ -382,14 +383,14 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Server and login
 
-- [ ] **W01** `GET /api/health` returns 200 with no token
-- [ ] **W02** Correct login returns a token. Wrong password returns 401 and the C++ message.
-- [ ] **W03** A route with no token, or a made-up token, returns 401
-- [ ] **W04** After logout, the old token returns 401
-- [ ] **W05** Teacher token on an admin route returns 403, with `curl`, not only the browser
-- [ ] **W06** Three wrong logins lock that username for 30 seconds (429)
-- [ ] **W07** `/data/teachers.txt` and `/../data/teachers.txt` are not served, and no API reply contains a password
-- [ ] **W08** Broken JSON and an oversized body return an error, and the server keeps running
+- [x] **W01** `GET /api/health` returns 200 with no token
+- [x] **W02** Correct login returns a token. Wrong password returns 401 and the C++ message.
+- [x] **W03** A route with no token, or a made-up token, returns 401
+- [x] **W04** After logout, the old token returns 401
+- [x] **W05** Teacher token on an admin route returns 403, with `curl`, not only the browser
+- [x] **W06** Three wrong logins lock that username for 30 seconds (429)
+- [x] **W07** `/data/teachers.txt` and `/../data/teachers.txt` are not served, and no API reply contains a password
+- [x] **W08** Broken JSON and an oversized body return an error, and the server keeps running
 
 #### Students, subjects, teachers
 

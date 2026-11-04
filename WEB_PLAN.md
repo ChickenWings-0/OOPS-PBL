@@ -221,7 +221,7 @@ Pinned to **v3.12.0**, MIT licence, in `third_party/`. Only `server/` includes i
 
 | Class | File | Job |
 |-------|------|-----|
-| `ApiServer` | `server/ApiServer.h/.cpp` | Registers routes, serves `web/`, and has shared helpers: `requireLogin`, `requireAdmin`, `readBody`, `sendResult` |
+| `ApiServer` | `server/ApiServer.h/.cpp` | Registers routes, serves `web/`, and has shared helpers: `requireLogin`, `readBody`, `sendResult` |
 | Route handlers | `server/AuthRoutes.cpp`, `StudentRoutes.cpp`, `AttendanceRoutes.cpp`, `ReportRoutes.cpp` | `ApiServer` member functions, one per endpoint, split by module |
 | `SessionManager` | `server/SessionManager.h/.cpp` | Fixed array of `Session` objects: create, find, remove, expire. Also counts failed logins. |
 | `JsonMapper` | `server/JsonMapper.h/.cpp` | Turns core objects and report structs into JSON. This is why passwords can never leak: it has no password to read. |
@@ -252,7 +252,7 @@ void ApiServer::handleAddStudent(const Request& req, Response& res) {
 | Sending it | `Authorization: Bearer <token>` on each request |
 | Storing it | `sessionStorage` in the browser, cleared when the tab closes |
 | Expiry | 8 hours, stored with the session. A restart clears all sessions. |
-| Admin routes | `requireAdmin()` in C++ checks the session's teacher. Hiding the menu item is only cosmetic. |
+| Admin routes | The core's `canViewTeachers()` and `canAddTeacher()` check the session's teacher. Hiding the menu item is only cosmetic. |
 | Wrong logins | Three failures for a username lock it for 30 seconds, matching the terminal's three attempts |
 | Files | Only `web/` is served, so `data/teachers.txt` has no URL |
 | XSS | JS inserts server text with `textContent`, never `innerHTML`. Subject names may contain `<`, so this matters. |

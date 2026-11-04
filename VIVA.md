@@ -356,7 +356,7 @@ Yes, and it is the one UI-only exception to our rule. JavaScript counts the tick
 After a correct login, `SessionManager` creates a long random token and stores it in an array with the teacher's details and an expiry time. The browser sends that token with each request. The server looks it up to find out who is asking.
 
 **Q91. How are admin-only routes protected?**
-`requireAdmin()` runs in C++ on each admin route and checks the teacher linked to the token. Hiding the Teachers menu item is only for appearance. A teacher who calls the URL directly still gets `403`.
+Each admin route finds the teacher linked to the token, then the core function `canViewTeachers()` or `canAddTeacher()` checks that this teacher is the admin. The same rule protects the terminal menu. Hiding the Teachers menu item is only for appearance. A teacher who calls the URL directly still gets `403`.
 
 **Q92. Could someone download `data/teachers.txt` from the website?**
 No. The server only serves files inside `web/`. The `data/` folder has no URL, and the `JsonMapper` code never reads a password.
