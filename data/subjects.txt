@@ -1,0 +1,4 @@
+CS201A|OOPs using C++|AIML-A
+MA201A|Mathematics III|AIML-A
+CS201B|OOPs using C++|AIML-B
+MA201B|Mathematics III|AIML-B

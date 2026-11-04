@@ -2,7 +2,7 @@
 
 Short answers in simple language. Do not memorise them word for word. Understand the idea, then open the code and find where it happens. Examiners often say "show me this in your code".
 
-This guide is written before the code. After the build, check it against the final code.
+This guide was checked against the final code.
 
 ---
 
@@ -40,7 +40,7 @@ Keeping data private and allowing access only through functions. `Teacher::passw
 Private: only the class itself. Protected: the class and its derived classes. Public: everyone. `Person::name` is protected, so `Student` and `Teacher` can use it directly.
 
 **Q10. What is a constructor? Which types do you use?**
-A special function that runs automatically when an object is created. It has the same name as the class and no return type. We use a default constructor, `Student()`, and a parameterised one, `Student(roll, name, className)`.
+A special function that runs automatically when an object is created. It has the same name as the class and no return type. We use a default constructor, `Student()`, and a parameterised one, `Student(id, rollNo, name, className)`.
 
 **Q11. Why does `Student` need a default constructor?**
 `Student students[100]` creates 100 objects with no arguments, so the compiler needs a constructor that takes none. Without it, the array declaration does not compile.
@@ -96,7 +96,7 @@ All the arrays together are about 1.2 MB. Normal local variables live on the sta
 A variable that belongs to the class, not to any object. There is only one copy, shared by all objects. `totalStudents` is one example.
 
 **Q26. Why did you use static members?**
-The total number of students is not a property of one student, it belongs to the whole class. The same is true for the next roll number. If they were normal members, each object would have its own copy, and the copies would not agree.
+The total number of students is not a property of one student, it belongs to the whole class. The same is true for the next internal ID. If they were normal members, each object would have its own copy, and the copies would not agree.
 
 **Q27. Why must a static data member be defined outside the class?**
 Inside the class it is only declared. Memory must be given exactly once, so we write `int Student::totalStudents = 0;` in `Student.cpp`. Without it, you get a linker error.
@@ -105,7 +105,7 @@ Inside the class it is only declared. Memory must be given exactly once, so we w
 It is a `static const int`, and for this type C++ allows the value to be given inside the class.
 
 **Q29. What is a static member function?**
-A function called through the class name, with no object needed: `Student::getTotalStudents()`. It has no `this` pointer, so it can only directly use static members.
+A function called through the class name, with no object needed: `Student::getCount()`. It has no `this` pointer, so it can only directly use static members.
 
 **Q30. Can a static function use `name`?**
 No. `name` belongs to one object, and a static function has no object to read it from.
@@ -113,14 +113,17 @@ No. `name` belongs to one object, and a static function has no object to read it
 **Q31. Why not increase the counter in the constructor?**
 `Student students[100]` runs the constructor 100 times when the program starts. A counter in the constructor would say 100 before anyone was added. So we only change it when a real student is added or removed.
 
-**Q32. How does the roll number generator work?**
-`nextRollNo` starts at 101, and `generateRollNo()` returns the value and then increases it. After loading from file, we make sure `nextRollNo` is greater than the highest roll number found, so numbers continue correctly between runs.
+**Q32. How does the internal ID generator work?**
+`nextId` starts at 1, and `generateId()` returns the value and then increases it. After loading from file, we make sure `nextId` is greater than the highest ID found, so numbers continue correctly between runs.
 
-**Q33. Could a roll number be reused?**
-Yes, in one case: if the student with the highest number is deleted and the program restarts, that number can be given again. This is safe because deleting a student also deletes their attendance, so the new student cannot inherit old marks.
+**Q33. Could an internal ID be reused?**
+Yes, in one case: if the student with the highest ID is deleted and the program restarts, that ID can be given again. This is safe because deleting a student also deletes their attendance, so the new student cannot inherit old marks.
 
 **Q34. Why are all `FileManager` and `Report` functions static?**
 These classes store no data of their own, so there is nothing an object would hold. `FileManager::saveStudents(students)` is clear and needs no object.
+
+**Q34a. `printStudentHeader()` and `percentText()` are marked `static` but are not in a class. Is that the same thing?**
+No, this is a different meaning of the word. On a function outside any class, `static` means the function can only be used inside that one `.cpp` file. It keeps small private helpers hidden from the rest of the program. It has nothing to do with objects or sharing. In `main()`, `static AttendanceSystem app;` is a third meaning: a local variable that lives for the whole program.
 
 ---
 
@@ -145,7 +148,7 @@ Lines have different lengths, so one line cannot be replaced in place. We change
 Text files can be opened in Notepad, which makes checking and the demo easy. Also, a `std::string` usually keeps its characters in separate memory, so writing the raw object to a binary file would not save the actual text. Binary would need fixed `char` arrays.
 
 **Q41. What does a line in `attendance.txt` mean?**
-`101|CS201A|26-10-2026|P` means roll number 101 was present in CS201A on 26 October 2026.
+`1|CS201A|26-10-2026|P` means the student with internal ID 1 was present in CS201A on 26 October 2026.
 
 **Q42. Why use `|` as the separator?**
 A name can contain spaces, so a space does not work. `|` never appears in normal data, and we reject any input containing it.
@@ -193,7 +196,7 @@ Before marking, we check `hasRecord(code, date)` for the students of that class.
 So a session is stored only after every answer is entered. If it stops halfway, no half-marked session is saved.
 
 **Q54. How does the daily report work?**
-For the chosen date, it goes through each subject and each student of that subject's class, finds the matching record, and lists present and absent students.
+For the chosen date, it goes through each subject and asks every student for their status with `getStatus(code, date)`. A student with no mark returns `-`, so subjects not held that day are skipped. It then lists present and absent students.
 
 **Q55. How does the monthly report work?**
 For the chosen class, month, and year, it calls `countTotal(m, y)` and `countPresent(m, y)` for each student, which count only records inside that month.
@@ -215,19 +218,27 @@ A class gets the members of another class. `Student` and `Teacher` inherit `id`,
 Hierarchical inheritance: one base class with two derived classes. It is public inheritance, so public members of `Person` stay public in `Student`.
 
 **Q60. How does the derived class constructor call the base constructor?**
-With an initialiser list: `Student(...) : Person(roll, name)`. The base part is built first.
+With an initialiser list: `Student(...) : Person(id, name)`. The base part is built first.
 
 **Q61. In what order do constructors and destructors run?**
 Constructors: base first, then derived. Destructors: derived first, then base.
 
 **Q62. What is function overloading? Show an example.**
-Same function name, different parameters. `searchStudent(int)` searches by roll number and `searchStudent(string)` by name. The compiler picks the right one from the argument type. This is compile-time polymorphism.
+Same function name, different parameters. `searchStudent(int)` searches by internal ID, and `searchStudent(string)` searches by roll number or name. The compiler picks the right one from the argument type. This is compile-time polymorphism.
 
 **Q63. What is the difference between overloading and overriding?**
 Overloading: same name, different parameters, usually in one class, decided at compile time. Overriding: a derived class gives its own version of a virtual function with the same signature, decided at run time. `searchStudent` is overloaded. `display()` is overridden.
 
-**Q64. Why is `display()` virtual?**
-`showPerson(const Person&)` can receive a `Student` or a `Teacher`. Because `display()` is virtual, the correct version runs for the real object type, not the `Person` version.
+**Q64. What is runtime polymorphism? Where is it in your project?**
+One function call behaves differently depending on the real type of the object, and the choice is made while the program runs.
+
+```cpp
+void AttendanceSystem::showPerson(const Person& person) const {
+    person.display();   // Student or Teacher version, chosen at run time
+}
+```
+
+`showPerson()` only knows it has a `Person`, but it can receive a `Student` or a `Teacher`. Because `display()` is `virtual`, C++ looks at the actual object and runs its version. Without `virtual`, the compiler would look only at the `Person&` type, and `Person::display()` would always run. It needs a base class reference or pointer. Calling `display()` directly on a `Student` object does not need polymorphism.
 
 **Q65. Why is the `Person` destructor virtual?**
 If a derived object is deleted through a base pointer, a virtual destructor ensures the derived destructor runs too. We do not delete through base pointers here, so it is not strictly needed. It is good practice for any class with virtual functions.
@@ -252,7 +263,23 @@ g++ -std=c++11 -Wall -Wextra -Iinclude main.cpp src/*.cpp -o attendance.exe
 
 ---
 
-## 9. Module guide for each member
+## 9. Roll numbers and internal IDs
+
+**Q69. Why is the roll number a `string` and not an `int`?**
+An `int` here holds at most 2,147,483,647, so an 11-digit enrollment number does not fit. A number type would also drop leading zeros, turning `00618015625` into `618015625`. We never do arithmetic on it, so it is really a label, not a number.
+
+**Q70. If the user enters the roll number, why have an internal ID too?**
+The ID is a fixed key that the program controls. `attendance.txt` stores the ID, so a mistyped roll number can be corrected in one place without changing any attendance lines. It also gives the static `nextId` a real job.
+
+**Q71. How do you reject a duplicate roll number?**
+`findStudent(const string&)` loops through the array comparing roll numbers. If it returns an index other than -1, the number already exists and we refuse it. Input is converted to uppercase first, so `ab12` and `AB12` count as the same number.
+
+**Q72. Why not overload `searchStudent` for roll number and name separately?**
+Both would take one `string`, so the two functions would have the same signature. The compiler cannot tell them apart and gives an error, because overloads must differ in their parameters. So one `string` version handles both, and the `int` version searches by ID.
+
+---
+
+## 10. Module guide for each member
 
 Each member should know these well and be able to open the code and walk through it.
 
@@ -266,7 +293,7 @@ Each member should know these well and be able to open the code and walk through
 
 - **Module:** `Person`, `Student`, student functions in `AttendanceSystem`
 - **Be ready to walk through:** adding a student from input to file, the delete shift, and both search overloads
-- **Revise:** Q11, Q19, Q25 to Q33, Q58 to Q63
+- **Revise:** Q11, Q19, Q25 to Q33, Q58 to Q63, Q69 to Q72
 
 ### Akshay Kumar: Subjects and attendance marking
 
@@ -288,7 +315,7 @@ Each member should know these well and be able to open the code and walk through
 
 ---
 
-## 10. Tips for the viva
+## 11. Tips for the viva
 
 1. Run the demo on your own laptop, and test it the day before.
 2. Keep the code open, so you can jump to whatever you are asked about.
