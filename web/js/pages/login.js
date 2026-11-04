@@ -4,10 +4,10 @@
 
 const Pages = {};
 
-// Draws the logo with its name.
+// The logo: two cells from a register page, with the name beside them.
 function brand() {
   return h("div", { class: "brand" },
-    h("div", { class: "brand-mark" }, icon("check", 20)),
+    h("div", { class: "brand-cells", "aria-hidden": "true" }, h("span", null, "P"), h("span", null, "A")),
     h("div", null,
       h("div", { class: "brand-name" }, "Attendance"),
       h("div", { class: "brand-tag" }, "Management System")));
@@ -16,7 +16,7 @@ function brand() {
 // A button that switches between light and dark mode.
 function themeButton() {
   const button = h("button", { class: "icon-btn", type: "button", "aria-label": "Switch theme" });
-  const showIcon = () => button.replaceChildren(icon(Theme.current() === "dark" ? "sun" : "moon", 20));
+  const showIcon = () => button.replaceChildren(icon(Theme.current() === "dark" ? "sun" : "moon", 19));
 
   button.addEventListener("click", () => {
     Theme.toggle();
@@ -29,12 +29,11 @@ function themeButton() {
 // Draws the login page. notice is an optional message, such as "session ended".
 Pages.login = function (root, notice, onLoggedIn) {
   const submit = h("button", { class: "btn btn-primary", type: "submit" }, "Sign in");
-  const errorBox = UI.formError();
 
-  const form = h("form", { novalidate: true },
-    errorBox,
-    UI.field("Username", "username", "text", "username"),
-    UI.field("Password", "password", "password", "current-password"),
+  const form = h("form", { class: "login-form", novalidate: true },
+    UI.formError(),
+    UI.field("Username", "username", { autocomplete: "username" }),
+    UI.field("Password", "password", { type: "password", autocomplete: "current-password" }),
     submit);
 
   form.addEventListener("submit", async (event) => {
@@ -59,9 +58,10 @@ Pages.login = function (root, notice, onLoggedIn) {
     h("main", { class: "login" },
       h("div", { class: "login-theme" }, themeButton()),
       h("section", { class: "login-card" },
-        brand(),
-        h("h1", { class: "login-title" }, "Welcome back"),
-        h("p", { class: "login-subtitle" }, "Sign in to manage attendance."),
+        h("div", { class: "login-head" },
+          brand(),
+          h("h1", { class: "login-title" }, "Sign in to the register"),
+          h("p", { class: "login-subtitle" }, "For teachers and the administrator.")),
         form)));
 
   if (notice) {

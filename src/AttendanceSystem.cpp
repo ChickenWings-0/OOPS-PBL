@@ -100,6 +100,42 @@ int AttendanceSystem::findMatchingStudents(const string& text, int results[]) co
     return matches;
 }
 
+// Adds a class name to the list, unless it is already there.
+static void addClassName(string classes[], int& count, const string& className) {
+    for (int i = 0; i < count; i++) {
+        if (classes[i] == className) {
+            return;
+        }
+    }
+    classes[count] = className;
+    count++;
+}
+
+// A class is only a label on students and subjects, so the list is built
+// from both. It is sorted with a selection sort.
+int AttendanceSystem::listClasses(string classes[]) const {
+    int count = 0;
+    for (int i = 0; i < Student::getCount(); i++) {
+        addClassName(classes, count, students[i].getClassName());
+    }
+    for (int i = 0; i < Subject::getCount(); i++) {
+        addClassName(classes, count, subjects[i].getClassName());
+    }
+
+    for (int i = 0; i < count - 1; i++) {
+        int smallest = i;
+        for (int j = i + 1; j < count; j++) {
+            if (classes[j] < classes[smallest]) {
+                smallest = j;
+            }
+        }
+        string temp = classes[i];
+        classes[i] = classes[smallest];
+        classes[smallest] = temp;
+    }
+    return count;
+}
+
 // ---------- Login and accounts ----------
 
 // Returns the index of the teacher with these details, or -1.

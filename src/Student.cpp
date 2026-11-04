@@ -78,6 +78,34 @@ bool Student::updateRecord(const string& code, const Date& date, char newStatus)
     return false;
 }
 
+// Returns the latest marks in one subject, oldest first, like "PPAP".
+// Marks may have been entered out of order, so they are sorted by date first.
+string Student::markHistory(const string& code, int maxMarks) const {
+    int order[MAX_RECORDS];
+    int count = 0;
+
+    // Insertion sort of this subject's records.
+    for (int i = 0; i < recordCount; i++) {
+        if (records[i].getSubjectCode() != code) {
+            continue;
+        }
+        int place = count;
+        while (place > 0 && records[order[place - 1]].getDate().isAfter(records[i].getDate())) {
+            order[place] = order[place - 1];
+            place--;
+        }
+        order[place] = i;
+        count++;
+    }
+
+    string marks;
+    int start = count > maxMarks ? count - maxMarks : 0;
+    for (int i = start; i < count; i++) {
+        marks += records[order[i]].getStatus();
+    }
+    return marks;
+}
+
 // Returns how many records this student has.
 int Student::getRecordCount() const { return recordCount; }
 

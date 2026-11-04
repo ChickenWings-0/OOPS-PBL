@@ -86,6 +86,9 @@ struct DashboardData {
     int todayTotal;
     double todayPercentage;
     bool anyMarks;             // false if no attendance exists at all
+    int overallPresent;
+    int overallTotal;
+    double overallPercentage;
     Date lastMarkedDate;
     double lastMarkedPercentage;
     int defaulterStudents;     // a student counts once, however many subjects
@@ -100,6 +103,7 @@ public:
     static StudentReportData studentReport(const Student& student, const Subject subjects[]);
     static int defaulterList(const Student students[], const Subject subjects[],
                              DefaulterEntry entries[]);
+    static void sortByPercentage(DefaulterEntry entries[], int count);
     static DailyReportData dailyReport(const Student students[], const Subject subjects[],
                                        const Date& date);
     static MonthlyReportData monthlyReport(const Student students[], const std::string& className,

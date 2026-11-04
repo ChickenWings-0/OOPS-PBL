@@ -60,6 +60,22 @@ string Date::shortLabel() const {
     return text.str();
 }
 
+// Returns the date for page headings, like Thu, 5 November 2026.
+string Date::longLabel() const {
+    const string months[12] = {"January", "February", "March", "April", "May", "June", "July",
+                               "August", "September", "October", "November", "December"};
+    const string days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+    // Sakamoto's method: works out the day of the week from the date.
+    const int offsets[12] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+    int y = month < 3 ? year - 1 : year;
+    int weekday = (y + y / 4 - y / 100 + y / 400 + offsets[month - 1] + day) % 7;
+
+    stringstream text;
+    text << days[weekday] << ", " << day << " " << months[month - 1] << " " << year;
+    return text.str();
+}
+
 // Returns true if both dates are the same day.
 bool Date::equals(const Date& other) const {
     return day == other.day && month == other.month && year == other.year;

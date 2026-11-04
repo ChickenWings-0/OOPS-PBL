@@ -1,51 +1,54 @@
 /* tokens.css
-   The design system. Every colour, size, and shadow used by the site is
-   defined here once, so changing a value here changes it everywhere.
+   The design system. The site is modelled on a paper attendance register:
+   light mode is ruled ledger paper, dark mode is a classroom blackboard.
+   Ink for text, ballpoint blue for data, red pen for absences, and a yellow
+   highlighter as the single accent. Every value is defined once, here.
    Colours were checked for contrast and colour-blind safety: see WEB_PLAN.md section 9. */
 
 :root {
   color-scheme: light;
 
-  /* Surfaces */
-  --bg-page: #f6f7f9;
-  --bg-surface: #ffffff;
-  --bg-hover: #f3f4f6;
-  --border: #e5e7eb;
+  /* Paper */
+  --paper: #eef1ea;
+  --sheet: #fdfdfa;
+  --sheet-head: #f4f6f1;
+  --rule: #d5dcd3;
+  --rule-heavy: #14241e;
+  --margin-line: #d9534f;
+  --ledger-line: rgba(36, 88, 201, 0.13);
 
-  /* Text */
-  --text: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  /* Ink */
+  --ink: #14241e;
+  --ink-2: #3d4f47;
+  --ink-3: #5a6b63;
 
-  /* Accent */
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
-  --on-accent: #ffffff;
+  /* The accent: a yellow highlighter */
+  --marker: #ffd83d;
+  --marker-hover: #ffcb0a;
+  --marker-soft: #fff3b0;
+  --on-marker: #14241e;
 
-  /* Status: reserved for attendance state, never used as a chart series */
-  --good-text: #166534;
-  --good-bg: #dcfce7;
-  --good-bar: #15803d;
-  --bad-text: #b91c1c;
-  --bad-bg: #fee2e2;
-  --bad-bar: #dc2626;
-  --track: #e5e7eb;
+  /* The register's cloth binding: the sidebar */
+  --binding: #16302a;
+  --binding-hover: #1f3f37;
+  --binding-rule: #2c4a41;
+  --binding-ink: #eef3ec;
+  --binding-ink-2: #b4c6bc;
+
+  /* Status: reserved for attendance state */
+  --good-text: #14613c;
+  --good-bg: #dcefe2;
+  --good-bar: #1a7f4e;
+  --bad-text: #b3261e;
+  --bad-bg: #fbe4e1;
+  --bad-bar: #c9302c;
+  --track: #e3e8e1;
 
   /* Charts */
-  --chart-1: #4f46e5;
-  --chart-2: #eb6834;
-  --chart-wash: rgba(79, 70, 229, 0.16);
-  --chart-grid: #e5e7eb;
-
-  /* Login background */
-  --glow-1: rgba(79, 70, 229, 0.16);
-  --glow-2: rgba(235, 104, 52, 0.09);
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 6px 16px rgba(16, 24, 40, 0.08);
-  --shadow-lg: 0 20px 48px rgba(16, 24, 40, 0.18);
+  --chart-1: #2458c9;
+  --chart-2: #d9622b;
+  --chart-grid: #e3e8e1;
+  --chart-danger: rgba(201, 48, 44, 0.04);
 
   /* Spacing */
   --space-1: 4px;
@@ -56,64 +59,70 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  /* Corners */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-full: 999px;
+  /* Corners: a register has square pages */
+  --radius: 2px;
+
+  /* Shadow: only things that float above the page have one */
+  --shadow-float: 0 12px 32px rgba(20, 36, 30, 0.22);
 
   /* Type */
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --text-xs: 12px;
+  --font-ui: "Archivo", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --narrow: 78%;           /* condensed width for headings and big numbers */
+  --text-xs: 11.5px;
   --text-sm: 13px;
-  --text-base: 14px;
-  --text-md: 16px;
-  --text-lg: 20px;
-  --text-xl: 24px;
-  --text-2xl: 32px;
+  --text-base: 15px;
+  --text-md: 17px;
+  --text-lg: 22px;
+  --text-xl: 28px;
+  --text-2xl: 52px;
 
   /* Motion */
-  --fast: 150ms ease-out;
+  --fast: 120ms ease-out;
 
   /* Layout */
-  --sidebar-width: 240px;
-  --topbar-height: 64px;
+  --sidebar-width: 232px;
+  --topbar-height: 68px;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg-page: #0f1115;
-  --bg-surface: #171a21;
-  --bg-hover: #1f2330;
-  --border: #2a2f3a;
+  --paper: #0f1916;
+  --sheet: #16231f;
+  --sheet-head: #1b2b26;
+  --rule: #2b3b35;
+  --rule-heavy: #93a69c;
+  --margin-line: #b5524e;
+  --ledger-line: rgba(238, 243, 238, 0.05);
 
-  --text: #f3f4f6;
-  --text-secondary: #c1c6d0;
-  --text-muted: #9aa1ad;
+  --ink: #eef3ee;
+  --ink-2: #c4d1c9;
+  --ink-3: #93a69c;
 
-  --accent: #818cf8;
-  --accent-hover: #a5b4fc;
-  --accent-soft: #1e2140;
-  --on-accent: #0f1115;
+  --marker: #f4d94e;
+  --marker-hover: #ffe45e;
+  --marker-soft: #3a3a1c;
+  --on-marker: #14241e;
 
-  --good-text: #86efac;
-  --good-bg: #14321f;
-  --good-bar: #22c55e;
-  --bad-text: #fca5a5;
-  --bad-bg: #3f1a1c;
-  --bad-bar: #f87171;
-  --track: #2a2f3a;
+  --binding: #0b1310;
+  --binding-hover: #16231f;
+  --binding-rule: #22312c;
+  --binding-ink: #eef3ee;
+  --binding-ink-2: #a9bbb1;
 
-  --chart-1: #7a84f6;
-  --chart-2: #d95926;
-  --chart-wash: rgba(122, 132, 246, 0.20);
-  --chart-grid: #2a2f3a;
+  --good-text: #8fe0ae;
+  --good-bg: #16382a;
+  --good-bar: #3ecb82;
+  --bad-text: #ffaaa3;
+  --bad-bg: #46201f;
+  --bad-bar: #ff7b72;
+  --track: #2b3b35;
 
-  --glow-1: rgba(129, 140, 248, 0.16);
-  --glow-2: rgba(217, 89, 38, 0.08);
+  --chart-1: #5b8def;
+  --chart-2: #d9622b;
+  --chart-grid: #2b3b35;
+  --chart-danger: rgba(255, 123, 114, 0.05);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.6);
 }

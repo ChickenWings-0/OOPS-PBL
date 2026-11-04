@@ -7,7 +7,7 @@ Related: [TASKS.md](TASKS.md) section 5 has the checkpoints and tests. [VIVA.md]
 **The two rules**
 
 1. **C++ does all the real work.** Validation, login checks, duplicate checks, marking, percentages, defaulters, reports, sorting, searching, and file handling all stay in C++.
-2. **The frontend must look genuinely good.** It should read as a modern SaaS dashboard, in light and dark mode, on a phone and on a laptop.
+2. **The frontend must look genuinely good.** It should have its own identity, in light and dark mode, on a phone and on a laptop.
 
 ---
 
@@ -559,8 +559,8 @@ Sidebar: 240 px with inline SVG icons, and the active item is tinted with the ac
 
 | Page | Layout | Details |
 |------|--------|---------|
-| **Login** | Centered 400 px card on a soft accent gradient | Logo, two fields, button with spinner. Errors appear inside the card. Lockout shows the C++ message. |
-| **Dashboard** | Row of 4 stat cards, then 2 charts side by side (stacked on mobile) | Details below |
+| **Login** | Centered card on ruled register paper with a red margin line | Logo, two fields, button with spinner. Errors appear inside the card. Lockout shows the C++ message. |
+| **Dashboard** | A tally of 4 numbers, 2 charts side by side (stacked on mobile), then a Needs attention table | Details below |
 | **Students** | Search box, Add button, table in a card | Search as you type, with a short pause, through the server. Clickable column headers sort through the server. Add and edit in a modal, delete through a confirm dialog. Empty state: "No students yet". |
 | **Subjects** | Table and Add button | Same pattern. Shown because of D3. |
 | **Mark attendance** | Filter bar (date, subject), then student list | Each row has a Present/Absent toggle (a checkbox styled as a switch). Sticky footer: live counter (JS, display only), "Mark all present", Save. After Save, the toast shows the totals from C++. If already marked, a banner says so and each change saves as a correction. |
@@ -573,19 +573,23 @@ Sidebar: 240 px with inline SVG icons, and the active item is tinted with the ac
 **Dashboard detail**
 
 ```
-+--------------+ +--------------+ +--------------+ +--------------+
-| Students     | | Subjects     | | Today        | | Defaulters   |
-| 10           | | 4            | | Not marked   | | 4            |
-| In all ...   | | In all ...   | | Last: 80.00% | | Below 75%    |
-+--------------+ +--------------+ +--------------+ +--------------+
++----------------------------------------------------------------+
+| STUDENTS     | SUBJECTS      | TODAY          | DEFAULTERS       |
+| 10           | 4             | Not marked     | 4                |
+| 2 classes    | 82.00% overall| Last 80.00%    | 5 below 75%      |
++----------------------------------------------------------------+
 +---------------------------------+ +----------------------------+
-| Attendance trend                | | Attendance by subject      |
+| Attendance by day               | | Attendance by subject      |
 | Line, % per marked day          | | Horizontal bars, by code   |
-| Y axis 0 to 100, 75% line       | | 75% line                   |
+| 0 to 100, red 75% minimum       | | Red 75% minimum            |
 +---------------------------------+ +----------------------------+
++----------------------------------------------------------------+
+| Needs attention: lowest attendance first                       |
+| Student | Class | Subject | Recent marks P A P | Attended | %  |
++----------------------------------------------------------------+
 ```
 
-Each chart card has a Chart/Table switch. The table shows the same server numbers, for colour-blind readers and for use without internet.
+Each chart sheet has a Chart/Table switch. The table shows the same server numbers, for colour-blind readers and for use without internet.
 
 **Polish on every page:** hover and focus states, 150 ms transitions, toasts for success and error, skeleton or spinner while loading, empty states, confirm dialogs before delete, field errors under the right input using `field` from the server, and a "Session expired" return to login on a 401.
 
@@ -593,54 +597,68 @@ Each chart card has a Chart/Table switch. The table shows the same server number
 
 ## 9. Design system
 
-All values are CSS variables in `web/css/tokens.css`. Colours below were checked: text contrast measured, chart colours run through a colour-blindness validator.
+All values are CSS variables in `web/css/tokens.css`.
 
-### 9.1 Colours
+**Change from the original plan:** the first design used indigo, the Inter font, and rounded floating cards. It was rejected in review because it looked like a generic template. The design below replaces it, so Inter is no longer used.
 
-One accent: **indigo**.
+### 9.1 The idea
+
+The site is modelled on the thing it replaces: a paper attendance register.
+
+| Register detail | On the site |
+|-----------------|-------------|
+| Ruled ledger paper with a red margin line | Login background, and the double red line beside the sidebar |
+| The register's cloth cover | The dark green sidebar |
+| P and A cells | The logo, the Recent marks strips, and the marking toggles |
+| Blue ballpoint | Chart data |
+| Red pen | Absences, the 75% minimum, and defaulters |
+| Yellow highlighter | The single accent: the active page, primary buttons, and row hover |
+
+Light mode is the paper register. Dark mode is a classroom blackboard, with chalk colours.
+
+### 9.2 Colours
 
 | Token | Light | Dark |
 |-------|-------|------|
-| `--bg-page` | `#f6f7f9` | `#0f1115` |
-| `--bg-surface` | `#ffffff` | `#171a21` |
-| `--border` | `#e5e7eb` | `#2a2f3a` |
-| `--text` | `#111827` | `#f3f4f6` |
-| `--text-secondary` | `#4b5563` | `#c1c6d0` |
-| `--text-muted` | `#6b7280` | `#9aa1ad` |
-| `--accent` | `#4f46e5` | `#818cf8` |
-| `--accent-hover` | `#4338ca` | `#a5b4fc` |
-| `--accent-soft` | `#eef2ff` | `#1e2140` |
-| `--on-accent` (button text) | `#ffffff` | `#0f1115` |
-| `--good-text` / `--good-bg` | `#166534` / `#dcfce7` | `#86efac` / `#14321f` |
-| `--bad-text` / `--bad-bg` | `#b91c1c` / `#fee2e2` | `#fca5a5` / `#3f1a1c` |
-| `--good-bar` / `--bad-bar` | `#15803d` / `#dc2626` | `#22c55e` / `#f87171` |
-| `--track` (bar background) | `#e5e7eb` | `#2a2f3a` |
-| `--chart-1` / `--chart-2` | `#4f46e5` / `#eb6834` | `#7a84f6` / `#d95926` |
+| `--paper` (page) | `#eef1ea` | `#0f1916` |
+| `--sheet` (panels) | `#fdfdfa` | `#16231f` |
+| `--rule` | `#d5dcd3` | `#2b3b35` |
+| `--ink` | `#14241e` | `#eef3ee` |
+| `--ink-2` | `#3d4f47` | `#c4d1c9` |
+| `--ink-3` | `#5a6b63` | `#93a69c` |
+| `--marker` (accent) | `#ffd83d` | `#f4d94e` |
+| `--marker-soft` (hover) | `#fff3b0` | `#3a3a1c` |
+| `--binding` (sidebar) | `#16302a` | `#0b1310` |
+| `--good-text` / `--good-bg` / `--good-bar` | `#14613c` / `#dcefe2` / `#1a7f4e` | `#8fe0ae` / `#16382a` / `#3ecb82` |
+| `--bad-text` / `--bad-bg` / `--bad-bar` | `#b3261e` / `#fbe4e1` / `#c9302c` | `#ffaaa3` / `#46201f` / `#ff7b72` |
+| `--chart-1` / `--chart-2` | `#2458c9` / `#d9622b` | `#5b8def` / `#d9622b` |
 
-**Measured contrast:** body text at least 15.8:1, muted text at least 4.5:1, button text at least 6.2:1, badge text at least 5.3:1, progress bars at least 3.9:1 on their track. Text needs 4.5:1 and bars need 3:1.
+**Measured:** all 29 text and bar colour pairs were checked. Text is at least 4.9:1 (the target is 4.5:1), and bars are at least 4.0:1 on their track (the target is 3:1).
 
-**Chart colours:** the pair passes every check in both themes, including colour-blind separation (worst pair 31.4 light, 29.0 dark, where the target is at least 8). Dark mode has its own chart indigo, because `#818cf8` failed the lightness limit for marks.
+**Chart colours:** the blue and orange pair passes every check in both themes, including colour-blind separation (worst pair 27.5 light, 27.4 dark, where the target is at least 8).
 
-Green and red are reserved for attendance status and are never used as chart series. Status always has an icon and words, so colour-blind users are not relying on red versus green.
+Green and red are reserved for attendance status and always come with words or a number, so colour-blind users are not relying on red versus green.
 
-### 9.2 Type, spacing, shape
+### 9.3 Type, spacing, shape
 
 | Group | Values |
 |-------|--------|
-| Font | Inter (Google Fonts), weights 400, 500, 600, 700, with a system font fallback |
-| Sizes | 12, 13, 14 (body), 16, 20, 24, 32 px. Table number columns use tabular figures. |
+| Interface font | Archivo (Google Fonts). Headings and big numbers use its condensed width. |
+| Data font | IBM Plex Mono, for roll numbers, dates, percentages, and chart labels |
+| Sizes | 11.5, 13, 15 (body), 17, 22, 28, 52 px |
 | Spacing | 4, 8, 12, 16, 24, 32, 48 px |
-| Radius | 6 (inputs, buttons), 10 (cards), 14 (modals), 999 (badges) |
-| Shadow | `sm` for cards, `md` for dropdowns, `lg` for modals, softer in dark mode |
-| Motion | 150 ms ease-out, turned off under `prefers-reduced-motion` |
+| Corners | 2 px or square. A register has square pages. |
+| Shadow | Only on things that float: dialogs, menus, toasts |
+| Separation | Ruled lines, not floating cards |
+| Motion | 120 ms ease-out, turned off under `prefers-reduced-motion` |
 
-### 9.3 Components
+### 9.4 Components
 
-Button (primary, secondary, ghost, danger), input, select, stat card, card, table, badge, progress bar, segmented toggle, modal, confirm dialog, toast, spinner and skeleton, empty state, sidebar item, user menu.
+Button (primary, secondary, danger, link), input, select, sheet (a ruled section), tally (the dashboard's four numbers), register table, marks strip, stamp (status label), attendance meter, P/A toggle, Chart/Table switch, modal, confirm dialog, toast, spinner, skeleton, empty state, sidebar item, user menu.
 
 Keyboard: visible focus ring, Esc closes modals, Tab stays inside an open modal.
 
-### 9.4 Charts
+### 9.5 Charts
 
 Chart.js **4.6.1** from jsDelivr, pinned, with an integrity hash:
 
@@ -652,9 +670,10 @@ Chart.js **4.6.1** from jsDelivr, pinned, with an integrity hash:
 
 | Rule | Value |
 |------|-------|
-| Line | 2 px, markers at least 8 px with a surface-coloured ring, a soft area fill that fades downwards |
-| Bars | At most 24 px thick, 4 px rounded ends, 2 px gaps in stacks |
+| Line | 2 px in ballpoint blue, 8 px markers with a surface-coloured ring, no area fill |
+| Bars | At most 20 px thick and square-ended, like a ruled mark, with 2 px gaps in stacks |
 | Grid | 1 px solid, recessive |
+| 75% minimum | A red pen line with a label, and a faint tint below it |
 | Y axis | Fixed 0 to 100 for percentages, always one axis |
 | Legend | Only with two or more series (daily report). Single-series charts rely on the title. |
 | Tooltips | On every chart |

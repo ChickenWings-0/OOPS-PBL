@@ -2,84 +2,52 @@
 // The dashboard page. Every number here was calculated by C++ and arrives
 // from GET /api/dashboard. This file only places it on the page.
 
-// One stat card. The value can be a number, or a short text like "Not marked".
-// A percentage from the server is text too, but it should look like a number.
-function statCard(label, value, detail, iconName, isBad) {
-  const isText = typeof value === "string" && !value.endsWith("%");
-  return h("article", { class: "card stat" },
-    h("div", { class: isBad ? "stat-icon is-bad" : "stat-icon" }, icon(iconName, 20)),
-    h("div", { class: "stat-label" }, label),
-    h("div", { class: isText ? "stat-value is-text" : "stat-value" }, String(value)),
-    h("div", { class: "stat-detail" }, detail));
+// One cell of the tally at the top of the page.
+function tallyCell(label, value, valueClass, foot, link) {
+  return h("article", { class: "tally-cell" },
+    h("div", { class: "label" }, label),
+    h("div", { class: `tally-value ${valueClass}` }, String(value)),
+    h("div", { class: "tally-foot" }, h("span", null, foot), link || null));
 }
 
-// The card for today's attendance, or the last marked day if today has no marks.
-function todayCard(cards) {
+// Today's cell: the percentage, or a way to go and mark attendance.
+function todayCell(cards) {
   if (cards.todayMarked) {
-    return statCard("Today", cards.todayPercentText,
-      `${cards.todayPresent} of ${cards.todayTotal} marks`, "clipboard");
+    return tallyCell("Today", cards.todayPercentText, "", `${cards.todayPresent} of ${cards.todayTotal} marks`);
   }
-  if (cards.anyMarks) {
-    return statCard("Today", "Not marked",
-      `Last: ${cards.lastMarkedPercentText}, ${cards.lastMarkedLabel}`, "clipboard");
-  }
-  return statCard("Today", "Not marked", "No attendance yet", "clipboard");
+  const foot = cards.anyMarks
+    ? `Last ${cards.lastMarkedPercentText}, ${cards.lastMarkedLabel}`
+    : "Nothing recorded";
+  return tallyCell("Today", "Not marked", "is-text", foot,
+    h("a", { class: "link-btn", href: "#/mark" }, "Mark now"));
 }
 
-// A card that shows a chart, with a button to see the same numbers as a table.
-function chartCard(title, subtitle, drawChart, tableColumns, rows) {
-  const body = h("div", { class: "card-body" });
-  const chartButton = h("button", { type: "button", "aria-label": "Show chart", "aria-pressed": "true" }, icon("line", 16));
-  const tableButton = h("button", { type: "button", "aria-label": "Show table", "aria-pressed": "false" }, icon("table", 16));
-
-  // Without internet Chart.js is missing, so the chart area explains why.
-  const showChart = () => {
-    chartButton.setAttribute("aria-pressed", "true");
-    tableButton.setAttribute("aria-pressed", "false");
-
-    if (!Charts.available()) {
-      body.replaceChildren(h("div", { class: "chart-note" }, "Charts need an internet connection. Use the table button to see the numbers."));
-      return;
-    }
-    const canvas = h("canvas", { role: "img", "aria-label": `${title}. ${subtitle}` });
-    body.replaceChildren(h("div", { class: "chart-box" }, canvas));
-    drawChart(canvas);
-  };
-
-  const showTable = () => {
-    chartButton.setAttribute("aria-pressed", "false");
-    tableButton.setAttribute("aria-pressed", "true");
-    body.replaceChildren(UI.table(tableColumns, rows));
-  };
-
-  chartButton.addEventListener("click", showChart);
-  tableButton.addEventListener("click", showTable);
-
-  const card = h("article", { class: "card" },
-    h("div", { class: "card-header" },
-      h("div", null,
-        h("h2", { class: "card-title" }, title),
-        h("p", { class: "card-subtitle" }, subtitle)),
-      h("div", { class: "segmented" }, chartButton, tableButton)),
-    body);
-
-  return { card, showChart };
+// The students closest to trouble, as rows of the register.
+function attentionTable(rows) {
+  return UI.table([
+    { label: "Student", cell: (row) => UI.person(row.studentId, row.name, row.rollNo) },
+    { label: "Class", key: "className", tight: true, hideNarrow: true },
+    { label: "Subject", cell: (row) => h("span", { class: "mono" }, row.subject), tight: true },
+    { label: "Recent marks", cell: (row) => UI.marks(row.marks), hideNarrow: true },
+    { label: "Attended", cell: (row) => `${row.present}/${row.total}`, num: true, tight: true, hideNarrow: true },
+    { label: "Attendance", cell: (row) => UI.stamp("bad", row.percentText), num: true, tight: true },
+  ], rows);
 }
 
 // Loading placeholders in the same shape as the page, so nothing jumps.
 function dashboardSkeleton() {
-  const stat = () => h("div", { class: "skeleton skeleton-stat" });
-  const chart = () => h("div", { class: "skeleton skeleton-chart" });
   return [
-    h("section", { class: "stat-grid" }, stat(), stat(), stat(), stat()),
-    h("section", { class: "chart-grid" }, chart(), chart()),
+    h("div", { class: "skeleton skeleton-tally" }),
+    h("div", { class: "split" },
+      h("div", { class: "skeleton skeleton-sheet" }), h("div", { class: "skeleton skeleton-sheet" })),
   ];
 }
 
 // Draws the dashboard into root. isCurrent() turns false if the user has
 // moved to another page before the reply arrives.
 Pages.dashboard = async function (root, isCurrent) {
-  root.replaceChildren(...dashboardSkeleton());
+  const page = h("div", { class: "stack" }, ...dashboardSkeleton());
+  root.replaceChildren(page);
 
   let data;
   try {
@@ -94,34 +62,57 @@ Pages.dashboard = async function (root, isCurrent) {
     return;
   }
 
-  const { cards, trend, subjects, limit } = data;
+  const { cards, trend, subjects, attention, limit } = data;
 
-  const stats = h("section", { class: "stat-grid", "aria-label": "Summary" },
-    statCard("Students", cards.students, "In all classes", "users"),
-    statCard("Subjects", cards.subjects, "In all classes", "book"),
-    todayCard(cards),
-    statCard("Defaulters", cards.defaulterStudents,
-      `Below ${limit}% · ${cards.defaulterEntries} entries`, "alert", true));
+  const tally = h("section", { class: "tally", "aria-label": "Summary" },
+    tallyCell("Students", cards.students, "", `${cards.classes} ${cards.classes === 1 ? "class" : "classes"}`,
+      h("a", { class: "link-btn", href: "#/students" }, "View")),
+    tallyCell("Subjects", cards.subjects, "", `${cards.overallPercentText} overall`,
+      h("a", { class: "link-btn", href: "#/subjects" }, "View")),
+    todayCell(cards),
+    tallyCell("Defaulters", cards.defaulterStudents, cards.defaulterStudents > 0 ? "is-bad" : "",
+      `${cards.defaulterEntries} below ${limit}%`,
+      h("a", { class: "link-btn", href: "#/defaulters" }, "View")));
 
   if (trend.length === 0) {
-    root.replaceChildren(stats,
-      h("section", { class: "card section-gap" },
-        UI.empty("clipboard", "No attendance yet",
-          "Charts will appear here once attendance has been marked.")));
+    page.replaceChildren(tally,
+      h("section", { class: "sheet" },
+        UI.empty("No attendance yet", "Charts and reports appear here once the first class has been marked.",
+          h("a", { class: "btn btn-primary", href: "#/mark" }, "Mark attendance"))));
     return;
   }
 
-  const trendCard = chartCard("Attendance trend", "Percentage present on each marked day",
+  const trendSheet = UI.chartOrTable("Attendance by day", "Share of students present on each day with marks",
     (canvas) => Charts.trend(canvas, trend, limit),
-    [["Date", "date"], ["Present", "present", true], ["Marks", "total", true], ["Attendance", "percentText", true]],
-    trend);
+    () => UI.table([
+      { label: "Date", cell: (row) => h("span", { class: "mono" }, row.date) },
+      { label: "Present", key: "present", num: true },
+      { label: "Marks", key: "total", num: true },
+      { label: "Attendance", key: "percentText", num: true },
+    ], trend));
 
-  const subjectCard = chartCard("Attendance by subject", "All marks so far, for each subject",
-    (canvas) => Charts.subjects(canvas, subjects, limit),
-    [["Code", "code"], ["Class", "className"], ["Present", "present", true], ["Marks", "total", true], ["Attendance", "percentText", true]],
-    subjects);
+  const subjectSheet = UI.chartOrTable("Attendance by subject", "All marks so far",
+    (canvas) => Charts.percentBars(canvas, subjects, limit,
+      (row) => row.code,
+      (row) => `${row.code}, ${row.name} (${row.className})`,
+      (row) => `${row.present} of ${row.total} marks`),
+    () => UI.table([
+      { label: "Code", cell: (row) => h("span", { class: "mono" }, row.code) },
+      { label: "Class", key: "className" },
+      { label: "Present", key: "present", num: true },
+      { label: "Marks", key: "total", num: true },
+      { label: "Attendance", key: "percentText", num: true },
+    ], subjects));
 
-  root.replaceChildren(stats, h("section", { class: "chart-grid" }, trendCard.card, subjectCard.card));
-  trendCard.showChart();
-  subjectCard.showChart();
+  const attentionBody = attention.length > 0
+    ? attentionTable(attention)
+    : UI.empty("Nobody is below the minimum", `Every student is at ${limit}% or above in every subject.`);
+
+  page.replaceChildren(tally,
+    h("div", { class: "split" }, trendSheet.element, subjectSheet.element),
+    UI.sheet("Needs attention", `Lowest attendance first, below ${limit}% in a subject`,
+      h("a", { class: "link-btn", href: "#/defaulters" }, "All defaulters"), attentionBody));
+
+  trendSheet.showChart();
+  subjectSheet.showChart();
 };

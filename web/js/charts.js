@@ -3,6 +3,8 @@
 // this file only decides how they look. Colours are read from tokens.css, and
 // charts are rebuilt when the theme changes.
 
+const CHART_FONT = "IBM Plex Mono";
+
 const Charts = {
   live: [],   // each entry remembers how to rebuild its chart
 
@@ -28,38 +30,47 @@ const Charts = {
     Charts.live = [];
   },
 
-  // Rebuilds every chart with the new theme's colours.
+  // Rebuilds every chart still on the page, in the new theme's colours.
+  // A chart can have left the page when its sheet switched to a table.
   redraw() {
+    Charts.live = Charts.live.filter((entry) => {
+      if (entry.canvas.isConnected) {
+        return true;
+      }
+      entry.chart.destroy();
+      return false;
+    });
     Charts.live.forEach((entry) => {
       entry.chart.destroy();
       entry.chart = entry.build(entry.canvas);
     });
   },
 
+  // The tooltip style shared by every chart.
+  tooltip(callbacks) {
+    return {
+      backgroundColor: Charts.color("--ink"),
+      titleColor: Charts.color("--sheet"),
+      bodyColor: Charts.color("--sheet"),
+      titleFont: { family: CHART_FONT, size: 11.5, weight: "500" },
+      bodyFont: { family: CHART_FONT, size: 13, weight: "600" },
+      padding: 10,
+      cornerRadius: 0,
+      caretSize: 0,
+      displayColors: false,
+      callbacks,
+    };
+  },
+
   // Settings shared by every chart.
-  baseOptions(tooltipCallbacks) {
+  baseOptions(callbacks) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     return {
       responsive: true,
       maintainAspectRatio: false,
-      animation: reducedMotion ? false : { duration: 450 },
-      layout: { padding: { top: 8, right: 8 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: Charts.color("--bg-surface"),
-          borderColor: Charts.color("--border"),
-          borderWidth: 1,
-          titleColor: Charts.color("--text-secondary"),
-          bodyColor: Charts.color("--text"),
-          titleFont: { family: "Inter", size: 12, weight: "500" },
-          bodyFont: { family: "Inter", size: 13, weight: "600" },
-          padding: 10,
-          cornerRadius: 8,
-          displayColors: false,
-          callbacks: tooltipCallbacks,
-        },
-      },
+      animation: reducedMotion ? false : { duration: 350 },
+      layout: { padding: { top: 6, right: 6 } },
+      plugins: { legend: { display: false }, tooltip: Charts.tooltip(callbacks) },
     };
   },
 
@@ -72,8 +83,8 @@ const Charts = {
       grid: { color: Charts.color("--chart-grid") },
       ticks: {
         stepSize: 25,
-        color: Charts.color("--text-muted"),
-        font: { family: "Inter", size: 12 },
+        color: Charts.color("--ink-3"),
+        font: { family: CHART_FONT, size: 11.5 },
         callback: (value) => `${value}%`,
       },
     };
@@ -82,31 +93,43 @@ const Charts = {
   // The category axis, which needs no grid lines.
   labelAxis() {
     return {
-      border: { color: Charts.color("--border") },
+      border: { color: Charts.color("--rule-heavy") },
       grid: { display: false },
       ticks: {
-        color: Charts.color("--text-muted"),
-        font: { family: "Inter", size: 12 },
+        color: Charts.color("--ink-2"),
+        font: { family: CHART_FONT, size: 11.5 },
         maxRotation: 0,
-        autoSkipPadding: 12,
+        autoSkipPadding: 10,
       },
     };
   },
 
-  // Plugin: a thin line across the chart at the attendance limit, with its label.
-  // On horizontal bars the label sits above the line, in the chart's top padding.
+  // Plugin: marks the minimum attendance in red pen, and tints the area below it.
   limitLine(limit, horizontalBars) {
     return {
       id: "limitLine",
+      beforeDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        ctx.save();
+        ctx.fillStyle = Charts.color("--chart-danger");
+        if (horizontalBars) {
+          const x = scales.x.getPixelForValue(limit);
+          ctx.fillRect(chartArea.left, chartArea.top, x - chartArea.left, chartArea.height);
+        } else {
+          const y = scales.y.getPixelForValue(limit);
+          ctx.fillRect(chartArea.left, y, chartArea.width, chartArea.bottom - y);
+        }
+        ctx.restore();
+      },
       afterDatasetsDraw(chart) {
         const { ctx, chartArea, scales } = chart;
-        const color = Charts.color("--text-muted");
+        const color = Charts.color("--bad-text");
 
         ctx.save();
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
-        ctx.lineWidth = 1;
-        ctx.font = "500 11px Inter, sans-serif";
+        ctx.lineWidth = 1.5;
+        ctx.font = `600 11px ${CHART_FONT}`;
         ctx.beginPath();
 
         if (horizontalBars) {
@@ -115,13 +138,13 @@ const Charts = {
           ctx.lineTo(x, chartArea.bottom);
           ctx.textAlign = "center";
           ctx.textBaseline = "bottom";
-          ctx.fillText(`${limit}% limit`, x, chartArea.top - 4);
+          ctx.fillText(`${limit}% min`, x, chartArea.top - 3);
         } else {
           const y = scales.y.getPixelForValue(limit);
           ctx.moveTo(chartArea.left, y);
           ctx.lineTo(chartArea.right, y);
           ctx.textBaseline = "top";
-          ctx.fillText(`${limit}% limit`, chartArea.left + 6, y + 4);
+          ctx.fillText(`${limit}% minimum`, chartArea.left + 6, y + 4);
         }
 
         ctx.stroke();
@@ -140,7 +163,7 @@ const Charts = {
       }
       const { ctx, chartArea } = chart;
       ctx.save();
-      ctx.strokeStyle = Charts.color("--text-muted");
+      ctx.strokeStyle = Charts.color("--ink-3");
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(active[0].element.x, chartArea.top);
@@ -150,7 +173,7 @@ const Charts = {
     },
   },
 
-  // Plugin: writes the latest value next to the last point of a line.
+  // Plugin: writes the latest value above the last point of a line.
   // A narrow chart has no room for it, and the tooltip and table still show it.
   endLabel(text) {
     return {
@@ -163,49 +186,36 @@ const Charts = {
         const last = points[points.length - 1];
         const { ctx } = chart;
         ctx.save();
-        ctx.fillStyle = Charts.color("--text");
-        ctx.font = "600 12px Inter, sans-serif";
+        ctx.fillStyle = Charts.color("--ink");
+        ctx.font = `600 12px ${CHART_FONT}`;
         ctx.textAlign = "right";
-        ctx.fillText(text, last.x + 6, last.y - 12);
+        ctx.fillText(text, last.x + 4, last.y - 11);
         ctx.restore();
       },
     };
   },
 
   // Plugin: writes each bar's value just past its tip. The chart keeps room on
-  // the right for this, and a patch of background keeps the text clear of the
-  // limit line.
+  // the right for this, and a patch of background keeps the text off the lines.
   barLabels(texts) {
     return {
       id: "barLabels",
       afterDatasetsDraw(chart) {
         const { ctx } = chart;
         ctx.save();
-        ctx.font = "600 12px Inter, sans-serif";
+        ctx.font = `600 12px ${CHART_FONT}`;
         ctx.textBaseline = "middle";
 
         chart.getDatasetMeta(0).data.forEach((bar, index) => {
           const width = ctx.measureText(texts[index]).width;
-          ctx.fillStyle = Charts.color("--bg-surface");
-          ctx.fillRect(bar.x + 3, bar.y - 9, width + 6, 18);
-          ctx.fillStyle = Charts.color("--text");
+          ctx.fillStyle = Charts.color("--sheet");
+          ctx.fillRect(bar.x + 3, bar.y - 8, width + 6, 16);
+          ctx.fillStyle = Charts.color("--ink");
           ctx.fillText(texts[index], bar.x + 6, bar.y);
         });
         ctx.restore();
       },
     };
-  },
-
-  // A soft fill under a line: strongest at the top, fading to nothing.
-  fadeFill(context) {
-    const { ctx, chartArea } = context.chart;
-    if (!chartArea) {
-      return Charts.color("--chart-wash");
-    }
-    const fill = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-    fill.addColorStop(0, Charts.color("--chart-wash"));
-    fill.addColorStop(1, "transparent");
-    return fill;
   },
 
   // Line chart of attendance on each marked day.
@@ -218,18 +228,15 @@ const Charts = {
         datasets: [{
           data: rows.map((row) => row.percent),
           borderColor: Charts.color("--chart-1"),
-          backgroundColor: Charts.fadeFill,
           borderWidth: 2,
-          fill: true,
-          tension: 0.25,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 4,
+          pointHoverRadius: 6,
           pointHitRadius: 24,
           pointBackgroundColor: Charts.color("--chart-1"),
-          pointBorderColor: Charts.color("--bg-surface"),
+          pointBorderColor: Charts.color("--sheet"),
           pointBorderWidth: 2,
           pointHoverBackgroundColor: Charts.color("--chart-1"),
-          pointHoverBorderColor: Charts.color("--bg-surface"),
+          pointHoverBorderColor: Charts.color("--sheet"),
           pointHoverBorderWidth: 2,
         }],
       },
@@ -250,33 +257,29 @@ const Charts = {
     }));
   },
 
-  // Horizontal bars of attendance in each subject.
-  // Server rows have: code, name, className, percent, percentText, present, total.
-  subjects(canvas, rows, limit) {
+  // Horizontal bars, one per row, with the value at the tip.
+  // Server rows have percent and percentText. The three functions pick out
+  // each row's axis label, tooltip title, and tooltip detail.
+  percentBars(canvas, rows, limit, labelOf, titleOf, detailOf) {
     return Charts.add(canvas, (target) => new Chart(target, {
       type: "bar",
       data: {
-        labels: rows.map((row) => row.code),
+        labels: rows.map(labelOf),
         datasets: [{
           data: rows.map((row) => row.percent),
           backgroundColor: Charts.color("--chart-1"),
-          hoverBackgroundColor: Charts.color("--accent-hover"),
-          maxBarThickness: 24,
-          borderRadius: 4,
-          borderSkipped: "start",
+          hoverBackgroundColor: Charts.color("--ink"),
+          maxBarThickness: 20,
         }],
       },
       options: {
         ...Charts.baseOptions({
-          title: (items) => {
-            const row = rows[items[0].dataIndex];
-            return `${row.code}, ${row.name} (${row.className})`;
-          },
+          title: (items) => titleOf(rows[items[0].dataIndex]),
           label: (item) => `${rows[item.dataIndex].percentText} present`,
-          afterLabel: (item) => `${rows[item.dataIndex].present} of ${rows[item.dataIndex].total} marks`,
+          afterLabel: (item) => detailOf(rows[item.dataIndex]),
         }),
         indexAxis: "y",
-        layout: { padding: { top: 20, right: 56 } },
+        layout: { padding: { top: 18, right: 58 } },
         scales: { x: Charts.percentAxis(), y: Charts.labelAxis() },
       },
       plugins: [
@@ -284,6 +287,61 @@ const Charts = {
         Charts.barLabels(rows.map((row) => row.percentText)),
       ],
     }));
+  },
+
+  // Stacked bars of present and absent students in each subject on one day.
+  // Server rows have: code, name, className, present, absent.
+  daily(canvas, rows) {
+    const series = (label, key, color) => ({
+      label,
+      data: rows.map((row) => row[key]),
+      backgroundColor: Charts.color(color),
+      borderColor: Charts.color("--sheet"),
+      borderWidth: { right: 2 },
+      maxBarThickness: 20,
+    });
+
+    return Charts.add(canvas, (target) => {
+      const options = Charts.baseOptions({
+        title: (items) => {
+          const row = rows[items[0].dataIndex];
+          return `${row.code}, ${row.name} (${row.className})`;
+        },
+        label: (item) => `${item.dataset.label}: ${item.raw}`,
+      });
+
+      options.plugins.legend = {
+        display: true,
+        position: "top",
+        align: "start",
+        labels: {
+          boxWidth: 12,
+          boxHeight: 12,
+          color: Charts.color("--ink-2"),
+          font: { family: CHART_FONT, size: 12 },
+        },
+      };
+      options.indexAxis = "y";
+      options.interaction = { mode: "index", intersect: false, axis: "y" };
+      options.scales = {
+        x: {
+          stacked: true,
+          border: { display: false },
+          grid: { color: Charts.color("--chart-grid") },
+          ticks: { precision: 0, color: Charts.color("--ink-3"), font: { family: CHART_FONT, size: 11.5 } },
+        },
+        y: { ...Charts.labelAxis(), stacked: true },
+      };
+
+      return new Chart(target, {
+        type: "bar",
+        data: {
+          labels: rows.map((row) => row.code),
+          datasets: [series("Present", "present", "--chart-1"), series("Absent", "absent", "--chart-2")],
+        },
+        options,
+      });
+    });
   },
 };
 

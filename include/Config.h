@@ -13,4 +13,7 @@ const int MAX_RECORDS  = 300;   // attendance records each student can hold
 // Longest possible defaulter list: every student in every subject.
 const int MAX_DEFAULTER_ENTRIES = MAX_STUDENTS * MAX_SUBJECTS;
 
+// Most class names that can exist: one for each student and subject.
+const int MAX_CLASSES = MAX_STUDENTS + MAX_SUBJECTS;
+
 #endif

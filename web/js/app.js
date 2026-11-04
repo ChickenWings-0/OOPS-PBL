@@ -17,10 +17,10 @@ const ROUTES = [
 const App = {
   user: null,
   today: null,
+  lastMarked: null,
   shell: null,
   content: null,
   title: null,
-  subtitle: null,
   visit: 0,    // counts page changes, so a slow reply cannot draw over a newer page
 
   // Decides between the login page and the app, then starts.
@@ -48,6 +48,7 @@ const App = {
     const reply = await Api.get("/api/me");
     App.user = reply.user;
     App.today = reply.today;
+    App.lastMarked = reply.lastMarked;
   },
 
   showLogin(notice) {
@@ -87,7 +88,8 @@ const App = {
       }
       nav.append(App.navLink(route));
     }
-    return h("aside", { class: "sidebar", id: "sidebar" }, brand(), nav);
+    return h("aside", { class: "sidebar", id: "sidebar" },
+      h("div", { class: "sidebar-brand" }, brand()), nav);
   },
 
   // Builds the user button with its menu.
@@ -95,7 +97,7 @@ const App = {
     const menu = h("div", { class: "user-menu", hidden: true },
       h("div", { class: "user-menu-head" },
         h("div", { class: "user-menu-name" }, App.user.name),
-        h("div", { class: "user-menu-role" }, App.user.isAdmin ? "Administrator" : "Teacher")),
+        h("div", { class: "label" }, App.user.isAdmin ? "Admin" : "Teacher")),
       h("button", { type: "button", onClick: () => App.changePassword() }, icon("key", 16), "Change password"),
       h("button", { type: "button", onClick: () => App.logout() }, icon("logout", 16), "Log out"));
 
@@ -127,7 +129,6 @@ const App = {
   // Builds the frame around every page, then shows the current page.
   showShell() {
     App.title = h("h1", { class: "topbar-title" });
-    App.subtitle = h("p", { class: "topbar-subtitle" });
     App.content = h("div", { class: "content" });
 
     const menuButton = h("button", {
@@ -141,10 +142,11 @@ const App = {
       h("div", { class: "main" },
         h("header", { class: "topbar" },
           menuButton,
-          h("div", { class: "topbar-heading" }, App.title, App.subtitle),
+          App.title,
+          h("span", { class: "topbar-date" }, App.today.long),
           themeButton(),
           App.userMenu()),
-        h("main", { class: "content-area" }, App.content)));
+        h("main", null, App.content)));
 
     document.getElementById("app").replaceChildren(App.shell);
     App.showPage();
@@ -162,11 +164,11 @@ const App = {
       return;
     }
 
-    const hash = window.location.hash.replace("#/", "");
+    // The address looks like #/report/2: a page name, then an optional value.
+    const [hash, value] = window.location.hash.replace("#/", "").split("/");
     const route = ROUTES.find((item) => item.hash === hash) || ROUTES[0];
 
     App.title.textContent = route.label;
-    App.subtitle.textContent = `Today: ${App.today.date}`;
     document.title = `${route.label} · Attendance Management System`;
 
     App.shell.querySelectorAll(".nav-item").forEach((link) => {
@@ -185,42 +187,22 @@ const App = {
     const isCurrent = () => thisVisit === App.visit;
 
     if (Pages[route.hash]) {
-      Pages[route.hash](App.content, isCurrent);
+      Pages[route.hash](App.content, isCurrent, value);
     } else {
-      App.content.replaceChildren(h("section", { class: "card" },
-        UI.empty(route.icon, `${route.label} is coming next`,
-          "This page is built after the dashboard design is approved.")));
+      App.content.replaceChildren(h("section", { class: "sheet" },
+        UI.empty(`${route.label} is coming next`, "This page has not been built yet.")));
     }
   },
 
   // Opens the change password dialog. C++ checks both passwords.
   changePassword() {
-    const submit = h("button", { class: "btn btn-primary", type: "submit" }, "Change password");
-    const form = h("form", { novalidate: true },
-      UI.formError(),
-      UI.field("Current password", "currentPassword", "password", "current-password"),
-      UI.field("New password", "newPassword", "password", "new-password"),
-      h("div", { class: "modal-actions" }, submit));
-
-    const dialog = UI.modal("Change password", form);
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      UI.clearErrors(form);
-      UI.setBusy(submit, true);
-
-      try {
-        const reply = await Api.post("/api/account/password", {
-          currentPassword: form.elements.currentPassword.value,
-          newPassword: form.elements.newPassword.value,
-        });
-        dialog.close();
-        UI.toast(reply.message);
-      } catch (error) {
-        UI.showError(form, error);
-        UI.setBusy(submit, false);
-      }
-    });
+    UI.formModal("Change password", "Change password", [
+      UI.field("Current password", "currentPassword", { type: "password", autocomplete: "current-password" }),
+      UI.field("New password", "newPassword", { type: "password", autocomplete: "new-password" }),
+    ], (fields) => Api.post("/api/account/password", {
+      currentPassword: fields.currentPassword.value,
+      newPassword: fields.newPassword.value,
+    }), () => {});
   },
 
   // Ends the session on the server, then returns to the login page.

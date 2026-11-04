@@ -41,6 +41,7 @@ public:
     bool hasRecord(const std::string& code, const Date& date) const;
     char getStatus(const std::string& code, const Date& date) const;
     bool updateRecord(const std::string& code, const Date& date, char newStatus);
+    std::string markHistory(const std::string& code, int maxMarks) const;
     int getRecordCount() const;
     const AttendanceRecord& getRecord(int index) const;
 

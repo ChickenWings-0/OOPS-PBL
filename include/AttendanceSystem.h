@@ -41,6 +41,9 @@ public:
     // Fills results[] with the index of every match and returns how many
     int findMatchingStudents(const std::string& text, int results[]) const;
 
+    // Fills classes[] with every class name, in order, and returns how many
+    int listClasses(std::string classes[]) const;
+
     // Login and accounts. "teacher" and "actor" are indexes in the teacher array.
     int checkLogin(const std::string& username, const std::string& password) const;
     bool isAdmin(int teacher) const;

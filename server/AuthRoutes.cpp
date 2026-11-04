@@ -5,6 +5,7 @@
 
 #include "ApiServer.h"
 #include "JsonMapper.h"
+#include "Report.h"
 #include "Utils.h"
 #include "httplib.h"
 
@@ -95,6 +96,10 @@ void ApiServer::handleMe(const Request& req, Response& res) {
     out["ok"] = true;
     out["user"] = JsonMapper::user(app.getTeacher(teacher));
     out["today"] = JsonMapper::today();
+
+    TrendPoint latest;
+    bool anyMarks = Report::dailyTrend(app.getStudents(), &latest, 1) > 0;
+    out["lastMarked"] = JsonMapper::lastMarked(anyMarks, latest.date);
     sendJson(res, 200, out);
 }
 

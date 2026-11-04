@@ -25,10 +25,13 @@ public:
     static nlohmann::json user(const Teacher& teacher);
     static nlohmann::json teacherRow(const Teacher& teacher);
     static nlohmann::json today();
+    static nlohmann::json lastMarked(bool anyMarks, const Date& date);
+    static nlohmann::json defaulterRow(const DefaulterEntry& entry, const Student students[],
+                                       const Subject subjects[]);
 
     static nlohmann::json dashboard(const DashboardData& data, const TrendPoint trend[],
                                     int trendCount, const SubjectLine lines[], int lineCount,
-                                    const Subject subjects[]);
+                                    const Subject subjects[], int classCount);
 };
 
 #endif

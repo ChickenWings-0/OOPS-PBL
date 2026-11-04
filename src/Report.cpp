@@ -78,6 +78,22 @@ int Report::defaulterList(const Student students[], const Subject subjects[],
     return count;
 }
 
+// Puts the lowest attendance first, with a selection sort. The web pages use
+// this, because the students in most danger should be seen first.
+void Report::sortByPercentage(DefaulterEntry entries[], int count) {
+    for (int i = 0; i < count - 1; i++) {
+        int lowest = i;
+        for (int j = i + 1; j < count; j++) {
+            if (entries[j].percentage < entries[lowest].percentage) {
+                lowest = j;
+            }
+        }
+        DefaulterEntry temp = entries[i];
+        entries[i] = entries[lowest];
+        entries[lowest] = temp;
+    }
+}
+
 // Counts who was present and absent in each subject held on one date.
 DailyReportData Report::dailyReport(const Student students[], const Subject subjects[],
                                     const Date& date) {
@@ -236,6 +252,14 @@ DashboardData Report::dashboardStats(const Student students[], const Subject sub
     data.todayPercentage = data.todayMarked ? latest.percentage : 0.0;
     data.lastMarkedDate = data.anyMarks ? latest.date : Date();
     data.lastMarkedPercentage = data.anyMarks ? latest.percentage : 0.0;
+
+    data.overallPresent = 0;
+    data.overallTotal = 0;
+    for (int i = 0; i < Student::getCount(); i++) {
+        data.overallPresent += students[i].countPresent();
+        data.overallTotal += students[i].countTotal();
+    }
+    data.overallPercentage = Student::calcPercentage(data.overallPresent, data.overallTotal);
 
     DefaulterEntry entries[MAX_DEFAULTER_ENTRIES];
     data.defaulterEntries = defaulterList(students, subjects, entries);
