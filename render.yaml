@@ -1,0 +1,13 @@
+# render.yaml
+# Tells Render how to run this project, so setting it up takes a few clicks.
+# Render asks for the value of DEMO_PASSWORD once. It is never stored in Git.
+services:
+  - type: web
+    name: attendance-register
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_PASSWORD
+        sync: false

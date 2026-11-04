@@ -3,4 +3,8 @@
 *.exe
 *.o
 *.md
+build/
+console/
+docs/
 tests/
+main.cpp
