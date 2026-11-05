@@ -63,15 +63,15 @@ async function login(page) {
   check("W74 API_BASE points at the API", (await page.evaluate(() => API_BASE)) === proxy.replace(/\/$/, ""), await page.evaluate(() => API_BASE));
 
   await login(page);
-  await page.waitForSelector(".tally-cell");
-  await wait(600);
-  check("W74 login and the dashboard work cross-origin", (await text(page, ".tally-cell")).includes("10"));
+  await page.waitForSelector("[data-stat=students]");
+  await wait(1000);
+  check("W74 login and the dashboard work cross-origin", (await text(page, "[data-stat=students]")).includes("10"));
   check("W74 every API call goes to API_BASE", calls.length > 2 && calls.every((c) => c.includes(new URL(proxy).host)), calls.slice(0, 4));
   check("W74 the token is in sessionStorage, and no cookie is set", await page.evaluate(() => sessionStorage.getItem("token").length === 32 && document.cookie === ""));
 
   await page.evaluate(() => { location.hash = "#/students"; });
   await wait(500);
-  await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent === "Add student").click());
+  await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Add student").click());
   await page.waitForSelector("dialog[open]");
   await page.type('dialog [name="rollNo"]', "90118015625");
   await page.type('dialog [name="name"]', "Cross Origin");
@@ -125,8 +125,9 @@ async function login(page) {
   check("W77 and no error", (await page.$(".form-error:not([hidden])")) === null);
   await page.screenshot({ path: process.env.SHOT_DIR + "/waking-up.png" });
   await login(page);
-  await page.waitForSelector(".tally-cell", { timeout: 30000 });
-  check("W77 login retries by itself after waking", (await text(page, ".tally-cell")).includes("10"));
+  await page.waitForSelector("[data-stat=students]", { timeout: 30000 });
+  await wait(1000);
+  check("W77 login retries by itself after waking", (await text(page, "[data-stat=students]")).includes("10"));
   await wait(400);
   check("W77 the message goes away", !(await noticeShown(page)));
 
@@ -138,7 +139,7 @@ async function login(page) {
   await wait(4600);
   check("W78 a slow reply shows the message after a few seconds", await noticeShown(page));
   await wait(2600);
-  check("W78 the page then loads", (await page.$$(".stamp.is-bad")).length === 5);
+  check("W78 the page then loads", (await page.$$(".table .badge.is-bad")).length === 5);
   check("W78 the message goes away", !(await noticeShown(page)));
 
   // ----- Cold start: a read while asleep -----
@@ -147,13 +148,13 @@ async function login(page) {
   await wait(1200);
   check("W79 a read waits for the server", await noticeShown(page));
   await wait(9000);
-  check("W79 and retries by itself", (await page.$$(".table tbody tr")).length === 4, await page.$$eval(".table tbody tr", (r) => r.length));
+  check("W79 and retries by itself", (await page.$$(".subject-card")).length === 4, await page.$$eval(".subject-card", (r) => r.length));
 
   // ----- Cold start: a save while asleep -----
   await page.evaluate(() => { location.hash = "#/students"; });
   await wait(600);
   const rowsBefore = await page.$$eval(".table tbody tr", (r) => r.length);
-  await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent === "Add student").click());
+  await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Add student").click());
   await page.waitForSelector("dialog[open]");
   await page.type('dialog [name="rollNo"]', "98118015625");
   await page.type('dialog [name="name"]', "Saved While Asleep");

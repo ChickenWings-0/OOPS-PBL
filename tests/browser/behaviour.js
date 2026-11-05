@@ -47,10 +47,10 @@ async function signIn(page, user, pass) {
 
 // Waits for the dashboard, and for its charts to finish animating.
 async function settle(page) {
-  await page.waitForSelector(".tally-cell");
+  await page.waitForSelector("[data-stat]");
   await page.evaluate(async () => {
     const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-    await pause(50);
+    await pause(900);
     for (let i = 0; i < 40 && typeof Chart !== "undefined" && Charts.live.some((e) => Chart.animator.running(e.chart)); i++) await pause(100);
   });
 }
@@ -63,6 +63,10 @@ async function go(page, name) {
 const text = (page, selector) => page.$eval(selector, (e) => e.textContent.trim());
 const lastToast = (page) => page.$$eval(".toast", (t) => (t.length ? t[t.length - 1].textContent.trim() : ""));
 const rows = (page) => page.$$eval(".table tbody tr", (r) => r.map((x) => x.innerText.replace(/\s+/g, " ").trim()));
+const lines = (page, selector) => page.$$eval(selector, (r) => r.map((x) => x.innerText.replace(/\s+/g, " ").trim()));
+const stat = (page, name) => page.$eval(`[data-stat="${name}"]`, (c) => c.innerText.replace(/\s+/g, " "));
+const choosePill = (page, value) => page.$eval(`.pill[data-value="${value}"]`, (p) => p.click());
+const setDate = (page, value) => page.$eval('input[name="date"]', (e, v) => { e.value = v; e.dispatchEvent(new Event("change")); }, value);
 
 async function clickButton(page, label, scope = "body") {
   const found = await page.evaluate((wanted, within) => {
@@ -93,14 +97,24 @@ async function fill(page, name, value) {
   page = await newPage(browser, 1280, 800);
   await signIn(page, "admin", "admin123");
   await settle(page);
-  const cells = await page.$$eval(".tally-cell", (c) => c.map((x) => x.innerText.replace(/\s+/g, " ")));
-  console.log("     tally:", JSON.stringify(cells));
-  check("W50 ten students in two classes", cells[0].includes("10") && cells[0].includes("2 classes"), cells);
-  check("W50 four subjects, overall from C++", cells[1].includes("4") && cells[1].includes("82.00% overall"), cells);
-  check("W50 four defaulter students", cells[3].includes("4") && cells[3].includes("5 below 75%"), cells);
-  check("W51 today shows the last marked day", cells[2].includes("Not marked") && cells[2].includes("80.00%, 03 Nov"), cells);
-  check("needs attention lists the lowest first", (await rows(page))[0].includes("50.00%"), await rows(page));
-  check("recent marks are drawn as cells", (await page.$$(".mark")).length > 10);
+  const today = await stat(page, "today");
+  console.log("     today:", today);
+  check("W50 ten students in two classes", /10/.test(await stat(page, "students")) && (await stat(page, "students")).includes("2 classes"), await stat(page, "students"));
+  check("W50 four subjects, overall from C++", (await stat(page, "subjects")).includes("82.00% overall"), await stat(page, "subjects"));
+  check("W50 four defaulter students", /Below 75% 4/.test(await stat(page, "defaulters")), await stat(page, "defaulters"));
+  check("W51 today says it is not marked", today.includes("Not marked yet") && today.includes("03 Nov") && today.includes("80.00%"), today);
+  check("W81 the hero counts today's classes", today.includes("0 of 4 classes marked"), today);
+  check("W51 not marked offers a way to mark", (await page.$eval("[data-stat=today] a", (a) => a.getAttribute("href"))) === "#/mark");
+  check("the hero has one segment per subject", (await page.$$(".hero-segments i")).length === 4);
+  const attention = await lines(page, "[data-tile=attention] .line");
+  check("needs attention lists the lowest first", attention[0].includes("50.00%"), attention);
+  const activity = await lines(page, "[data-tile=activity] .line");
+  check("W82 recent activity shows the latest classes", activity.length === 4 && activity[0].includes("CS201A marked") && activity[0].includes("03 Nov"), activity);
+  check("each subject has a ring", (await page.$$(".ring")).length === 4);
+  check("W83 the greeting comes from the server", (await text(page, ".head-title")).endsWith(", Administrator") && (await text(page, ".head-title")).startsWith("Good "), await text(page, ".head-title"));
+  const clock = new Date();
+  const longDate = clock.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  check("W85 the head shows the real date", (await text(page, ".head-kicker")).endsWith(longDate), { shown: await text(page, ".head-kicker"), longDate });
   check("token is in sessionStorage only", await page.evaluate(() => sessionStorage.getItem("token").length === 32 && localStorage.getItem("token") === null));
 
   const facts = await page.evaluate(() => Charts.live.map(({ chart }) => {
@@ -110,16 +124,16 @@ async function fill(page, name, value) {
   check("the line chart really spans its area", facts[0].spread > facts[0].area * 0.9, facts);
 
   // ----- Theme -----
-  const before = await page.evaluate(() => ({ theme: Theme.current(), line: Charts.live[0].chart.data.datasets[0].borderColor, bg: getComputedStyle(document.body).backgroundColor }));
-  await page.click('.topbar [aria-label="Switch theme"]');
+  const before = await page.evaluate(() => ({ theme: Theme.current(), line: Charts.live[0].chart.options.scales.y.ticks.color, bg: getComputedStyle(document.body).backgroundColor }));
+  await page.click('.dock [aria-label="Switch theme"]');
   await wait(600);
-  const after = await page.evaluate(() => ({ theme: Theme.current(), line: Charts.live[0].chart.data.datasets[0].borderColor, bg: getComputedStyle(document.body).backgroundColor, charts: Charts.live.length }));
+  const after = await page.evaluate(() => ({ theme: Theme.current(), line: Charts.live[0].chart.options.scales.y.ticks.color, bg: getComputedStyle(document.body).backgroundColor, charts: Charts.live.length }));
   check("W52 the toggle changes the theme and page colour", before.theme !== after.theme && before.bg !== after.bg, { before, after });
-  check("W52 the toggle redraws charts in new colours", before.line !== after.line && after.charts === 2, { before, after });
+  check("W52 the toggle redraws charts in new colours", before.line !== after.line && after.charts === 1, { before, after });
   await page.reload({ waitUntil: "domcontentloaded" });
   await settle(page);
   check("W52 the theme stays after reload", (await page.evaluate(() => Theme.current())) === after.theme);
-  check("reload stays logged in", (await page.$(".tally-cell")) !== null);
+  check("reload stays logged in", (await page.$("[data-stat]")) !== null);
   check("W52 only the theme is in localStorage", await page.evaluate(() => Object.keys(localStorage).join() === "theme"));
 
   // ----- Tooltip, table view -----
@@ -130,10 +144,10 @@ async function fill(page, name, value) {
   check("tooltip shows server values on hover", tip.opacity > 0 && tip.title[0].endsWith("-2026") && JSON.stringify(tip.body).includes("present"), tip);
   await page.screenshot({ path: path.join(out, "hover-tooltip.png") });
   await page.mouse.move(5, 5);
-  await clickButton(page, "Table", ".split");
+  await clickButton(page, "Table", "[data-tile=trend]");
   await wait(100);
-  check("table view shows every marked day", (await page.$$eval(".split .table tbody tr", (r) => r.length)) === 6);
-  await clickButton(page, "Chart", ".split");
+  check("table view shows every marked day", (await page.$$eval("[data-tile=trend] .table tbody tr", (r) => r.length)) === 6);
+  await clickButton(page, "Chart", "[data-tile=trend]");
   await wait(200);
 
   // ----- Students -----
@@ -147,7 +161,7 @@ async function fill(page, name, value) {
   await clickButton(page, "Name");
   await wait(250);
   check("W15 sorting by name comes from the server", (await rows(page))[0].includes("Aarav Sharma"), (await rows(page))[0]);
-  await page.evaluate(() => [...document.querySelectorAll("th button")].find((b) => b.textContent.startsWith("Name")).click());
+  await page.evaluate(() => [...document.querySelectorAll(".mini-pills button")].find((b) => b.textContent.startsWith("Name")).click());
   await wait(250);
   check("W15 pressing again reverses it", (await rows(page))[0].includes("Vivaan Singh") || (await rows(page))[0].includes("Tara Bose"), (await rows(page))[0]);
 
@@ -222,46 +236,58 @@ async function fill(page, name, value) {
   await fill(page, "className", "AIML-B");
   await page.click('dialog button[type="submit"]');
   await wait(400);
-  const bold = await page.$$eval(".table td b, .table td img", (e) => e.length);
-  check("W58 a subject named like HTML shows as plain text", bold === 0 && (await rows(page)).join().includes("<b>test</b>"), await rows(page));
+  const bold = await page.$$eval(".subject-card b, .subject-card img", (e) => e.length);
+  const subjectCards = await lines(page, ".subject-card");
+  check("W58 a subject named like HTML shows as plain text", bold === 0 && subjectCards.join().includes("<b>test</b>"), subjectCards);
+  check("a new subject has a ring with no percentage", subjectCards.some((c) => c.includes("No classes yet")), subjectCards);
+  await page.evaluate(() => [...document.querySelectorAll(".subject-card a")][1].click());
+  await page.waitForSelector(".kid");
+  check("a subject card opens its own marking page", (await text(page, '.pill[aria-pressed="true"]')).startsWith("MA201A"), await text(page, '.pill[aria-pressed="true"]'));
 
   // ----- Marking -----
   await go(page, "mark");
-  await page.waitForSelector(".marking-row");
-  const select = await page.$('select[name="subject"]');
-  await select.select("CS201B");
-  await page.waitForFunction(() => document.querySelectorAll(".marking-row").length === 4);
-  await page.$eval('input[name="date"]', (e) => { e.value = "2026-10-28"; e.dispatchEvent(new Event("change")); });
+  await page.waitForSelector(".kid");
+  const realToday = await page.$eval('input[name="date"]', (e) => e.value);
+  const pad = (n) => String(n).padStart(2, "0");
+  check("W85 marking opens on the real date", realToday === `${clock.getFullYear()}-${pad(clock.getMonth() + 1)}-${pad(clock.getDate())}`, realToday);
+  check("W85 today's heading", (await text(page, ".head-title")) === "Who's here today?");
+  await choosePill(page, "CS201B");
+  await page.waitForFunction(() => document.querySelectorAll(".kid").length === 4);
+  await setDate(page, "2026-10-28");
   await wait(300);
-  check("W20 choosing a subject lists only its class", (await page.$$(".marking-row")).length === 4);
+  check("W85 another day's heading names the date", (await text(page, ".head-title")) === "Who was here on 28-10-2026?", await text(page, ".head-title"));
+  check("W20 choosing a subject lists only its class", (await page.$$(".kid")).length === 4);
   check("counter starts at everyone present", (await text(page, "#present-count")) === "4" && (await text(page, "#absent-count")) === "0");
 
   const requests = [];
   page.on("request", (r) => { if (r.url().includes("/api/")) requests.push(r.url()); });
-  const boxes = await page.$$(".pa input");
+  const boxes = await page.$$(".kid-box");
   await boxes[1].click();
   await boxes[2].click();
   check("W21 the counter updates after each toggle", (await text(page, "#present-count")) === "2" && (await text(page, "#absent-count")) === "2");
   await wait(200);
   check("W21 toggling sends no request", requests.length === 0, requests);
+  check("W21 an absent tile changes colour", (await page.$$(".kid.is-away")).length === 2);
+  const barGap = await page.evaluate(() => window.innerHeight - document.querySelector(".savebar").getBoundingClientRect().bottom);
+  check("W21 the save bar floats at the bottom of the screen", barGap > 10 && barGap < 40, barGap);
   await page.screenshot({ path: path.join(out, "marking.png") });
 
   await clickButton(page, "Mark all present");
   check("W22 mark all present sets every toggle", (await text(page, "#absent-count")) === "0");
   await boxes[0].click();
-  await clickButton(page, "Save attendance");
+  await page.click(".savebar .btn-glow");
   await wait(500);
   check("W22 the totals after Save come from C++", (await lastToast(page)) === "Attendance saved. Present: 3, Absent: 1", await lastToast(page));
   check("W24 a marked session shows the notice", (await text(page, ".notice")).startsWith("Already marked"));
-  check("W24 a marked session has no Save button", !(await page.$eval(".sheet", (s) => s.innerText.includes("Save attendance"))));
+  check("W24 a marked session has no Save button", !(await page.$eval(".content", (s) => s.innerText.includes("Save attendance"))));
 
-  const again = await page.$$(".pa input");
+  const again = await page.$$(".kid-box");
   await again[0].click();
   await wait(400);
   check("W26 correcting saves straight away", (await lastToast(page)) === "Attendance corrected.", await lastToast(page));
   check("W26 the counter follows the correction", (await text(page, "#present-count")) === "4");
 
-  await page.$eval('input[name="date"]', (e) => { e.value = "2099-01-01"; e.dispatchEvent(new Event("change")); });
+  await setDate(page, "2099-01-01");
   await wait(300);
   check("W25 a future date shows the C++ message", (await text(page, ".empty-text")) === "The date cannot be in the future.");
 
@@ -273,39 +299,43 @@ async function fill(page, name, value) {
   };
   page.on("request", slowDown);
   await page.$eval('input[name="date"]', (e) => { e.value = "2026-10-31"; });
-  await select.select("CS201A");
+  await choosePill(page, "CS201A");
   await wait(60);
-  await select.select("MA201B");
+  await choosePill(page, "MA201B");
   await wait(900);
-  check("a slow old reply does not replace a newer one", (await text(page, ".sheet-title")).startsWith("MA201B"), await text(page, ".sheet-title"));
+  check("a slow old reply does not replace a newer one", (await text(page, ".wall-title")).startsWith("MA201B"), await text(page, ".wall-title"));
   page.off("request", slowDown);
   await page.setRequestInterception(false);
 
   // ----- Reports -----
   await go(page, "report");
-  check("report page starts with a student list", (await rows(page)).length === 10);
+  check("report page starts with a student list", (await page.$$(".pick")).length === 10);
   await page.evaluate(() => [...document.querySelectorAll(".person-name")].find((a) => a.textContent === "Diya Verma").click());
-  await wait(450);
-  const lines = await page.$$eval(".subject-row", (r) => r.map((x) => x.innerText.replace(/\s+/g, " ")));
-  console.log("     report:", JSON.stringify(lines));
-  check("W30 Diya's report matches", lines[0].includes("83.33%") && lines[1].includes("75.00%") && (await text(page, ".tally-value")) === "80.00%", lines);
-  const colours = await page.$$eval(".meter-fill", (f) => f.map((x) => ({ good: x.classList.contains("is-good"), width: x.style.width })));
-  check("W31 exactly 75% is green, with the word OK", colours[1].good && lines[1].includes("OK"), { colours, lines });
+  await wait(1200);
+  const subjectLines = await lines(page, ".report-subject");
+  console.log("     report:", JSON.stringify(subjectLines));
+  check("W30 Diya's report matches", subjectLines[0].includes("83.33%") && subjectLines[1].includes("75%") && (await text(page, ".hero-number")) === "80%", { subjectLines, overall: await text(page, ".hero-number") });
+  const rings = await page.$$eval(".report-subject .ring", (f) => f.map((x) => x.className));
+  check("W31 exactly 75% is not low, with the word OK", rings[1].includes("is-ok") && subjectLines[1].includes("OK"), { rings, subjectLines });
+  const arc = await page.$eval(".report-subject .ring-arc", (a) => Number(a.getAttribute("stroke-dasharray").split(" ")[0]));
+  check("the ring is drawn to the server's percentage", Math.abs(arc - 2 * Math.PI * 36 * 0.8333) < 1, arc);
   await go(page, "report/3");
-  const low = await page.$$eval(".meter-fill", (f) => f.map((x) => x.classList.contains("is-bad")));
-  check("W31 below 75% is red, with words", low.every(Boolean) && (await text(page, ".subject-row")).includes("Below 75%"), low);
+  const low = await page.$$eval(".report-subject .ring", (f) => f.map((x) => x.classList.contains("is-low")));
+  check("W31 below 75% is red, with words", low.every(Boolean) && (await text(page, ".report-subject")).includes("Below 75%"), low);
 
   await go(page, "defaulters");
   const defaulters = await rows(page);
   check("W33 the defaulters page has 5 entries", defaulters.length === 5 && defaulters[0].includes("50.00%"), defaulters);
-  check("defaulters have red stamps", (await page.$$(".stamp.is-bad")).length === 5);
+  check("defaulters have red badges", (await page.$$(".table .badge.is-bad")).length === 5);
+  check("recent marks are drawn as cells", (await page.$$(".mark")).length > 10);
+  check("the summary names the lowest entry", (await text(page, ".summary")).includes("Lowest:"), await text(page, ".summary"));
 
   await go(page, "daily");
   await wait(300);
   check("W34 daily report opens on the last marked day", (await page.$eval('input[name="date"]', (e) => e.value)) === "2026-11-03");
-  check("W34 daily report has present and absent stamps", (await page.$$(".stamp.is-good")).length > 0 && (await page.$$(".stamp.is-bad")).length > 0);
+  check("W34 daily report has present and absent badges", (await page.$$(".line .badge.is-good")).length > 0 && (await page.$$(".line .badge.is-bad")).length > 0);
   check("daily report draws its chart with a legend", await page.evaluate(() => Charts.live.length === 1 && Charts.live[0].chart.legend.options.display));
-  await page.$eval('input[name="date"]', (e) => { e.value = "2026-11-01"; e.dispatchEvent(new Event("change")); });
+  await setDate(page, "2026-11-01");
   await wait(300);
   check("W34 a date with no data has an empty state", (await text(page, ".empty-title")) === "No attendance on this date");
 
@@ -318,7 +348,7 @@ async function fill(page, name, value) {
   check("a month with no marks has an empty state", (await text(page, ".empty-title")) === "No attendance in this month");
 
   await go(page, "teachers");
-  check("W19 admin sees the teachers", (await rows(page)).length === 2);
+  check("W19 admin sees the teachers", (await page.$$(".person-card")).length === 2);
   check("no password on the teachers page", !(await page.$eval(".content", (c) => c.innerText)).includes("admin123"));
   await clickButton(page, "Add teacher");
   await page.waitForSelector("dialog[open]");
@@ -331,7 +361,67 @@ async function fill(page, name, value) {
   await fill(page, "username", "teacher9");
   await page.click('dialog button[type="submit"]');
   await wait(400);
-  check("W19 the teacher is added", (await rows(page)).length === 3 && (await lastToast(page)) === "Teacher added.");
+  check("W19 the teacher is added", (await page.$$(".person-card")).length === 3 && (await lastToast(page)) === "Teacher added.");
+  // ----- Keyboard shortcuts on a laptop -----
+  // This comes after the reports, because it saves marks of its own.
+  await go(page, "mark");
+  await page.waitForSelector(".kid");
+  await choosePill(page, "MA201B");
+  await wait(150);
+  await setDate(page, "2026-10-28");
+  await page.waitForFunction(() => document.querySelectorAll(".kid").length === 4);
+  await page.evaluate(() => document.activeElement.blur());
+  const keyRequests = [];
+  const countRequest = (r) => { if (r.url().includes("/api/")) keyRequests.push(r.url()); };
+  page.on("request", countRequest);
+  const focused = () => page.evaluate(() => [...document.querySelectorAll(".kid-box")].indexOf(document.activeElement));
+
+  await page.keyboard.press("a");
+  check("W86 A marks the first student absent", (await text(page, "#absent-count")) === "1");
+  check("W86 and moves to the next tile", (await focused()) === 1, await focused());
+  await page.keyboard.press("p");
+  check("W86 P keeps a student present and moves on", (await text(page, "#absent-count")) === "1" && (await focused()) === 2);
+  await page.keyboard.press("j");
+  check("W86 J moves forward", (await focused()) === 3);
+  await page.keyboard.press("k");
+  check("W86 K moves back", (await focused()) === 2);
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowLeft");
+  check("W86 left and right arrows move", (await focused()) === 2);
+  await page.keyboard.press("Space");
+  check("W86 Space flips the tile", (await text(page, "#absent-count")) === "2");
+  await page.keyboard.press("ArrowUp");
+  check("W86 the up arrow stays put on the first row", (await focused()) === 2, await focused());
+  await page.keyboard.press("j");
+  await page.keyboard.press("ArrowUp");
+  const columns = await page.evaluate(() => getComputedStyle(document.querySelector(".wall")).gridTemplateColumns.split(" ").length);
+  check("W86 the up arrow moves a whole row", (await focused()) === 3 - columns, { at: await focused(), columns });
+  await page.keyboard.press("ArrowDown");
+  check("W86 the down arrow moves a whole row", (await focused()) === 3, await focused());
+  await page.screenshot({ path: path.join(out, "marking-keyboard.png") });
+
+  await page.focus('input[name="date"]');
+  await page.keyboard.press("a");
+  check("W86 typing in the date box marks nobody", (await text(page, "#absent-count")) === "2");
+  check("W86 shortcuts send no request", keyRequests.length === 0, keyRequests);
+
+  await page.keyboard.down("Control");
+  await page.keyboard.press("s");
+  await page.keyboard.up("Control");
+  await wait(500);
+  check("W86 Ctrl+S saves, with totals from C++", (await lastToast(page)) === "Attendance saved. Present: 2, Absent: 2", await lastToast(page));
+  page.off("request", countRequest);
+
+  await page.waitForSelector(".notice");
+  await page.evaluate(() => document.activeElement.blur());
+  await page.keyboard.press("p");
+  await wait(400);
+  check("W86 in a marked session a shortcut is a correction", (await lastToast(page)) === "Attendance corrected.", await lastToast(page));
+  await page.evaluate(() => document.activeElement.blur());
+  await go(page, "subjects");
+  check("W86 shortcuts end when the page changes", await page.evaluate(() => App.pageKeys === null));
+
+
   check("no script errors in the whole session", page.errors.length === 0, page.errors);
 
   // ----- User menu and password -----
@@ -379,7 +469,8 @@ async function fill(page, name, value) {
   page = await newPage(browser, 1280, 800);
   await signIn(page, "teacher1", "pass123");
   await settle(page);
-  check("W19 a teacher does not see Teachers", !(await page.$eval(".nav", (n) => n.innerText.toLowerCase().includes("teachers"))));
+  check("W19 a teacher does not see Teachers", await page.$eval(".dock", (n) => n.textContent.includes("Students") && !n.textContent.includes("Teachers")));
+  check("W83 the greeting uses the first name", (await text(page, ".head-title")).endsWith(", Neha"), await text(page, ".head-title"));
   check("the teacher sees their own name", (await text(page, ".user-name")) === "Neha Kapoor");
   check("initials come from the server", (await text(page, ".avatar")) === "NK");
   await go(page, "teachers");
@@ -397,7 +488,8 @@ async function fill(page, name, value) {
   check("W54 a slow page shows a loading state", (await page.$$(".skeleton")).length >= 3);
   await settle(page);
   await go(page, "subjects");
-  check("W54 pages finish loading", (await page.$(".loading-note")) === null);
+  await wait(800);   // this page reads the slowed /api/dashboard too
+  check("W54 pages finish loading", (await page.$(".skeleton")) === null);
 
   // ----- Phone width -----
   page = await newPage(browser, 360, 740);
@@ -409,35 +501,70 @@ async function fill(page, name, value) {
   }
   await go(page, "dashboard");
   await settle(page);
-  check("W53 the sidebar is hidden on a phone", await page.$eval(".sidebar", (s) => getComputedStyle(s).visibility === "hidden"));
-  await page.click(".topbar-menu");
+  check("W53 the dock is hidden on a phone", await page.$eval(".dock", (s) => getComputedStyle(s).display === "none"));
+  check("W53 the tab bar shows five tabs", (await lines(page, ".tabbar .tab")).length === 5);
+  await page.click(".tabbar .tab:last-child");
+  await page.waitForSelector("dialog[open]");
   await wait(320);
-  check("W53 the menu button opens the drawer", await page.$eval(".sidebar", (s) => s.getBoundingClientRect().left === 0));
-  await page.screenshot({ path: path.join(out, "phone-drawer.png") });
-  await page.click('a[data-hash="defaulters"]');
-  await wait(320);
-  check("W53 choosing a page closes the drawer", await page.$eval(".shell", (s) => !s.classList.contains("drawer-open")));
-  await page.setViewport({ width: 899, height: 800 });
+  const more = await lines(page, ".more-link");
+  check("W53 More lists the other pages, and the theme", more.join().includes("Defaulters") && more.join().includes("Teachers") && more.join().includes("mode"), more);
+  await page.screenshot({ path: path.join(out, "phone-more.png") });
+  await page.click('dialog a[data-hash="defaulters"]');
+  await wait(450);
+  check("W53 choosing a page closes the sheet", (await page.$("dialog")) === null && (await page.evaluate(() => location.hash)) === "#/defaulters");
+
+  await page.click('.tabbar a[data-hash="mark"]');
+  await page.waitForSelector(".savebar");
+  await wait(450);
+  check("W86 a phone shows no keyboard hints", await page.$eval(".key-hints", (k) => getComputedStyle(k).display === "none"));
+  const gap = await page.evaluate(() => document.querySelector(".tabbar").getBoundingClientRect().top - document.querySelector(".savebar").getBoundingClientRect().bottom);
+  check("W53 the save bar sits just above the tab bar", gap > 0 && gap < 30, gap);
+  const tile = await page.$eval(".kid", (k) => k.getBoundingClientRect().height);
+  check("W53 tiles are large tap targets", tile >= 96, tile);
+
+  await page.setViewport({ width: 760, height: 800 });
   await wait(100);
-  check("drawer mode at 899 px", await page.$eval(".sidebar", (s) => getComputedStyle(s).position === "fixed"));
-  await page.setViewport({ width: 900, height: 800 });
+  check("tab bar at 760 px", await page.$eval(".tabbar", (s) => getComputedStyle(s).display === "grid"));
+  await page.setViewport({ width: 761, height: 800 });
   await wait(100);
-  check("full sidebar at 900 px", await page.$eval(".sidebar", (s) => getComputedStyle(s).position === "sticky"));
+  check("dock at 761 px", await page.$eval(".dock", (s) => getComputedStyle(s).display === "flex") && await page.$eval(".tabbar", (s) => getComputedStyle(s).display === "none"));
 
   // ----- No internet -----
   page = await newPage(browser, 1280, 800, { offline: true, quiet: true });
   await signIn(page, "admin", "admin123");
-  await page.waitForSelector(".tally-cell");
+  await page.waitForSelector("[data-stat]");
   await wait(250);
   check("W59 without Chart.js the chart area explains why", (await text(page, ".chart-note")).includes("internet"));
-  await clickButton(page, "Table", ".split");
+  await clickButton(page, "Table", "[data-tile=trend]");
   await wait(100);
   // Seven days: the six sample days, and the one marked earlier in this run.
-  check("W59 tables still work without internet", (await page.$$eval(".split .table tbody tr", (r) => r.length)) === 7);
+  check("W59 tables still work without internet", (await page.$$eval("[data-tile=trend] .table tbody tr", (r) => r.length)) === 7);
   await go(page, "daily");
   await wait(250);
-  check("W59 the daily page works without internet", (await page.$(".chart-note")) !== null && (await page.$$(".stamp")).length > 0);
+  check("W59 the daily page works without internet", (await page.$(".chart-note")) !== null && (await page.$$(".badge")).length > 0);
   check("no script errors offline", page.errors.length === 0, page.errors);
+
+  // ----- Marking today, with the real date -----
+  page = await newPage(browser, 1440, 900);
+  await signIn(page, "teacher1", "pass123");
+  await settle(page);
+  await go(page, "mark");
+  await page.waitForSelector(".kid");
+  await (await page.$$(".kid-box"))[0].click();
+  await page.click(".savebar .btn-glow");
+  await wait(500);
+  check("W85 today's attendance saves", (await lastToast(page)) === "Attendance saved. Present: 5, Absent: 1", await lastToast(page));
+  await go(page, "dashboard");
+  await settle(page);
+  const marked = await stat(page, "today");
+  console.log("     today:", marked);
+  check("W81 the hero shows today's percentage from C++", marked.includes("83.33%") && marked.includes("5 present, 1 absent today"), marked);
+  // Five subjects by now, because this run added one earlier.
+  check("W81 one class of all subjects is marked", marked.includes("1 of 5 classes marked") && (await page.$$(".hero-segments i:not(.is-off)")).length === 1, marked);
+  check("W81 the hero offers the rest", marked.includes("Mark the rest"), marked);
+  const fresh = await lines(page, "[data-tile=activity] .line");
+  check("W82 the new class is first, and says Today", fresh[0].includes("CS201A marked") && fresh[0].includes("Today") && fresh[0].includes("5/6"), fresh);
+  check("no script errors while marking today", page.errors.length === 0, page.errors);
 
   await browser.close();
   console.log(failed ? `FAILED: ${failed} of ${passed + failed}` : `ALL ${passed} BEHAVIOUR CHECKS PASSED`);
