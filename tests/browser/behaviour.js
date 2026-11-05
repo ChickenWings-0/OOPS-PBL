@@ -491,6 +491,25 @@ async function fill(page, name, value) {
   await wait(800);   // this page reads the slowed /api/dashboard too
   check("W54 pages finish loading", (await page.$(".skeleton")) === null);
 
+  // ----- A server older than the page -----
+  // The frontend and the server are updated separately, so a reply can be
+  // missing fields. The page must say so, and never load forever.
+  page = await newPage(browser, 1280, 800, { quiet: true });
+  await page.setRequestInterception(true);
+  page.on("request", (r) => {
+    if (r.url().includes("/api/dashboard")) {
+      r.respond({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    } else {
+      r.continue();
+    }
+  });
+  await signIn(page, "admin", "admin123");
+  await page.waitForSelector(".empty-title");
+  check("W87 a reply with missing fields shows a message", (await text(page, ".empty-title")) === "Could not load this page", await text(page, ".empty-title"));
+  check("W87 and says what to do", (await text(page, ".empty-text")).includes("older version"), await text(page, ".empty-text"));
+  check("W87 it never stays on the loading tiles", (await page.$(".skeleton")) === null);
+  check("W87 it offers Try again", (await page.$$eval(".empty button", (b) => b.map((x) => x.textContent))).includes("Try again"));
+
   // ----- Phone width -----
   page = await newPage(browser, 360, 740);
   await signIn(page, "admin", "admin123");

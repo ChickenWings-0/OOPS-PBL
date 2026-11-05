@@ -393,7 +393,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [x] Every page rebuilt, keeping the API, `config.js`, and the cold-start message
 - [x] Browser tests updated, and new screenshots in `docs/screenshots/`
 
-**Test:** every suite again, and W81 to W86. Terminal 45 of 45, API 253 of 253, browser 144 of 144, cross-origin 23 of 23.
+**Test:** every suite again, and W81 to W87. Terminal 45 of 45, API 253 of 253, browser 148 of 148, cross-origin 23 of 23.
 
 #### Checkpoint W12: Documentation
 **Owners:** Dhruv Kataria (`README.md`), all members (review)
@@ -478,6 +478,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [x] **W84** Avatar initials come from the server
 - [x] **W85** The dashboard and marking page use the real date
 - [x] **W86** Keyboard shortcuts mark, move, and save, stay out of the date box, and end with the page. Phones do not show them.
+- [x] **W87** A server older than the page gives a message and Try again, and never leaves the page loading forever
 
 #### Split hosting
 

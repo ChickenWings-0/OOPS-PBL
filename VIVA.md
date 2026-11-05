@@ -455,6 +455,9 @@ Because it uses the real date from the server's clock, and nothing has been mark
 **Q120. Why does the greeting come from the server?**
 "Good morning" depends on the time, and deciding it is logic, so `JsonMapper::greeting()` does it with `Date::currentHour()`. The Dockerfile sets `TZ=Asia/Kolkata`, so it is correct on Render too.
 
+**Q121. What happens if the website is newer than the server?**
+They are updated separately, so a reply can be missing a field the page expects. `App.drawPage()` catches the failure and shows a message with Try again, instead of leaving the loading tiles on screen forever. This matters on the live site, because Vercel can finish updating before Render does. The fix is to run the latest server build.
+
 ---
 
 ## 11. Module guide for each member
@@ -466,7 +469,7 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `main.cpp`, `ConsoleUI`, `AttendanceSystem` (core and login), `Result`, `Teacher`, `Config.h`
 - **Be ready to walk through:** program start, the login loop, how menus reach `AttendanceSystem` through `ConsoleUI`, and how the admin check works
 - **Revise:** Q4, Q5, Q12, Q14, Q24, Q64, Q66, Q68
-- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100, Q107, Q109 to Q112
+- **Web:** the `ApiServer` handlers, login and tokens, and the mutex. Revise Q73 to Q76, Q84 to Q87, Q90, Q91, Q95 to Q100, Q107, Q109 to Q112, Q121
 
 ### Vaibhav: Students
 

@@ -215,9 +215,25 @@ const App = {
 
     window.scrollTo(0, 0);
     if (Pages[route.hash]) {
-      Pages[route.hash](App.content, isCurrent, value);
+      App.drawPage(Pages[route.hash], value, isCurrent);
     } else {
       App.content.replaceChildren(UI.emptyTile("Page not found", "Choose a page from the menu."));
+    }
+  },
+
+  // Draws a page. If drawing fails, the page says so instead of loading forever.
+  // The usual cause is a server older than these files, because the two are
+  // updated separately: a reply is then missing fields this code expects.
+  async drawPage(page, value, isCurrent) {
+    try {
+      await page(App.content, isCurrent, value);
+    } catch (error) {
+      console.error(error);
+      if (isCurrent()) {
+        App.content.replaceChildren(UI.loadError(
+          { message: "The server may be an older version than this page. Restart it with the latest build, then try again." },
+          () => App.showPage()));
+      }
     }
   },
 
