@@ -106,6 +106,12 @@ bool Date::isInMonth(int m, int y) const {
     return month == m && year == y;
 }
 
+// Returns the hour of the day from the computer's clock, from 0 to 23.
+int Date::currentHour() {
+    time_t now = time(0);
+    return localtime(&now)->tm_hour;
+}
+
 // Returns today's date from the computer's clock.
 Date Date::today() {
     time_t now = time(0);

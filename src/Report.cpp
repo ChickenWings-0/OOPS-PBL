@@ -237,6 +237,29 @@ int Report::subjectSummary(const Student students[], const Subject subjects[],
     return Subject::getCount();
 }
 
+// Lists the latest marked classes, newest day first. Each class has at least
+// one day, so the latest MAX_RECENT_SESSIONS days always hold enough of them.
+// Fills lines[] and returns how many were found.
+int Report::recentSessions(const Student students[], const Subject subjects[],
+                           SessionLine lines[]) {
+    TrendPoint days[MAX_RECENT_SESSIONS];
+    int dayCount = dailyTrend(students, days, MAX_RECENT_SESSIONS);
+    int count = 0;
+
+    for (int i = dayCount - 1; i >= 0; i--) {
+        DailyReportData day = dailyReport(students, subjects, days[i].date);
+
+        for (int j = 0; j < day.lineCount && count < MAX_RECENT_SESSIONS; j++) {
+            lines[count].subjectIndex = day.lines[j].subjectIndex;
+            lines[count].date = days[i].date;
+            lines[count].present = day.lines[j].present;
+            lines[count].absent = day.lines[j].absent;
+            count++;
+        }
+    }
+    return count;
+}
+
 // Works out the headline numbers for the dashboard.
 DashboardData Report::dashboardStats(const Student students[], const Subject subjects[]) {
     DashboardData data;
@@ -249,7 +272,9 @@ DashboardData Report::dashboardStats(const Student students[], const Subject sub
     data.todayMarked = data.anyMarks && latest.date.equals(Date::today());
     data.todayPresent = data.todayMarked ? latest.present : 0;
     data.todayTotal = data.todayMarked ? latest.total : 0;
+    data.todayAbsent = data.todayTotal - data.todayPresent;
     data.todayPercentage = data.todayMarked ? latest.percentage : 0.0;
+    data.todayClassesMarked = dailyReport(students, subjects, Date::today()).lineCount;
     data.lastMarkedDate = data.anyMarks ? latest.date : Date();
     data.lastMarkedPercentage = data.anyMarks ? latest.percentage : 0.0;
 

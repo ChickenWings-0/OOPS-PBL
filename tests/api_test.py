@@ -194,6 +194,34 @@ def test_dashboard(admin, data_folder):
     check("percent text has two decimals", cards["lastMarkedPercentText"] == "80.00%", cards)
     check("last marked day has a short label", cards["lastMarkedLabel"] == "03 Nov", cards)
 
+    check("W81 nothing marked today counts zero classes", cards["todayClassesMarked"] == 0 and
+          cards["todayClassesTotal"] == 4 and cards["todayAbsent"] == 0, cards)
+
+    # Recent activity, worked out from the text file: newest day first, in subject file order.
+    order = [line.split("|")[0] for line in open(os.path.join(data_folder, "subjects.txt")) if line.strip()]
+    sessions = {}
+    for line in open(os.path.join(data_folder, "attendance.txt")):
+        if line.strip():
+            _, code, date, status = line.strip().split("|")
+            sessions.setdefault((date, code), [0, 0])
+            sessions[(date, code)][status != "P"] += 1
+    wanted = sorted(sessions, key=lambda key: (tuple(-int(part) for part in date_key(key[0])), order.index(key[1])))[:4]
+    recent = body["recent"]
+    check("W82 recent activity lists the latest four classes, newest first",
+          [(row["date"], row["code"]) for row in recent] == wanted, recent)
+    for row in recent:
+        present, absent = sessions[(row["date"], row["code"])]
+        check("W82 recent counts for " + row["code"] + " " + row["date"], row["present"] == present and
+              row["absent"] == absent and row["total"] == present + absent and bool(row["name"]) and bool(row["className"]), row)
+    check("W82 an older class shows its short date", recent[0]["when"] == "03 Nov", recent[0])
+
+    hour = datetime.datetime.now().hour
+    part = "Good morning" if hour < 12 else "Good afternoon" if hour < 17 else "Good evening"
+    _, me, _ = call("GET", "/api/me", token=admin)
+    check("W83 the greeting comes from the server clock", me["user"]["greeting"] == part + ", Administrator", me["user"])
+    check("W84 avatar initials come from the server", body["attention"][0]["initials"] == "".join(
+        word[0] for word in body["attention"][0]["name"].split()[:2]), body["attention"][0])
+
 
 def test_security_headers():
     _, _, headers = call("GET", "/")
@@ -262,6 +290,11 @@ def test_long_history(exe):
         check("W51 today is recognised when marked", cards["todayMarked"] is True and
               cards["todayTotal"] == 1 and cards["todayPresent"] == 0 and
               cards["todayPercentText"] == "0.00%", cards)
+        check("W81 one class marked today is counted", cards["todayClassesMarked"] == 1 and
+              cards["todayClassesTotal"] == 4 and cards["todayAbsent"] == 1, cards)
+        check("W82 a class marked today says Today", body["recent"][0]["when"] == "Today" and
+              body["recent"][0]["date"] == today.strftime("%d-%m-%Y"), body["recent"][0])
+        check("W82 the list stops at four", len(body["recent"]) == 4, body["recent"])
     finally:
         stop_server(server, folder)
 
@@ -274,6 +307,7 @@ def test_empty_data(exe):
               body["cards"]["anyMarks"] is False, (status, body))
         check("no attendance: subjects show none", all(row["status"] == "none" for row in body["subjects"]),
               body["subjects"])
+        check("W82 no attendance: recent activity is empty", body["recent"] == [], body["recent"])
     finally:
         stop_server(server, folder)
 

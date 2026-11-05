@@ -22,6 +22,8 @@ public:
     static double rounded(double percentage);          // two decimals, for charts
     static std::string initials(const std::string& name);
 
+    static std::string greeting(const std::string& name);
+
     static nlohmann::json user(const Teacher& teacher);
     static nlohmann::json studentRow(const Student& student);
     static nlohmann::json subjectRow(const Subject& subject);
@@ -38,6 +40,8 @@ public:
     static nlohmann::json monthlyReport(const Student students[], const std::string& className,
                                         int month, int year, const MonthlyReportData& data);
 
+    static nlohmann::json recentSessions(const SessionLine lines[], int count,
+                                         const Subject subjects[]);
     static nlohmann::json dashboard(const DashboardData& data, const TrendPoint trend[],
                                     int trendCount, const SubjectLine lines[], int lineCount,
                                     const Subject subjects[], int classCount);

@@ -28,12 +28,25 @@ string JsonMapper::initials(const string& name) {
     return result;
 }
 
+// The dashboard's welcome line, by the server's clock: Good morning, Neha
+string JsonMapper::greeting(const string& name) {
+    int hour = Date::currentHour();
+    string part = "Good evening";
+    if (hour < 12) {
+        part = "Good morning";
+    } else if (hour < 17) {
+        part = "Good afternoon";
+    }
+    return part + ", " + name.substr(0, name.find(' '));
+}
+
 // The logged-in user, as the frontend needs them.
 json JsonMapper::user(const Teacher& teacher) {
     json out;
     out["name"] = teacher.getName();
     out["username"] = teacher.getUsername();
     out["initials"] = initials(teacher.getName());
+    out["greeting"] = greeting(teacher.getName());
     out["isAdmin"] = teacher.isAdmin();
     return out;
 }
@@ -44,6 +57,7 @@ json JsonMapper::studentRow(const Student& student) {
     out["id"] = student.getId();
     out["rollNo"] = student.getRollNo();
     out["name"] = student.getName();
+    out["initials"] = initials(student.getName());
     out["className"] = student.getClassName();
     return out;
 }
@@ -62,6 +76,7 @@ json JsonMapper::teacherRow(const Teacher& teacher) {
     json out;
     out["id"] = teacher.getId();
     out["name"] = teacher.getName();
+    out["initials"] = initials(teacher.getName());
     out["username"] = teacher.getUsername();
     out["isAdmin"] = teacher.isAdmin();
     return out;
@@ -97,6 +112,7 @@ json JsonMapper::defaulterRow(const DefaulterEntry& entry, const Student student
     out["studentId"] = student.getId();
     out["rollNo"] = student.getRollNo();
     out["name"] = student.getName();
+    out["initials"] = initials(student.getName());
     out["className"] = student.getClassName();
     out["subject"] = subject.getCode();
     out["subjectName"] = subject.getName();
@@ -211,6 +227,21 @@ json JsonMapper::monthlyReport(const Student students[], const string& className
     return out;
 }
 
+// The latest marked classes, for Recent activity on the dashboard.
+json JsonMapper::recentSessions(const SessionLine lines[], int count, const Subject subjects[]) {
+    json rows = json::array();
+    for (int i = 0; i < count; i++) {
+        json row = subjectRow(subjects[lines[i].subjectIndex]);
+        row["date"] = lines[i].date.toString();
+        row["when"] = lines[i].date.equals(Date::today()) ? "Today" : lines[i].date.shortLabel();
+        row["present"] = lines[i].present;
+        row["absent"] = lines[i].absent;
+        row["total"] = lines[i].present + lines[i].absent;
+        rows.push_back(row);
+    }
+    return rows;
+}
+
 // Everything the dashboard page shows.
 json JsonMapper::dashboard(const DashboardData& data, const TrendPoint trend[], int trendCount,
                            const SubjectLine lines[], int lineCount, const Subject subjects[],
@@ -225,7 +256,10 @@ json JsonMapper::dashboard(const DashboardData& data, const TrendPoint trend[], 
     cards["todayMarked"] = data.todayMarked;
     cards["todayPercentText"] = Report::percentText(data.todayPercentage);
     cards["todayPresent"] = data.todayPresent;
+    cards["todayAbsent"] = data.todayAbsent;
     cards["todayTotal"] = data.todayTotal;
+    cards["todayClassesMarked"] = data.todayClassesMarked;
+    cards["todayClassesTotal"] = data.subjectCount;
     cards["anyMarks"] = data.anyMarks;
     cards["lastMarkedDate"] = data.anyMarks ? data.lastMarkedDate.toString() : "";
     cards["lastMarkedLabel"] = data.anyMarks ? data.lastMarkedDate.shortLabel() : "";

@@ -49,6 +49,10 @@ void ApiServer::handleDashboard(const Request& req, Response& res) {
     }
     out["attention"] = attention;
 
+    SessionLine recent[MAX_RECENT_SESSIONS];
+    int recentCount = Report::recentSessions(students, subjects, recent);
+    out["recent"] = JsonMapper::recentSessions(recent, recentCount, subjects);
+
     sendJson(res, 200, out);
 }
 

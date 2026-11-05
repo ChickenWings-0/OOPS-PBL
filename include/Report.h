@@ -77,14 +77,24 @@ struct TrendPoint {
     double percentage;
 };
 
+// One class that was marked: a subject on one date.
+struct SessionLine {
+    int subjectIndex;
+    Date date;
+    int present;
+    int absent;
+};
+
 // The headline numbers for the dashboard.
 struct DashboardData {
     int studentCount;
     int subjectCount;
     bool todayMarked;          // has any attendance been marked today?
     int todayPresent;
+    int todayAbsent;
     int todayTotal;
     double todayPercentage;
+    int todayClassesMarked;    // subjects with marks today
     bool anyMarks;             // false if no attendance exists at all
     int overallPresent;
     int overallTotal;
@@ -94,6 +104,8 @@ struct DashboardData {
     int defaulterStudents;     // a student counts once, however many subjects
     int defaulterEntries;      // one for each student and subject
 };
+
+const int MAX_RECENT_SESSIONS = 4;   // how many marked classes the dashboard lists
 
 class Report {
 public:
@@ -113,6 +125,8 @@ public:
     static int dailyTrend(const Student students[], TrendPoint points[], int maxPoints);
     static int subjectSummary(const Student students[], const Subject subjects[],
                               SubjectLine lines[]);
+    static int recentSessions(const Student students[], const Subject subjects[],
+                              SessionLine lines[]);
     static DashboardData dashboardStats(const Student students[], const Subject subjects[]);
 };
 

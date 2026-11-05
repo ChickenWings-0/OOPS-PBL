@@ -32,6 +32,7 @@ public:
 
     // Static functions: useful before any Date object exists.
     static Date today();
+    static int currentHour();                   // 0 to 23, from the computer's clock
     static bool isLeapYear(int y);
     static bool parse(const std::string& text, Date& result);
     static bool parseIso(const std::string& text, Date& result);
