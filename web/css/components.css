@@ -943,8 +943,7 @@ a.person-name:hover {
 
   /* Each table row becomes a small card. The lead cell is its heading, the
      corner cell sits opposite it, and other cells show their label. */
-  .table thead,
-  .table .hide-phone {
+  .table thead {
     display: none;
   }
 
@@ -999,6 +998,10 @@ a.person-name:hover {
   }
 
   .table td.corner::before {
+    display: none;
+  }
+
+  .table td.hide-phone {
     display: none;
   }
 

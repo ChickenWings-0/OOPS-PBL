@@ -18,7 +18,7 @@ function alertTile(cards, attention, limit) {
     .map((row) => UI.face(row.initials, row.studentId));
 
   const entries = cards.defaulterEntries === 1 ? "1 subject entry" : `${cards.defaulterEntries} subject entries`;
-  return h("a", { class: "tile stat span-3 is-alert", href: "#/defaulters", "data-stat": "defaulters" },
+  return h("a", { class: cards.defaulterStudents > 0 ? "tile stat span-3 is-alert" : "tile stat span-3", href: "#/defaulters", "data-stat": "defaulters" },
     h("div", { class: "stat-label" }, `Below ${limit}%`),
     UI.countUp(h("div", { class: "tile-big" }), cards.defaulterStudents),
     faces.length > 0 ? h("div", { class: "faces" }, ...faces) : h("div", { class: "tile-note" }, entries));

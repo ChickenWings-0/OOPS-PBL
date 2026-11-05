@@ -301,9 +301,9 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 - [x] `tokens.css` and the core components
 - [x] Light and dark themes with the toggle
-- [x] Sidebar, top bar, and mobile drawer
+- [x] Navigation and page head (rebuilt as a dock and phone tab bar in W14)
 - [x] Login page
-- [x] Dashboard page with the tally and both charts
+- [x] Dashboard page (rebuilt as a bento grid in W14)
 - [x] Screenshots at desktop and phone width, in both themes (in `docs/screenshots/`)
 - [x] Browser checks in `tests/browser/`
 
@@ -384,6 +384,17 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 **Test:** W70 to W80.
 
+#### Checkpoint W14: Redesign
+**Owners:** Srishti Gupta (CSS, components), Aksh Rastogi (dock, tab bar, login page), Vaibhav (Students), Akshay Kumar (Subjects, Mark attendance, keyboard shortcuts), Dhruv Kataria (`Report::recentSessions`, dashboard, reports, charts)
+
+- [x] Three design directions as mockups, in `docs/design-directions/`
+- [x] Direction A chosen, with direction B's keyboard shortcuts
+- [x] C++ fields for recent activity, classes marked today, the greeting, and avatars
+- [x] Every page rebuilt, keeping the API, `config.js`, and the cold-start message
+- [x] Browser tests updated, and new screenshots in `docs/screenshots/`
+
+**Test:** every suite again, and W81 to W86. Terminal 45 of 45, API 253 of 253, browser 144 of 144, cross-origin 23 of 23.
+
 #### Checkpoint W12: Documentation
 **Owners:** Dhruv Kataria (`README.md`), all members (review)
 
@@ -449,15 +460,24 @@ Each member keeps the same area as in section 1, now from the browser down to th
 #### Design and behaviour
 
 - [x] **W50** Dashboard shows 10 students, 4 subjects, 4 defaulter students
-- [x] **W51** The Today cell shows the last marked day when nothing is marked today
+- [x] **W51** The hero says Not marked yet and gives the last marked day when nothing is marked today
 - [x] **W52** Theme toggle changes every colour and redraws charts, and stays after reload
-- [x] **W53** Sidebar collapses below 900 px, with no sideways scrolling at 360 px
+- [x] **W53** The dock becomes a tab bar at 760 px, with no sideways scrolling at 360 px
 - [x] **W54** Every page has a loading state and an empty state
 - [x] **W55** Every save and delete shows a toast
 - [x] **W56** An expired session returns to login with a message
 - [x] **W57** Modals work with the keyboard, and focus is visible
 - [x] **W58** A subject named `<b>test</b>` shows as plain text
 - [x] **W59** With no internet, tables work and the chart areas show a message
+
+#### Redesign
+
+- [x] **W81** The hero counts today's classes from C++, and shows today's percentage once a class is marked
+- [x] **W82** Recent activity lists the latest four classes, newest first, and a class marked today says Today
+- [x] **W83** The greeting comes from the server's clock and uses the first name
+- [x] **W84** Avatar initials come from the server
+- [x] **W85** The dashboard and marking page use the real date
+- [x] **W86** Keyboard shortcuts mark, move, and save, stay out of the date box, and end with the page. Phones do not show them.
 
 #### Split hosting
 
@@ -487,9 +507,9 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 1. Start `attendance_server.exe` and show the build command.
 2. Log in, point out the error message from a wrong password, then show the dashboard.
-3. Switch the theme, and narrow the window to show the mobile layout.
+3. Switch the theme, and narrow the window to show the phone layout with its tab bar.
 4. Add a student, and show the duplicate error from C++.
-5. Mark attendance, then open `data/attendance.txt` to show the new lines.
+5. Mark attendance with `P`, `A`, and `Ctrl+S`, then open `data/attendance.txt` to show the new lines. Return to the dashboard to show today's numbers.
 6. Show a student report and the defaulter list.
 7. Open DevTools > Network and show the JSON for one request.
 8. Open the same function in `AttendanceSystem.cpp`, and show that the terminal calls it too.

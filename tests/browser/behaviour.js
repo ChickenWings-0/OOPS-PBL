@@ -522,6 +522,11 @@ async function fill(page, name, value) {
   const tile = await page.$eval(".kid", (k) => k.getBoundingClientRect().height);
   check("W53 tiles are large tap targets", tile >= 96, tile);
 
+  await go(page, "students");
+  check("W53 a phone card leaves out the ID", await page.$eval(".table td.hide-phone", (c) => getComputedStyle(c).display === "none"));
+  const card = await page.$eval(".table tbody tr", (r) => r.getBoundingClientRect().height);
+  check("W53 a phone card is compact", card < 110, card);
+
   await page.setViewport({ width: 760, height: 800 });
   await wait(100);
   check("tab bar at 760 px", await page.$eval(".tabbar", (s) => getComputedStyle(s).display === "grid"));

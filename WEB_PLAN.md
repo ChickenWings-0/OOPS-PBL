@@ -312,9 +312,9 @@ Everything except `/api/login` and `/api/health` needs a token. Dates come back 
 | GET | `/api/health` | none | none (Render health check) |
 | POST | `/api/login` | none | `checkLogin` |
 | POST | `/api/logout` | login | `SessionManager::remove` |
-| GET | `/api/me` | login | current user and today's date |
+| GET | `/api/me` | login | current user, greeting, and today's date |
 | POST | `/api/account/password` | login | `changePassword` |
-| GET | `/api/dashboard` | login | `Report::dashboardStats`, `dailyTrend`, `subjectSummary` |
+| GET | `/api/dashboard` | login | `Report::dashboardStats`, `dailyTrend`, `subjectSummary`, `recentSessions` |
 | GET | `/api/students?q=&sort=&order=` | login | `listStudents` (search and sort) |
 | GET | `/api/students/{id}` | login | `findStudent(int)` |
 | POST | `/api/students` | login | `addStudent` |
@@ -527,17 +527,34 @@ GET /api/teachers   (logged in as teacher1)
 
 ---
 
+### 6.3 Added for the redesign
+
+These fields were added to existing replies. Nothing was removed or renamed, so older tests still hold.
+
+| Reply | New field | Meaning |
+|-------|-----------|---------|
+| `/api/dashboard` `cards` | `todayClassesMarked`, `todayClassesTotal` | Subjects with marks today, out of all subjects |
+| `/api/dashboard` `cards` | `todayAbsent` | Absent marks today |
+| `/api/dashboard` | `recent` | The latest four marked classes, newest first, each with `code`, `name`, `className`, `date`, `when`, `present`, `absent`, and `total`. `when` is "Today" or a short date. |
+| `user`, in `/api/me` and `/api/login` | `greeting` | "Good morning, Neha", by the server's clock |
+| Student, teacher, and defaulter rows | `initials` | The letters for the avatar |
+
+---
+
 ## 7. What JavaScript may do
 
 | Allowed | Not allowed |
 |---------|-------------|
 | Send requests and show replies | Any arithmetic on data, including percentages and report totals |
-| Open modals, toggle the sidebar and theme | Comparing a value to 75. C++ sends `status`. |
+| Open modals, and switch the theme | Comparing a value to 75. C++ sends `status`. |
 | Hold unsaved Present/Absent toggles on the page | Filtering or sorting rows. Search goes to the server. |
 | Hold the token in `sessionStorage` | Validation, including HTML `required` or `pattern` (forms use `novalidate`) |
 | Store the theme choice (D4) | Reformatting dates |
 | Pass server numbers to Chart.js | Storing any project data |
 | Count ticked checkboxes for the live counter (D1, UI-only exception) | Sending that count to the server, or using it for anything else |
+| Animate a number up to the value C++ sent, and sweep a ring to it | Showing any value that did not come from the server |
+| Show the decimals of a C++ percentage smaller, as in 83.33% | Rounding a percentage |
+| Keyboard shortcuts that press the same tiles and Save button | Marking or saving by any other route |
 
 Because forms have no browser validation, every message a user sees comes from C++.
 
@@ -550,58 +567,70 @@ The app is one `index.html`. Hash routes such as `#/students` swap the content a
 **Shell (every page after login)**
 
 ```
-+-----------+-----------------------------------------------------+
-| LOGO      |  [=] Page title              [sun/moon]  (AR) Admin v|
-|           +-----------------------------------------------------+
-| Dashboard |                                                     |
-| Students  |   Content area: ruled sheets on the page background |
-| Subjects  |                                                     |
-| Mark      |                                                     |
-| Report    |                                                     |
-| Defaulters|                                                     |
-| Daily     |                                                     |
-| Monthly   |                                                     |
-| Teachers* |                                * admin only         |
-+-----------+-----------------------------------------------------+
+ Laptop                                     Phone
++---+---------------------------------+    +----------------------+
+| O |  Thu, 5 November 2026            |    | Thu, 5 November      |
+| # |  Good morning, Neha    (Neha  NK)|    | Good morning    (NK) |
+| # |  +---------+ +-----+ +-----+     |    |                      |
+| # |  |         | |     | |     |     |    |  Page content        |
+| # |  | Bento   | +-----+ +-----+     |    |  in one column       |
+| # |  | tiles   | +-----------+       |    |                      |
+| # |  +---------+ +-----------+       |    | +------------------+ |
+| * |                                  |    | | Home Mark  More  | |
++---+---------------------------------+    +----------------------+
+ Floating dock                              Floating tab bar
 ```
 
-Sidebar: 240 px with inline SVG icons, and the active item is tinted with the accent. Below 900 px it becomes a slide-in drawer opened by the menu button, over a dimmed backdrop. The user menu holds Change password and Log out.
+**Dock:** a floating pill with one icon for each page, the page name on hover or keyboard focus, and the theme button at the bottom. At 760 px and below it becomes a tab bar with Home, Students, Mark, Reports, and More. Mark sits in the middle as a large gradient button, because it is the main job on a phone. More opens a sheet with the other pages and the theme. The avatar at the top right holds Change password and Log out. Teachers appears only for the admin.
 
 | Page | Layout | Details |
 |------|--------|---------|
-| **Login** | Centered card on ruled register paper with a red margin line | Logo, two fields, button with spinner. Errors appear inside the card. Lockout shows the C++ message. |
-| **Dashboard** | A tally of 4 numbers, 2 charts side by side (stacked on mobile), then a Needs attention table | Details below |
-| **Students** | Search box, Add button, register table | Search as you type, with a short pause, through the server. Clickable column headers sort through the server. Add and edit in a modal, delete through a confirm dialog. Empty state: "No students yet". |
-| **Subjects** | Table and Add button | Same pattern. Shown because of D3. |
-| **Mark attendance** | Filter bar (date, subject), then student list | Each row has a Present/Absent toggle (a checkbox styled as a switch). Sticky footer: live counter (JS, display only), "Mark all present", Save. After Save, the toast shows the totals from C++. If already marked, a banner says so and each change saves as a correction. |
-| **Student report** | Student search, then a report sheet and a Recent marks table | Name, roll number, class, large overall %. One meter per subject, with a notch at 75%, `5 of 6 classes`, and the %. Green at 75% or above, red below, always with the words "OK" or "Below 75%". "No classes yet" for `none`. |
-| **Defaulters** | Summary line and table | Red badge with the % in each row. Empty state: "No defaulters". |
-| **Daily report** | Date picker, stacked bar chart, then a table per subject | Chart shows present and absent per subject |
-| **Monthly report** | Class and month pickers, bar chart, then table | Chart shows each student's %, with the 75% line |
-| **Teachers** | Table and Add button | Admin only. A teacher who opens this URL sees "Only the admin can view teachers." from the server. |
+| **Login** | Split screen: the form on one side, gradient art on the other | The art shows a register, a ring, and a saved message. It is decoration, hidden from screen readers, and not real data. On a phone the art becomes a band above the form. Errors appear inside the form. Lockout shows the C++ message. |
+| **Dashboard** | Bento grid | Details below |
+| **Students** | Search pill, Add button, a tile with a table | Search as you type, with a short pause, through the server. Sort buttons sort through the server. Avatars from C++ initials. Add and edit in a dialog, delete through a confirm dialog. On a phone each row is a compact card. |
+| **Subjects** | Note, Add button, a grid of cards | Each card has a ring of that subject's attendance, from the dashboard reply, and a link that opens marking for that subject (`#/mark/CS201A`). Shown because of D3. |
+| **Mark attendance** | Subject pills, date pill, then a wall of student tiles | Details below |
+| **Student report** | Wall of students to choose from, then the report | The report has a gradient tile with the name and the overall %, one ring per subject with `5 of 6 classes` and the words "OK", "Below 75%", or "No classes yet", and a tile of recent marks. |
+| **Defaulters** | Red summary tile, then a table | The summary gives the count and the lowest entry. Each row has an avatar, recent marks, and a red badge with the %. Empty state: "No defaulters". |
+| **Daily report** | Date pill, stacked bar chart, then a tile per subject | Opens on the latest marked day. Each tile lists students with Present or Absent badges. |
+| **Monthly report** | Class pills, month pill, bar chart, then a table | Chart shows each student's %, with the 75% line |
+| **Teachers** | Add button and a grid of person cards | Admin only. A teacher who opens this URL sees "Only the admin can view teachers." from the server. |
 
 **Dashboard detail**
 
 ```
-+----------------------------------------------------------------+
-| STUDENTS     | SUBJECTS      | TODAY          | DEFAULTERS       |
-| 10           | 4             | Not marked     | 4                |
-| 2 classes    | 82.00% overall| Last 80.00%    | 5 below 75%      |
-+----------------------------------------------------------------+
-+---------------------------------+ +----------------------------+
-| Attendance by day               | | Attendance by subject      |
-| Line, % per marked day          | | Horizontal bars, by code   |
-| 0 to 100, red 75% minimum       | | Red 75% minimum            |
-+---------------------------------+ +----------------------------+
-+----------------------------------------------------------------+
-| Needs attention: lowest attendance first                       |
-| Student | Class | Subject | Recent marks P A P | Attended | %  |
-+----------------------------------------------------------------+
++------------------+ +--------+ +--------+ +----------+
+| Today at a glance| |Students| |Subjects| |Below 75% |
+| 3 of 4 classes   | |  10    | |  4     | |  4       |
+|                  | +--------+ +--------+ +----------+
+| 75%              | +--------------------------------+
+| 12 present,      | | Attendance by day (area chart) |
+| 4 absent today   | | 0 to 100, dashed 75% minimum   |
++------------------+ +--------------------------------+
++------------------+ +---------------+ +---------------+
+| By subject       | | Recent        | | Needs         |
+| one ring each    | | activity      | | attention     |
++------------------+ +---------------+ +---------------+
 ```
 
-Each chart sheet has a Chart/Table switch. The table shows the same server numbers, for colour-blind readers and for use without internet.
+The hero uses the real date from the server. When nothing is marked today it says "Not marked yet", gives the last marked day, and links to marking. When some classes are marked it shows today's percentage, with one bar segment for each subject. A chart tile has a Chart/Table switch. The table shows the same server numbers, for colour-blind readers and for use without internet.
 
-**Polish on every page:** hover and focus states, 150 ms transitions, toasts for success and error, skeleton or spinner while loading, empty states, confirm dialogs before delete, field errors under the right input using `field` from the server, and a "Session expired" return to login on a 401.
+**Mark attendance detail**
+
+Each student is a large tile with an avatar. A real checkbox covers the whole tile, so tapping anywhere works, and screen readers and the keyboard get a normal control. Absent tiles turn red with a cross, so nobody relies on colour alone. A floating bar shows the live counter (JS, display only, decision D1) and Save. After Save, the toast shows the totals from C++. If the class is already marked, a notice says so and each change saves as a correction.
+
+On a laptop there are keyboard shortcuts, and the bar shows them:
+
+| Key | Action |
+|-----|--------|
+| `P` / `A` | Mark present or absent, and move to the next student |
+| Arrow keys, `J` / `K` | Move between tiles |
+| `Space` | Flip the current tile |
+| `Ctrl+S` | Save |
+
+The shortcuts only press the same tiles and the same Save button, so they add no logic. They stop while the date box or a dialog has focus, and end when the page changes. Phones do not show them.
+
+**Polish on every page:** content rises in as a page opens, tiles follow one by one, numbers count up to the server's value, rings sweep round, cards lift on hover, tiles pop when tapped, and skeleton tiles in the shape of the page show while loading. There are also toasts, empty states, confirm dialogs before delete, field errors under the right input using `field` from the server, and a "Session expired" return to login on a 401.
 
 ---
 
@@ -609,64 +638,53 @@ Each chart sheet has a Chart/Table switch. The table shows the same server numbe
 
 All values are CSS variables in `web/css/tokens.css`.
 
-**Change from the original plan:** the first design used indigo, the Inter font, and rounded floating cards. It was rejected in review because it looked like a generic template. The design below replaces it, so Inter is no longer used.
+**Change from the original plan:** two earlier designs were rejected in review. The first used indigo and Inter and looked like a generic template. The second was modelled on a paper register, but kept the same layout, so it looked like the old site with new colours. Three different directions were then built as mockups, kept in `docs/design-directions/`, and direction A was chosen, with direction B's keyboard shortcuts on the marking page.
 
 ### 9.1 The idea
 
-The site is modelled on the thing it replaces: a paper attendance register.
-
-| Register detail | On the site |
-|-----------------|-------------|
-| Ruled ledger paper with a red margin line | Login background, and the double red line beside the sidebar |
-| The register's cloth cover | The dark green sidebar |
-| P and A cells | The logo, the Recent marks strips, and the marking toggles |
-| Blue ballpoint | Chart data |
-| Red pen | Absences, the 75% minimum, and defaulters |
-| Yellow highlighter | The single accent: the active page, primary buttons, and row hover |
-
-Light mode is the paper register. Dark mode is a classroom blackboard, with chalk colours.
+A bento layout: rounded tiles of different sizes, where the size of a tile shows how much it matters. Today's attendance is the largest thing on the dashboard, so a teacher sees it first. One warm gradient, from orange through pink to violet, is kept for what matters most: the hero, rings, charts, and the main button. Everything else stays quiet.
 
 ### 9.2 Colours
 
 | Token | Light | Dark |
 |-------|-------|------|
-| `--paper` (page) | `#eef1ea` | `#0f1916` |
-| `--sheet` (panels) | `#fdfdfa` | `#16231f` |
-| `--rule` | `#d5dcd3` | `#2b3b35` |
-| `--ink` | `#14241e` | `#eef3ee` |
-| `--ink-2` | `#3d4f47` | `#c4d1c9` |
-| `--ink-3` | `#5a6b63` | `#93a69c` |
-| `--marker` (accent) | `#ffd83d` | `#f4d94e` |
-| `--marker-soft` (hover) | `#fff3b0` | `#3a3a1c` |
-| `--binding` (sidebar) | `#16302a` | `#0b1310` |
-| `--good-text` / `--good-bg` / `--good-bar` | `#14613c` / `#dcefe2` / `#1a7f4e` | `#8fe0ae` / `#16382a` / `#3ecb82` |
-| `--bad-text` / `--bad-bg` / `--bad-bar` | `#b3261e` / `#fbe4e1` / `#c9302c` | `#ffaaa3` / `#46201f` / `#ff7b72` |
-| `--chart-1` / `--chart-2` | `#2458c9` / `#d9622b` | `#5b8def` / `#d9622b` |
+| `--bg` (page) | `#f3f1f8` | `#0e0c14` |
+| `--tile` | `#ffffff` | `#191622` |
+| `--tile-2` / `--tile-3` | `#f6f4fb` / `#ece9f4` | `#221e2e` / `#2d2839` |
+| `--ink` | `#17132a` | `#f6f3ff` |
+| `--ink-2` | `#514c66` | `#bdb7d0` |
+| `--ink-3` | `#6a657e` | `#9a94ae` |
+| `--glow-a` / `-b` / `-c` (rings, charts) | `#ff9a5a` / `#ff4f8b` / `#7b5cff` | same |
+| `--hero-a` / `-b` / `-c` (behind white text) | `#ee6a22` / `#ea2f78` / `#6a45f0` | same |
+| `--button-a` / `-b` / `-c` (main button) | `#cf4a0c` / `#d61f67` / `#6a45f0` | same |
+| `--good-text` / `--good-soft` | `#087443` / `#e0f6ea` | `#5be3a4` / `#10321f` |
+| `--bad-text` / `--bad-soft` | `#be1c47` / `#ffe9ee` | `#ff8fa8` / `#3a1524` |
+| `--chart` / `--bad` (daily chart) | `#7b5cff` / `#f0446a` | `#9478ff` / `#f24d76` |
 
-**Measured:** all 29 text and bar colour pairs were checked. Text is at least 4.9:1 (the target is 4.5:1), and bars are at least 4.0:1 on their track (the target is 3:1).
+**Measured:** 38 token pairs across both themes were checked. Text is at least 4.97:1 (the target is 4.5:1). White text on the gradients was measured on the real pixels, with the text hidden: at least 4.68:1 on buttons, 5.94:1 on small labels, and 4.33:1 on the 19 px bold lines (the target for large text is 3:1).
 
-**Chart colours:** the blue and orange pair passes every check in both themes, including colour-blind separation (worst pair 27.5 light, 27.4 dark, where the target is at least 8).
+**Chart colours:** the violet and pink pair passes every check in both themes, including colour-blind separation (worst pair 23.1 light, 20.5 dark, where the target is at least 8).
 
-Green and red are reserved for attendance status and always come with words or a number, so colour-blind users are not relying on red versus green.
+Green and red are reserved for attendance status and always come with words, a number, or a tick or cross, so colour-blind users are not relying on red versus green.
 
 ### 9.3 Type, spacing, shape
 
 | Group | Values |
 |-------|--------|
-| Interface font | Archivo (Google Fonts). Headings and big numbers use its condensed width. |
-| Data font | IBM Plex Mono, for roll numbers, dates, percentages, and chart labels |
-| Sizes | 11.5, 13, 15 (body), 17, 22, 28, 52 px |
-| Spacing | 4, 8, 12, 16, 24, 32, 48 px |
-| Corners | 2 px or square. A register has square pages. |
-| Shadow | Only on things that float: dialogs, menus, toasts |
-| Separation | Ruled lines, not floating cards |
-| Motion | 120 ms ease-out, turned off under `prefers-reduced-motion` |
+| Display font | Bricolage Grotesque (Google Fonts), for headings and big numbers |
+| Body font | DM Sans (Google Fonts), for text, tables, and chart labels |
+| Sizes | 13, 15 (body), 19, 25, up to 46 px for page titles and 172 px for the hero number |
+| Corners | 28 px tiles, 16 px inputs, full pills for buttons |
+| Shadow | Soft on tiles in light mode. Dark mode uses a thin top highlight. |
+| Icons | Lucide, inline SVG |
+| Breakpoints | 760 px (phone), 1180 px (tablet) |
+| Motion | 150 to 450 ms, turned off under `prefers-reduced-motion` |
 
 ### 9.4 Components
 
-Button (primary, secondary, danger, link), input, select, sheet (a ruled section), tally (the dashboard's four numbers), register table, marks strip, stamp (status label), attendance meter, P/A toggle, Chart/Table switch, modal, confirm dialog, toast, spinner, skeleton, empty state, sidebar item, user menu.
+Tile, stat tile, hero, button (primary, secondary, danger, gradient), icon button, pills, mini pills, input, search pill, date pill, avatar, badge, marks strip, ring, table (which becomes cards on a phone), student tile, save bar, modal, bottom sheet, toast, spinner, skeleton, empty state, dock, tab bar, user menu.
 
-Keyboard: visible focus ring, Esc closes modals, Tab stays inside an open modal.
+Keyboard: visible focus ring, Esc closes modals, Tab stays inside an open modal, and the shortcuts on the marking page.
 
 ### 9.5 Charts
 
@@ -680,13 +698,13 @@ Chart.js **4.6.1** from jsDelivr, pinned, with an integrity hash:
 
 | Rule | Value |
 |------|-------|
-| Line | 2 px in ballpoint blue, 8 px markers with a surface-coloured ring, no area fill |
-| Bars | At most 20 px thick and square-ended, like a ruled mark, with 2 px gaps in stacks |
+| Line | 3.5 px with the brand gradient, a soft wash down to the axis, and a marker on the latest day |
+| Bars | At most 18 px thick with rounded ends, and 2 px gaps in stacks |
 | Grid | 1 px solid, recessive |
-| 75% minimum | A red pen line with a label, and a faint tint below it |
-| Y axis | Fixed 0 to 100 for percentages, always one axis |
+| 75% minimum | A dashed line with a label |
+| Y axis | Fixed 0 to 100 for percentages, always one axis, so a chart can never exaggerate a change |
 | Legend | Only with two or more series (daily report). Single-series charts rely on the title. |
-| Tooltips | On every chart |
+| Tooltips | On every chart, with rounded corners |
 | Labels | Text uses text tokens, never the series colour |
 | Theme | Colours are read from CSS variables and charts redraw on toggle |
 | Without internet | Tables still work, and the chart area says "Charts need an internet connection" |
@@ -749,12 +767,13 @@ OOPS-PBL/
 |-- third_party/            httplib.h, json.hpp, and their licences
 |-- web/                    Everything the browser downloads
 |   |-- index.html
-|   |-- css/  tokens.css  base.css  layout.css  components.css
+|   |-- css/  tokens.css  base.css  layout.css  components.css  pages.css
 |   `-- js/   theme.js  config.js  api.js  ui.js  icons.js  charts.js  app.js
 |       `-- pages/  login.js  dashboard.js  students.js  subjects.js  mark.js
 |                   report.js  defaulters.js  daily.js  monthly.js  teachers.js
 |-- data/                   The same four text files
 |-- docs/screenshots/       Screenshots for review and the README
+|-- docs/design-directions/ The three mockups the final design was chosen from
 |-- tests/                  Golden terminal output, API tests, and browser tests
 |-- Dockerfile
 |-- render.yaml

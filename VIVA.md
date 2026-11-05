@@ -412,8 +412,8 @@ Both get the same entries from `defaulterList()`. The web calls `sortByPercentag
 **Q107. How do you know the terminal still works after such a big change?**
 Before moving any code, we recorded 45 scripted terminal sessions from the original program, with everything printed and the data files left behind. After the split, `tests/run_golden.py` runs the same sessions and compares them byte for byte, on both compilers. This is called regression testing.
 
-**Q108. Why does the site look like a paper register?**
-A design should come from its subject. Ruled paper, a red margin line, P and A cells, and a highlighter are what an attendance register really looks like. All colours and sizes are CSS variables in `tokens.css`, so light mode (paper) and dark mode (blackboard) share the same components.
+**Q108. Why does the site use a bento layout?**
+Two earlier designs were rejected because they looked generic, so we built three different mockups and chose one, which are all in `docs/design-directions/`. In a bento layout the size of a tile shows how much it matters, so today's attendance is the biggest thing on the dashboard. All colours and sizes are CSS variables in `tokens.css`, so light and dark mode are one set of names with two sets of values. We measured the contrast of every text colour, including white text on the gradient.
 
 ### Hosting
 
@@ -438,6 +438,23 @@ A container's disk is temporary. On each restart, redeploy, or sleep, Render sta
 **Q115. What happens when the free server is asleep?**
 Requests hang or fail with a 503 while it wakes, which takes about a minute. `api.js` shows a "Waking up the server" message and asks `/api/health` every few seconds. Reads and logins then retry by themselves. A save does not, because the first try may have reached the server, so the user is asked to save again.
 
+### The redesign
+
+**Q116. Where do Recent activity and "3 of 4 classes marked" come from?**
+From C++. `Report::recentSessions()` takes the latest days from `dailyTrend()`, calls `dailyReport()` for each day, and returns the latest four classes, newest first. It reuses both functions, so nothing is counted twice. `dashboardStats()` sets `todayClassesMarked` from `dailyReport()` for today. JavaScript only draws what arrives. There is no timetable, so "of 4" means all subjects, not the classes scheduled today.
+
+**Q117. How do the keyboard shortcuts work? Do they break your rule about logic in JavaScript?**
+No. `wallKeys()` in `mark.js` only moves focus, ticks the same checkbox a tap would tick, or calls the same save function. `P` and `A` mark and move to the next tile, the arrows and `J` and `K` move, `Space` flips, and `Ctrl+S` saves. C++ still validates, counts, and saves. The shortcuts stop while typing in the date box or inside a dialog, and `showPage()` clears them when the page changes.
+
+**Q118. The numbers count up on the dashboard. Is JavaScript calculating them?**
+No. `UI.countUp()` is only an animation. It is given the final value from C++, shows steps on the way for 0.7 seconds, and always ends on that exact value. With reduced motion turned on it shows the value straight away. The same goes for rings: C++ sends the percentage, and JavaScript only turns it into the length of an arc. Percentages are never rounded in JavaScript, because 74.60% must not appear as 75%. `UI.percent()` only shows the decimals in smaller type.
+
+**Q119. Why does the dashboard say "Not marked yet"?**
+Because it uses the real date from the server's clock, and nothing has been marked today. The sample data ends on 03-11-2026. Once a class is saved, the hero shows today's percentage. We chose this over faking a date, because a dashboard that shows the wrong day cannot be trusted.
+
+**Q120. Why does the greeting come from the server?**
+"Good morning" depends on the time, and deciding it is logic, so `JsonMapper::greeting()` does it with `Date::currentHour()`. The Dockerfile sets `TZ=Asia/Kolkata`, so it is correct on Render too.
+
 ---
 
 ## 11. Module guide for each member
@@ -456,28 +473,28 @@ Each member should know these well and be able to open the code and walk through
 - **Module:** `Person`, `Student`, student functions in `AttendanceSystem`
 - **Be ready to walk through:** adding a student from input to file, the delete shift, and both search overloads
 - **Revise:** Q11, Q19, Q25 to Q33, Q58 to Q63, Q69 to Q72
-- **Web:** the student routes, search and sorting on the server, and the Add Student click. Revise Q77 to Q80, Q84, Q85, Q88, Q105
+- **Web:** the student routes, search and sorting on the server, and the Add Student click. Revise Q77 to Q80, Q84, Q85, Q88, Q105, Q118
 
 ### Akshay Kumar: Subjects and attendance marking
 
 - **Module:** `Date`, `AttendanceRecord`, `Subject`, marking functions in `AttendanceSystem`
 - **Be ready to walk through:** the full marking flow, duplicate checking, correcting a mark, and date validation
 - **Revise:** Q8, Q14, Q17, Q52, Q53, Q56, Q57
-- **Web:** the attendance routes, the live count, and two teachers marking together. Revise Q78, Q84, Q88, Q89, Q97
+- **Web:** the attendance routes, the live count, and two teachers marking together. Revise Q78, Q84, Q88, Q89, Q97, Q117
 
 ### Srishti Gupta: File handling and validation
 
 - **Module:** `FileManager`, `Utils`, `ConsoleInput`, sample data
 - **Be ready to walk through:** loading one file line by line, append versus rewrite, handling a missing file, and `readInt`
 - **Revise:** Q35 to Q47, Q67
-- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103, Q108, Q113 to Q115
+- **Web:** `JsonMapper`, why the files stay the same, the design system, and the Dockerfile. Revise Q81 to Q83, Q92, Q93, Q101 to Q103, Q108, Q113 to Q115, Q118, Q120
 
 ### Dhruv Kataria: Reports and testing
 
 - **Module:** `Report`, `ReportPrinter`, `README.md`, testing
 - **Be ready to walk through:** percentage calculation, the defaulter loop, daily and monthly reports, and a few test cases from TASKS.md
 - **Revise:** Q34, Q48 to Q51, Q54, Q55
-- **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104 to Q107
+- **Web:** how `Report` fills a struct for both `ReportPrinter` and the API, the dashboard numbers, and the test approach. Revise Q79, Q85 to Q88, Q104 to Q107, Q116, Q119
 
 ---
 

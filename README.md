@@ -52,10 +52,11 @@ The frontend is a static site. The C++ server holds all the logic and data, and 
 
 The web version adds:
 
-- A dashboard with charts and a list of the students who need attention
+- A dashboard with today at a glance, gradient rings and charts, recent activity, and the students who need attention
+- Fast marking: tap a student tile on a phone, or use keyboard shortcuts on a laptop
 - Search and sort, done by the C++ server
 - A REST API with JSON, and login sessions with tokens
-- Light mode (ruled register paper) and dark mode (blackboard), on phones and laptops
+- Light and dark themes, with layouts designed for phones and laptops
 
 ## How to compile and run
 
@@ -152,8 +153,9 @@ Total entries: 5
 
 | Light | Dark |
 |-------|------|
-| ![Students](docs/screenshots/students-light-desktop.png) | ![Monthly report](docs/screenshots/monthly-dark-desktop.png) |
 | ![Mark attendance](docs/screenshots/mark-light-desktop.png) | ![Dashboard](docs/screenshots/dashboard-dark-desktop.png) |
+| ![Student report](docs/screenshots/report-3-light-desktop.png) | ![Monthly report](docs/screenshots/monthly-dark-desktop.png) |
+| ![Login](docs/screenshots/login-light-desktop.png) | ![Defaulters](docs/screenshots/defaulters-dark-desktop.png) |
 
 ## Concepts used
 

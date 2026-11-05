@@ -21,7 +21,6 @@
   --line-strong: rgba(23, 19, 42, 0.18);
 
   /* Status colours. A status is always shown with a word too. */
-  --good: #12b76a;
   --good-text: #087443;
   --good-soft: #e0f6ea;
   --bad: #f0446a;
@@ -92,7 +91,6 @@
   --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.2);
 
-  --good: #2fd68a;
   --good-text: #5be3a4;
   --good-soft: #10321f;
   --bad: #f24d76;

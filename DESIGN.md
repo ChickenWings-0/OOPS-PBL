@@ -39,6 +39,7 @@ Stores and checks a calendar date.
 | + | `bool isAfter(const Date&) const` | Later than the other date? |
 | + | `bool isInMonth(int m, int y) const` | In this month and year? |
 | + static | `Date today()` | Today's date, using `<ctime>` |
+| + static | `int currentHour()` | The hour from 0 to 23, for the web greeting |
 | + static | `bool isLeapYear(int y)` | Leap year check |
 | + static | `bool parse(const string&, Date&)` | Converts `DD-MM-YYYY` text to a `Date`. Returns false if invalid. |
 | + static | `bool parseIso(const string&, Date&)` | Converts `YYYY-MM-DD` text, as sent by a browser date input |
@@ -164,6 +165,7 @@ Calculates reports and returns them as plain structs. It never prints and never 
 | + static | `DashboardData dashboardStats(const Student[], const Subject[])` | Numbers for the dashboard cards |
 | + static | `int dailyTrend(const Student[], TrendPoint[], int maxPoints)` | Latest days that have marks, oldest first |
 | + static | `int subjectSummary(const Student[], const Subject[], SubjectLine[])` | Attendance for each subject, across its class |
+| + static | `int recentSessions(const Student[], const Subject[], SessionLine[])` | The latest marked classes, newest first |
 | + static | `void sortByPercentage(DefaulterEntry[], int count)` | Selection sort, lowest attendance first. Only the web pages use this order. |
 | + static | `bool isBelowLimit(double)`, `string percentText(double)` | The 75% rule, and text like `83.33%` |
 
