@@ -1,0 +1,832 @@
+/* pages.css
+   Styles that belong to one page each. */
+
+/* ---------- The gradient hero, on the dashboard and student report ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  min-height: 340px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    linear-gradient(var(--hero-shade), var(--hero-shade)),
+    radial-gradient(90% 90% at 12% 8%, var(--hero-a) 0, transparent 60%),
+    radial-gradient(80% 90% at 92% 18%, var(--hero-b) 0, transparent 62%),
+    radial-gradient(110% 100% at 62% 112%, var(--hero-c) 0, transparent 66%),
+    var(--hero-base);
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.hero-pill {
+  padding: 6px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(30, 8, 60, 0.3);
+  border-radius: var(--radius-pill);
+}
+
+.hero-number {
+  font-family: var(--font-display);
+  font-size: clamp(112px, 12vw, 172px);
+  font-weight: 800;
+  line-height: 0.84;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-number .percent-rest {
+  margin-left: 0.04em;
+  font-size: 0.38em;
+  letter-spacing: -0.02em;
+  vertical-align: 0.92em;
+}
+
+.hero-words {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 5vw, 64px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.hero-sub {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.hero-segments {
+  display: flex;
+  gap: 5px;
+  margin-top: 16px;
+}
+
+.hero-segments i {
+  flex: 1;
+  height: 10px;
+  background: #fff;
+  border-radius: 5px;
+}
+
+.hero-segments i.is-off {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 12px 20px;
+  color: #17132a;
+  font-weight: 700;
+  background: #fff;
+  border-radius: var(--radius-pill);
+  transition: transform 0.18s var(--ease);
+}
+
+.hero-action:hover {
+  transform: translateX(3px);
+}
+
+/* ---------- Dashboard ---------- */
+
+.stat-label {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.stat.is-alert {
+  background: var(--bad-soft);
+}
+
+.stat.is-alert .stat-label {
+  color: var(--bad-text);
+}
+
+.stat.is-alert .tile-big {
+  color: var(--bad-text);
+}
+
+.stat.is-alert .tile-note {
+  color: var(--bad-text);
+}
+
+.faces {
+  display: flex;
+  margin-top: 12px;
+}
+
+.faces .face {
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+  font-size: 12px;
+  border: 3px solid var(--bad-soft);
+}
+
+.tile-fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.ring-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  align-content: center;
+  gap: 16px 12px;
+  text-align: center;
+}
+
+.ring-code {
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.ring-class {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+/* ---------- Mark attendance ---------- */
+
+.mark-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mark-controls .pills {
+  flex: 1;
+}
+
+.wall-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wall-title {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.wall-note {
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+  padding-bottom: 104px;
+}
+
+/* A student tile. The real checkbox covers the whole tile, so a tap anywhere
+   works, and the keyboard and screen readers get a normal control. */
+.kid {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 20px 56px 20px 20px;
+  background: var(--tile);
+  border: 2px solid transparent;
+  border-radius: var(--radius-tile);
+  box-shadow: var(--shadow);
+  transition: background 0.2s, border-color 0.2s, transform 0.18s var(--ease), box-shadow 0.2s;
+}
+
+.kid:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+.kid:active {
+  transform: scale(0.98);
+}
+
+.kid-box {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  background: none;
+  border-radius: var(--radius-tile);
+  appearance: none;
+  scroll-margin: 110px 0 130px;
+}
+
+.kid .face {
+  width: 66px;
+  height: 66px;
+  font-family: var(--font-display);
+  font-size: 23px;
+  transition: filter 0.2s;
+}
+
+.kid-text {
+  min-width: 0;
+}
+
+.kid-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.kid-roll {
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kid-mark {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  background: #0b8f55;
+  border-radius: 50%;
+  transition: background 0.2s, transform 0.26s var(--spring);
+}
+
+.kid-mark svg {
+  position: absolute;
+  inset: 7px;
+  transition: opacity 0.14s, transform 0.26s var(--spring);
+}
+
+.kid-mark .is-no {
+  opacity: 0;
+  transform: scale(0.3) rotate(-60deg);
+}
+
+.kid.is-away {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+
+.kid.is-away .kid-roll {
+  color: var(--bad-text);
+}
+
+.kid.is-away .face {
+  filter: saturate(0.45);
+}
+
+.kid.is-away .kid-mark {
+  background: #c81e4a;
+  transform: rotate(90deg);
+}
+
+.kid.is-away .kid-mark .is-yes {
+  opacity: 0;
+  transform: scale(0.3);
+}
+
+.kid.is-away .kid-mark .is-no {
+  opacity: 1;
+  transform: rotate(-90deg);
+}
+
+.kid.is-locked {
+  opacity: 0.6;
+}
+
+.kid.is-locked:hover {
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.kid.is-locked .kid-box {
+  cursor: default;
+}
+
+.kid.is-locked .kid-mark {
+  display: none;
+}
+
+/* The floating bar with the live count and the save button */
+.savebar {
+  position: fixed;
+  left: calc(50% + 50px);
+  bottom: 24px;
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: calc(100vw - 150px);
+  padding: 9px 9px 9px 26px;
+  color: var(--float-ink);
+  white-space: nowrap;
+  background: var(--float-bg);
+  border-radius: 40px;
+  box-shadow: var(--shadow-float);
+  animation: rise-centred 0.4s var(--spring) both;
+}
+
+.savebar-count {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 14px;
+  color: var(--float-ink-2);
+}
+
+.savebar-count b {
+  display: inline-block;
+  min-width: 1.1em;
+  color: var(--float-ink);
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.savebar-count b.bump {
+  animation: pop 0.3s var(--ease);
+}
+
+.savebar .btn-glow {
+  min-height: 50px;
+}
+
+.savebar-done {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 18px 0 4px;
+  min-height: 50px;
+  color: var(--float-ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Keyboard shortcuts are only shown to people with a keyboard and a mouse. */
+.key-hints {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding-left: 20px;
+  color: var(--float-ink-2);
+  font-size: 13px;
+  border-left: 1px solid var(--float-line);
+}
+
+.key-hints span {
+  margin-right: 8px;
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  color: var(--float-ink);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.13);
+  border-radius: 7px;
+}
+
+.btn kbd {
+  margin-left: 2px;
+  color: #fff;
+  background: rgba(30, 8, 60, 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) {
+  .key-hints {
+    display: flex;
+  }
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .btn kbd {
+    display: none;
+  }
+}
+
+/* ---------- Students, subjects, teachers ---------- */
+
+.sort-label {
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.sort-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+  gap: 16px;
+}
+
+.subject-card {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 26px 28px;
+}
+
+.subject-code {
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.subject-name {
+  margin-top: 3px;
+  font-size: 21px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.subject-meta {
+  margin-top: 5px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.subject-card .link-btn {
+  margin-top: 8px;
+}
+
+.person-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.person-card .face {
+  width: 58px;
+  height: 58px;
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.person-card .person-text {
+  flex: 1;
+}
+
+/* ---------- Student report ---------- */
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.pick .face {
+  width: 52px;
+  height: 52px;
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+.pick .person-text {
+  flex: 1;
+}
+
+.pick > svg {
+  color: var(--ink-3);
+  transition: transform 0.18s var(--ease);
+}
+
+.pick:hover > svg {
+  transform: translateX(3px);
+}
+
+.report-person {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.report-person .face {
+  width: 62px;
+  height: 62px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  background: rgba(30, 8, 60, 0.32);
+}
+
+.report-name {
+  font-size: 30px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.report-meta {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.report-rings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px;
+}
+
+.report-subject {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  padding: 18px 12px;
+  text-align: center;
+  background: var(--tile-2);
+  border-radius: 22px;
+}
+
+.report-subject .ring {
+  max-width: 136px;
+  margin-bottom: 8px;
+}
+
+.report-subject .ring-track {
+  stroke: var(--tile-3);
+}
+
+.report-subject-name {
+  font-weight: 700;
+}
+
+.report-subject-sub {
+  margin-bottom: 6px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.back-link svg {
+  transform: rotate(180deg);
+}
+
+.back-link:hover {
+  color: var(--ink);
+}
+
+/* ---------- Defaulters ---------- */
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.summary .tile-big {
+  margin: 0;
+}
+
+.summary-lowest {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Daily report ---------- */
+
+.day-subject .tile-head {
+  align-items: flex-start;
+}
+
+.day-counts {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+/* ---------- More menu on a phone ---------- */
+
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.more-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 0 14px;
+  color: var(--ink);
+  font-weight: 700;
+  text-align: left;
+  background: var(--tile-2);
+  border: 0;
+  border-radius: 20px;
+}
+
+.more-link.active {
+  color: var(--bg);
+  background: var(--ink);
+}
+
+/* ---------- The logo with its name, on the login page ---------- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand .dock-logo {
+  margin: 0;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.brand-tag {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* ---------- Phone versions ---------- */
+
+@media (max-width: 760px) {
+  .hero {
+    min-height: 300px;
+  }
+
+  .hero-number {
+    font-size: 128px;
+  }
+
+  .hero-sub {
+    font-size: 19px;
+  }
+
+  .ring-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile-big {
+    font-size: 52px;
+  }
+
+  .mark-controls {
+    display: grid;
+    gap: 8px;
+  }
+
+  .wall-head {
+    padding: 2px 4px 0;
+  }
+
+  .wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-bottom: 176px;
+  }
+
+  .kid {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 0;
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .kid .face {
+    width: 54px;
+    height: 54px;
+    font-size: 19px;
+  }
+
+  .kid-name {
+    font-size: 17px;
+  }
+
+  .savebar {
+    left: 16px;
+    right: 16px;
+    bottom: 90px;
+    justify-content: space-between;
+    gap: 10px;
+    max-width: none;
+    padding: 7px 7px 7px 20px;
+    animation-name: rise;
+  }
+
+  /* The word sits under its number, so the bar fits a small phone. */
+  .savebar-count {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+
+  .savebar-count b {
+    font-size: 22px;
+  }
+
+  .savebar .btn-glow {
+    padding: 0 18px;
+  }
+
+  .btn kbd {
+    display: none;
+  }
+
+  .subject-card {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .subject-card .ring-value {
+    font-size: 20px;
+  }
+
+  .report-rings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .report-name {
+    font-size: 25px;
+  }
+
+  .sort-row {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+
+  .summary {
+    display: block;
+  }
+
+  .summary-lowest {
+    margin-top: 10px;
+  }
+}

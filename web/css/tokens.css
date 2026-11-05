@@ -1,128 +1,115 @@
 /* tokens.css
-   The design system. The site is modelled on a paper attendance register:
-   light mode is ruled ledger paper, dark mode is a classroom blackboard.
-   Ink for text, ballpoint blue for data, red pen for absences, and a yellow
-   highlighter as the single accent. Every value is defined once, here.
-   Colours were checked for contrast and colour-blind safety: see WEB_PLAN.md section 9. */
+   Every colour, font, size, and shadow in the site. The rest of the CSS only
+   uses these names, so the light and dark themes are both defined here. */
 
 :root {
   color-scheme: light;
 
-  /* Paper */
-  --paper: #eef1ea;
-  --sheet: #fdfdfa;
-  --sheet-head: #f4f6f1;
-  --rule: #d5dcd3;
-  --rule-heavy: #14241e;
-  --margin-line: #d9534f;
-  --ledger-line: rgba(36, 88, 201, 0.13);
+  /* Surfaces */
+  --bg: #f3f1f8;
+  --tile: #ffffff;
+  --tile-2: #f6f4fb;
+  --tile-3: #ece9f4;
 
-  /* Ink */
-  --ink: #14241e;
-  --ink-2: #3d4f47;
-  --ink-3: #5a6b63;
+  /* Text. Each one is readable on --tile and on --bg. */
+  --ink: #17132a;
+  --ink-2: #514c66;
+  --ink-3: #6a657e;
 
-  /* The accent: a yellow highlighter */
-  --marker: #ffd83d;
-  --marker-hover: #ffcb0a;
-  --marker-soft: #fff3b0;
-  --on-marker: #14241e;
+  /* Lines */
+  --line: rgba(23, 19, 42, 0.08);
+  --line-strong: rgba(23, 19, 42, 0.18);
 
-  /* The register's cloth binding: the sidebar */
-  --binding: #16302a;
-  --binding-hover: #1f3f37;
-  --binding-rule: #2c4a41;
-  --binding-ink: #eef3ec;
-  --binding-ink-2: #b4c6bc;
+  /* Status colours. A status is always shown with a word too. */
+  --good: #12b76a;
+  --good-text: #087443;
+  --good-soft: #e0f6ea;
+  --bad: #f0446a;
+  --bad-text: #be1c47;
+  --bad-soft: #ffe9ee;
 
-  /* Status: reserved for attendance state */
-  --good-text: #14613c;
-  --good-bg: #dcefe2;
-  --good-bar: #1a7f4e;
-  --bad-text: #b3261e;
-  --bad-bg: #fbe4e1;
-  --bad-bar: #c9302c;
-  --track: #e3e8e1;
+  /* The brand gradient, used for rings, charts, and art */
+  --glow-a: #ff9a5a;
+  --glow-b: #ff4f8b;
+  --glow-c: #7b5cff;
+
+  /* The deeper version, used behind white text */
+  --hero-a: #ee6a22;
+  --hero-b: #ea2f78;
+  --hero-c: #6a45f0;
+  --hero-base: #e4476c;
+
+  /* Deeper again for buttons, whose smaller white text needs more contrast */
+  --button-a: #cf4a0c;
+  --button-b: #d61f67;
+  --button-c: #6a45f0;
+  --hero-shade: rgba(34, 10, 70, 0.07);
 
   /* Charts */
-  --chart-1: #2458c9;
-  --chart-2: #d9622b;
-  --chart-grid: #e3e8e1;
-  --chart-danger: rgba(201, 48, 44, 0.04);
+  --chart: #7b5cff;
+  --chart-grid: rgba(23, 19, 42, 0.07);
+  --chart-wash-top: rgba(255, 79, 139, 0.3);
+  --chart-wash-end: rgba(123, 92, 255, 0);
 
-  /* Spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
+  /* Fixed bars that float above the page */
+  --float-bg: #17132a;
+  --float-ink: #ffffff;
+  --float-ink-2: #c9c4da;
+  --float-line: rgba(255, 255, 255, 0.16);
 
-  /* Corners: a register has square pages */
-  --radius: 2px;
+  --focus: #7b5cff;
+  --accent-text: #6a45f0;
 
-  /* Shadow: only things that float above the page have one */
-  --shadow-float: 0 12px 32px rgba(20, 36, 30, 0.22);
+  /* Shadows */
+  --shadow: 0 1px 2px rgba(30, 20, 60, 0.04), 0 12px 32px -12px rgba(60, 40, 120, 0.14);
+  --shadow-lift: 0 2px 4px rgba(30, 20, 60, 0.05), 0 22px 44px -14px rgba(60, 40, 120, 0.26);
+  --shadow-float: 0 18px 44px -10px rgba(30, 10, 60, 0.5);
 
   /* Type */
-  --font-ui: "Archivo", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  --narrow: 78%;           /* condensed width for headings and big numbers */
-  --text-xs: 11.5px;
-  --text-sm: 13px;
-  --text-base: 15px;
-  --text-md: 17px;
-  --text-lg: 22px;
-  --text-xl: 28px;
-  --text-2xl: 52px;
+  --font-display: "Bricolage Grotesque", system-ui, "Segoe UI", sans-serif;
+  --font-body: "DM Sans", system-ui, "Segoe UI", sans-serif;
 
-  /* Motion */
-  --fast: 120ms ease-out;
-
-  /* Layout */
-  --sidebar-width: 232px;
-  --topbar-height: 68px;
+  /* Shape and motion */
+  --radius-tile: 28px;
+  --radius-control: 16px;
+  --radius-pill: 999px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper: #0f1916;
-  --sheet: #16231f;
-  --sheet-head: #1b2b26;
-  --rule: #2b3b35;
-  --rule-heavy: #93a69c;
-  --margin-line: #b5524e;
-  --ledger-line: rgba(238, 243, 238, 0.05);
+  --bg: #0e0c14;
+  --tile: #191622;
+  --tile-2: #221e2e;
+  --tile-3: #2d2839;
 
-  --ink: #eef3ee;
-  --ink-2: #c4d1c9;
-  --ink-3: #93a69c;
+  --ink: #f6f3ff;
+  --ink-2: #bdb7d0;
+  --ink-3: #9a94ae;
 
-  --marker: #f4d94e;
-  --marker-hover: #ffe45e;
-  --marker-soft: #3a3a1c;
-  --on-marker: #14241e;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.2);
 
-  --binding: #0b1310;
-  --binding-hover: #16231f;
-  --binding-rule: #22312c;
-  --binding-ink: #eef3ee;
-  --binding-ink-2: #a9bbb1;
+  --good: #2fd68a;
+  --good-text: #5be3a4;
+  --good-soft: #10321f;
+  --bad: #f24d76;
+  --bad-text: #ff8fa8;
+  --bad-soft: #3a1524;
 
-  --good-text: #8fe0ae;
-  --good-bg: #16382a;
-  --good-bar: #3ecb82;
-  --bad-text: #ffaaa3;
-  --bad-bg: #46201f;
-  --bad-bar: #ff7b72;
-  --track: #2b3b35;
+  --chart: #9478ff;
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --chart-wash-top: rgba(255, 79, 139, 0.32);
 
-  --chart-1: #5b8def;
-  --chart-2: #d9622b;
-  --chart-grid: #2b3b35;
-  --chart-danger: rgba(255, 123, 114, 0.05);
+  --float-bg: #2c2739;
+  --float-line: rgba(255, 255, 255, 0.14);
 
-  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --focus: #b7a4ff;
+  --accent-text: #b7a4ff;
+
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --shadow-lift: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 20px 40px -16px rgba(0, 0, 0, 0.7);
+  --shadow-float: 0 18px 44px -10px rgba(0, 0, 0, 0.7);
 }

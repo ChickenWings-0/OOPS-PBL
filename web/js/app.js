@@ -1,17 +1,18 @@
 // app.js
-// Starts the site: login, the sidebar and top bar, and moving between pages.
+// Starts the site: login, the dock and tab bar, and moving between pages.
 
-// Every page in the sidebar. The address after # chooses the page.
+// Every page. The address after # chooses the page. tab puts a page on the
+// phone's tab bar, and the rest are under More.
 const ROUTES = [
-  { hash: "dashboard", label: "Dashboard", icon: "dashboard", group: "Overview" },
-  { hash: "students", label: "Students", icon: "users", group: "Manage" },
-  { hash: "subjects", label: "Subjects", icon: "book", group: "Manage" },
-  { hash: "mark", label: "Mark attendance", icon: "clipboard", group: "Manage" },
-  { hash: "report", label: "Student report", icon: "report", group: "Reports" },
-  { hash: "defaulters", label: "Defaulters", icon: "alert", group: "Reports" },
-  { hash: "daily", label: "Daily report", icon: "calendar", group: "Reports" },
-  { hash: "monthly", label: "Monthly report", icon: "columns", group: "Reports" },
-  { hash: "teachers", label: "Teachers", icon: "cap", group: "Admin", adminOnly: true },
+  { hash: "dashboard", label: "Dashboard", icon: "dashboard", tab: "Home" },
+  { hash: "students", label: "Students", icon: "users", tab: "Students" },
+  { hash: "subjects", label: "Subjects", icon: "book" },
+  { hash: "mark", label: "Mark attendance", icon: "clipboard", tab: "Mark" },
+  { hash: "report", label: "Student report", icon: "report", tab: "Reports" },
+  { hash: "defaulters", label: "Defaulters", icon: "alert" },
+  { hash: "daily", label: "Daily report", icon: "calendar" },
+  { hash: "monthly", label: "Monthly report", icon: "columns" },
+  { hash: "teachers", label: "Teachers", icon: "cap", adminOnly: true },
 ];
 
 const App = {
@@ -21,12 +22,17 @@ const App = {
   shell: null,
   content: null,
   title: null,
-  visit: 0,    // counts page changes, so a slow reply cannot draw over a newer page
+  kicker: null,
+  menu: null,      // the open or closed user menu
+  pageKeys: null,  // keyboard shortcuts of the current page, if it has any
+  visit: 0,        // counts page changes, so a slow reply cannot draw over a newer page
 
   // Decides between the login page and the app, then starts.
   async start() {
     Api.onSessionEnded = () => App.showLogin("Your session has ended. Please sign in again.");
     window.addEventListener("hashchange", () => App.showPage());
+    document.addEventListener("keydown", (event) => App.onKey(event));
+    document.addEventListener("click", () => App.closeMenu());
 
     if (!Api.getToken()) {
       App.showLogin();
@@ -56,6 +62,7 @@ const App = {
     Charts.clear();
     App.shell = null;
     App.user = null;
+    App.pageKeys = null;
     document.title = "Sign in · Attendance Management System";
     Pages.login(document.getElementById("app"), notice, async () => {
       try {
@@ -67,96 +74,114 @@ const App = {
     });
   },
 
-  // Builds one sidebar link.
-  navLink(route) {
-    return h("a", { class: "nav-item", href: `#/${route.hash}`, "data-hash": route.hash, onClick: () => App.closeDrawer() },
-      icon(route.icon), route.label);
+  // The pages this person sees. Hiding Teachers is only for appearance: C++
+  // decides who may really see that data.
+  routes() {
+    return ROUTES.filter((route) => !route.adminOnly || App.user.isAdmin);
   },
 
-  // Builds the sidebar. Hiding Teachers is only for appearance: C++ decides
-  // who may really see that data.
-  sidebar() {
-    const nav = h("nav", { class: "nav", "aria-label": "Main" });
-    let group = null;
+  // Builds the floating dock for wide screens.
+  dock() {
+    const links = App.routes().map((route) =>
+      h("a", { class: "dock-link nav-item", href: `#/${route.hash}`, "data-hash": route.hash, "aria-label": route.label },
+        icon(route.icon, 22), h("span", { class: "dock-tip" }, route.label)));
 
-    for (const route of ROUTES) {
-      if (route.adminOnly && !App.user.isAdmin) {
-        continue;
-      }
-      if (route.group !== group) {
-        group = route.group;
-        nav.append(h("div", { class: "nav-label" }, group));
-      }
-      nav.append(App.navLink(route));
-    }
-    return h("aside", { class: "sidebar", id: "sidebar" },
-      h("div", { class: "sidebar-brand" }, brand()), nav);
+    return h("nav", { class: "dock", "aria-label": "Main" },
+      h("a", { class: "dock-logo", href: "#/dashboard", "aria-label": "Attendance Management System home" }, icon("check", 24)),
+      ...links,
+      h("div", { class: "dock-gap" }),
+      themeButton("dock-link", 22));
+  },
+
+  // Builds the tab bar for phones. The middle tab is Mark attendance.
+  tabbar() {
+    const tabs = App.routes().filter((route) => route.tab).map((route) =>
+      h("a", {
+        class: route.hash === "mark" ? "tab tab-main nav-item" : "tab nav-item",
+        href: `#/${route.hash}`, "data-hash": route.hash,
+      }, icon(route.icon, route.hash === "mark" ? 25 : 21), h("span", null, route.tab)));
+
+    return h("nav", { class: "tabbar", "aria-label": "Main" }, ...tabs,
+      h("button", { class: "tab", type: "button", onClick: () => App.openMore() }, icon("more", 21), h("span", null, "More")));
+  },
+
+  // The rest of the pages on a phone, in a sheet that slides up.
+  openMore() {
+    const others = App.routes().filter((route) => !route.tab);
+    const links = others.map((route) =>
+      h("a", {
+        class: "more-link", href: `#/${route.hash}`, "data-hash": route.hash,
+        onClick: () => dialog.close(),
+      }, icon(route.icon, 20), route.label));
+
+    const dialog = UI.modal("More", h("div", { class: "more-grid" }, ...links, themeButton("more-link", 20, true)));
   },
 
   // Builds the user button with its menu.
   userMenu() {
-    const menu = h("div", { class: "user-menu", hidden: true },
+    App.menu = h("div", { class: "user-menu", hidden: true },
       h("div", { class: "user-menu-head" },
         h("div", { class: "user-menu-name" }, App.user.name),
         h("div", { class: "label" }, App.user.isAdmin ? "Admin" : "Teacher")),
-      h("button", { type: "button", onClick: () => App.changePassword() }, icon("key", 16), "Change password"),
-      h("button", { type: "button", onClick: () => App.logout() }, icon("logout", 16), "Log out"));
+      h("button", { type: "button", onClick: () => App.changePassword() }, icon("key", 17), "Change password"),
+      h("button", { type: "button", onClick: () => App.logout() }, icon("logout", 17), "Log out"));
 
-    const button = h("button", { class: "user-button", type: "button", "aria-haspopup": "true", "aria-expanded": "false" },
-      h("span", { class: "avatar" }, App.user.initials),
-      h("span", { class: "user-name" }, App.user.name),
-      icon("chevron", 16));
-
-    const setOpen = (open) => {
-      menu.hidden = !open;
-      button.setAttribute("aria-expanded", String(open));
-    };
+    const button = h("button", {
+      class: "user-button", type: "button", "aria-haspopup": "true", "aria-expanded": "false",
+      "aria-label": `Account menu for ${App.user.name}`,
+    },
+    h("span", { class: "user-name" }, App.user.name),
+    h("span", { class: "avatar" }, App.user.initials));
 
     button.addEventListener("click", (event) => {
       event.stopPropagation();
-      setOpen(menu.hidden);
-    });
-    document.addEventListener("click", () => setOpen(false));
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        App.closeDrawer();
-      }
+      App.menu.hidden = !App.menu.hidden;
+      button.setAttribute("aria-expanded", String(!App.menu.hidden));
     });
 
-    return h("div", { class: "user" }, button, menu);
+    return h("div", { class: "user" }, button, App.menu);
+  },
+
+  closeMenu() {
+    if (App.menu) {
+      App.menu.hidden = true;
+      App.menu.previousElementSibling.setAttribute("aria-expanded", "false");
+    }
+  },
+
+  // Esc closes the menu, and the current page may have shortcuts of its own.
+  onKey(event) {
+    if (event.key === "Escape") {
+      App.closeMenu();
+    }
+    if (App.pageKeys) {
+      App.pageKeys(event);
+    }
+  },
+
+  // Sets the big title at the top of the page, and the small line above it.
+  setHead(title, kicker) {
+    App.title.textContent = title;
+    App.kicker.textContent = kicker || App.today.long;
   },
 
   // Builds the frame around every page, then shows the current page.
   showShell() {
-    App.title = h("h1", { class: "topbar-title" });
-    App.content = h("div", { class: "content" });
-
-    const menuButton = h("button", {
-      class: "icon-btn topbar-menu", type: "button", "aria-label": "Open menu",
-      "aria-controls": "sidebar", onClick: () => App.shell.classList.add("drawer-open"),
-    }, icon("menu", 20));
+    App.kicker = h("div", { class: "head-kicker" });
+    App.title = h("h1", { class: "head-title" });
+    App.content = h("main", { class: "content" });
 
     App.shell = h("div", { class: "shell" },
-      App.sidebar(),
-      h("div", { class: "backdrop", onClick: () => App.closeDrawer() }),
-      h("div", { class: "main" },
-        h("header", { class: "topbar" },
-          menuButton,
-          App.title,
-          h("span", { class: "topbar-date" }, App.today.long),
-          themeButton(),
+      App.dock(),
+      h("div", { class: "page" },
+        h("header", { class: "head" },
+          h("div", { class: "head-text" }, App.kicker, App.title),
           App.userMenu()),
-        h("main", null, App.content)));
+        App.content),
+      App.tabbar());
 
     document.getElementById("app").replaceChildren(App.shell);
     App.showPage();
-  },
-
-  closeDrawer() {
-    if (App.shell) {
-      App.shell.classList.remove("drawer-open");
-    }
   },
 
   // Shows the page named in the address bar.
@@ -169,7 +194,7 @@ const App = {
     const [hash, value] = window.location.hash.replace("#/", "").split("/");
     const route = ROUTES.find((item) => item.hash === hash) || ROUTES[0];
 
-    App.title.textContent = route.label;
+    App.setHead(route.hash === "dashboard" ? App.user.greeting : route.label);
     document.title = `${route.label} · Attendance Management System`;
 
     App.shell.querySelectorAll(".nav-item").forEach((link) => {
@@ -183,15 +208,16 @@ const App = {
     });
 
     Charts.clear();
+    App.pageKeys = null;
     App.visit += 1;
     const thisVisit = App.visit;
     const isCurrent = () => thisVisit === App.visit;
 
+    window.scrollTo(0, 0);
     if (Pages[route.hash]) {
       Pages[route.hash](App.content, isCurrent, value);
     } else {
-      App.content.replaceChildren(h("section", { class: "sheet" },
-        UI.empty("Page not found", "Choose a page from the menu.")));
+      App.content.replaceChildren(UI.emptyTile("Page not found", "Choose a page from the menu."));
     }
   },
 

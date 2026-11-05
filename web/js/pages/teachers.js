@@ -2,9 +2,20 @@
 // The Teachers page. Only the admin may use it, and C++ enforces that: a
 // teacher who opens this address sees the server's refusal.
 
+function teacherCard(row) {
+  return h("article", { class: "tile tile-lift person-card" },
+    UI.face(row.initials, row.id),
+    h("div", { class: "person-text" },
+      h("div", { class: "person-name" }, row.name),
+      h("span", { class: "person-roll" }, row.username)),
+    UI.badge(row.isAdmin ? "good" : "none", row.isAdmin ? "Admin" : "Teacher"));
+}
+
 Pages.teachers = async function (root, isCurrent) {
-  const results = h("div", null, UI.loading("Loading teachers"));
-  const addButton = h("button", { class: "btn btn-primary", type: "button", onClick: openForm }, "Add teacher");
+  const results = h("div", null, UI.skeleton(["span-4", "is-short"], ["span-4", "is-short"]));
+  const addButton = h("button", { class: "btn btn-primary", type: "button", onClick: openForm }, icon("plus", 18), "Add teacher");
+  const head = h("div", { class: "wall-head" },
+    h("p", { class: "wall-note" }, "Passwords are never shown."), addButton);
 
   async function load() {
     let reply;
@@ -12,8 +23,8 @@ Pages.teachers = async function (root, isCurrent) {
       reply = await Api.get("/api/teachers");
     } catch (error) {
       if (isCurrent()) {
-        addButton.hidden = true;
-        results.replaceChildren(UI.empty("Admin only", error.message));
+        head.hidden = true;
+        results.replaceChildren(UI.emptyTile("Admin only", error.message));
       }
       return;
     }
@@ -21,12 +32,7 @@ Pages.teachers = async function (root, isCurrent) {
       return;
     }
 
-    results.replaceChildren(UI.table([
-      { label: "ID", key: "id", num: true, tight: true },
-      { label: "Name", key: "name" },
-      { label: "Username", cell: (row) => h("span", { class: "mono" }, row.username) },
-      { label: "Role", tight: true, cell: (row) => (row.isAdmin ? "Admin" : "Teacher") },
-    ], reply.teachers));
+    results.replaceChildren(h("div", { class: "card-grid" }, ...reply.teachers.map(teacherCard)));
   }
 
   function openForm() {
@@ -41,7 +47,6 @@ Pages.teachers = async function (root, isCurrent) {
     }), load);
   }
 
-  root.replaceChildren(h("div", { class: "stack" },
-    UI.sheet("Teachers", "Passwords are never shown.", addButton, results)));
+  root.replaceChildren(h("div", { class: "stack" }, head, results));
   load();
 };

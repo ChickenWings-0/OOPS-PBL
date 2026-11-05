@@ -15,8 +15,10 @@ function studentFields(student, classes) {
 // Draws the Students page.
 Pages.students = async function (root, isCurrent) {
   const state = { q: "", sort: "rollNo", order: "asc" };
-  const results = h("div", null, UI.loading("Loading students"));
-  const count = h("span", null);
+  const results = h("div", null);
+  const count = h("span", { class: "tile-note" });
+  const sortChoices = [["rollNo", "Roll no"], ["name", "Name"], ["className", "Class"], ["id", "ID"]];
+  const sortRow = h("div", { class: "mini-pills", role: "group", "aria-label": "Sort by" });
   let latestLoad = 0;   // only the newest request may draw
 
   // Asks the server for the current search and sort, and redraws the table.
@@ -48,26 +50,36 @@ Pages.students = async function (root, isCurrent) {
     }
   }
 
-  // Changes the sort. Pressing the same heading again reverses the order.
+  // Shows which way each sort button points now.
+  function showSort() {
+    sortRow.replaceChildren(...sortChoices.map(([field, label]) => {
+      const active = state.sort === field;
+      const arrow = state.order === "asc" ? " ↑" : " ↓";
+      return h("button", { type: "button", "aria-pressed": String(active), onClick: () => sortBy(field) },
+        label, active ? arrow : "");
+    }));
+  }
+
+  // Changes the sort. Pressing the same button again reverses the order.
   function sortBy(field) {
     state.order = state.sort === field && state.order === "asc" ? "desc" : "asc";
     state.sort = field;
+    showSort();
     load();
   }
 
   function table(rows) {
     return UI.table([
-      { label: "ID", key: "id", sort: "id", num: true, tight: true, hideNarrow: true },
-      { label: "Roll no", sort: "rollNo", tight: true, hideNarrow: true, cell: (row) => h("span", { class: "mono" }, row.rollNo) },
-      { label: "Name", sort: "name", firstNarrow: true, cell: (row) => h("a", { class: "person-name", href: `#/report/${row.id}` }, row.name) },
-      { label: "Class", key: "className", sort: "className", tight: true },
+      { label: "Student", lead: true, cell: (row) => UI.person(row.id, row.name, row.rollNo, row.initials) },
+      { label: "Class", tight: true, cell: (row) => UI.badge("none", row.className) },
+      { label: "ID", key: "id", num: true, tight: true, hidePhone: true },
       {
-        label: "Actions", tight: true,
+        label: "Actions", tight: true, corner: true,
         cell: (row) => h("div", { class: "row-actions" },
-          h("button", { class: "link-btn", type: "button", onClick: () => openForm(row) }, "Edit"),
-          h("button", { class: "link-btn is-danger", type: "button", onClick: () => remove(row) }, "Delete")),
+          h("button", { class: "icon-btn", type: "button", "aria-label": `Edit ${row.name}`, onClick: () => openForm(row) }, icon("edit", 17)),
+          h("button", { class: "icon-btn is-danger", type: "button", "aria-label": `Delete ${row.name}`, onClick: () => remove(row) }, icon("trash", 17))),
       },
-    ], rows, state, sortBy);
+    ], rows);
   }
 
   // Opens the add form, or the edit form when a student is given.
@@ -112,27 +124,21 @@ Pages.students = async function (root, isCurrent) {
   }
 
   function addButton() {
-    return h("button", { class: "btn btn-primary", type: "button", onClick: () => openForm() }, "Add student");
+    return h("button", { class: "btn btn-primary", type: "button", onClick: () => openForm() }, icon("plus", 18), "Add student");
   }
 
-  // Waits for a short pause in typing, so each key press is not a request.
-  let timer = null;
-  const search = h("input", {
-    class: "input", id: "student-search", type: "search", placeholder: "Name or roll number", autocomplete: "off",
-    onInput: () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        state.q = search.value;
-        load();
-      }, 200);
-    },
+  const search = UI.search("student-search", "Search students", "Search by name or roll number", (text) => {
+    state.q = text;
+    load();
   });
 
+  results.replaceChildren(UI.skeleton(["span-12", "is-tall"]));
+  showSort();
+
   root.replaceChildren(h("div", { class: "stack" },
-    h("div", { class: "toolbar" },
-      h("div", { class: "field toolbar-grow" }, h("label", { class: "label", for: "student-search" }, "Search"), search),
-      addButton()),
-    UI.sheet("Student register", null, h("span", { class: "sheet-note mono" }, count), results)));
+    h("div", { class: "toolbar" }, search, addButton()),
+    UI.tile("Everyone", null,
+      h("div", { class: "sort-row" }, count, h("span", { class: "sort-label" }, "Sort"), sortRow), results)));
 
   load();
 };
