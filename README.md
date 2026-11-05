@@ -221,7 +221,7 @@ The API runs on Render, and the frontend on Vercel. Do Render first, because Ver
 3. Check that the plan says Free, then deploy.
 4. Open `https://<your-service>.onrender.com/api/health`. It should show `{"status":"ok"}`.
 
-If your address is not `https://attendance-register.onrender.com`, change `RENDER_API` in `web/js/config.js` and the same address in `vercel.json`, then push.
+If your address is not `https://attendance-register-qty3.onrender.com`, change `RENDER_API` in `web/js/config.js` and the same address in `vercel.json`, then push.
 
 ### 2. Vercel (the frontend)
 

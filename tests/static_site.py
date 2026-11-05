@@ -11,7 +11,7 @@ import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RENDER_URL = "https://attendance-register.onrender.com"
+RENDER_URL = "https://attendance-register-qty3.onrender.com"
 
 with open(os.path.join(ROOT, "vercel.json"), encoding="utf-8") as file:
     HEADERS = json.load(file)["headers"][0]["headers"]

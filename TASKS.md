@@ -369,7 +369,7 @@ Each member keeps the same area as in section 1, now from the browser down to th
 - [x] Confirm `data/` is the clean sample data
 - [ ] Create the Render service and set `DEMO_PASSWORD` and `ALLOWED_ORIGIN`
 - [ ] Create the Vercel project
-- [ ] Deploy and read the build log
+- [x] Deploy on Render: the Docker build succeeded and `/api/health` answers
 
 **Test:** W60 to W66.
 
@@ -496,10 +496,10 @@ Each member keeps the same area as in section 1, now from the browser down to th
 
 #### Deployed site
 
-- [ ] **W60** Build succeeds on Render, and the health check passes
+- [x] **W60** Build succeeds on Render, and the health check passes
 - [ ] **W61** Login works with `DEMO_PASSWORD`, and `admin123` does not
 - [ ] **W62** The site opens over HTTPS, on a laptop and on a phone
-- [ ] **W63** `/data/teachers.txt` is not reachable
+- [x] **W63** `/data/teachers.txt` is not reachable
 - [ ] **W64** Marking today works at any time of day (India time zone)
 - [ ] **W65** Add a student, restart the service, and confirm the sample data is back
 - [ ] **W66** Cold start after 15 idle minutes loads within about a minute

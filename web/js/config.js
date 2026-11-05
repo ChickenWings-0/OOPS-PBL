@@ -7,6 +7,6 @@
 //
 // If Render gives the service a different address, change RENDER_API here.
 
-const RENDER_API = "https://attendance-register.onrender.com";
+const RENDER_API = "https://attendance-register-qty3.onrender.com";
 
 const API_BASE = window.location.hostname.endsWith(".vercel.app") ? RENDER_API : "";
